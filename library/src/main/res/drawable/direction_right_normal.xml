@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Filippo Scognamiglio.
+  ~ Copyright (c) 2020. This file is part of RadialGamePad.
+  ~
+  ~ RadialGamePad is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ RadialGamePad is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="@dimen/size_direction_button_item"
+        android:height="@dimen/size_direction_button_item"
+        android:viewportHeight="@integer/vector_viewportsize"
+        android:viewportWidth="@integer/vector_viewportsize">
+
+    <path
+        android:fillColor="#fff"
+        android:pathData="@string/vectorpath_direction_right" />
+</vector>

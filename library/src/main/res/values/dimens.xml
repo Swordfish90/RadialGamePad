@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Filippo Scognamiglio.
+  ~ Copyright (c) 2020. This file is part of RadialGamePad.
+  ~
+  ~ RadialGamePad is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ RadialGamePad is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<resources>
+    <dimen name="size_button_medium">48dp</dimen>
+
+    <integer name="vector_viewportsize">30</integer>
+    <integer name="vector_stroke_size">1</integer>
+
+    <dimen name="size_direction_button_item">@dimen/size_button_medium</dimen>
+</resources>

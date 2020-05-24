@@ -1,0 +1,244 @@
+/*
+ * Created by Filippo Scognamiglio.
+ * Copyright (c) 2020. This file is part of RadialGamePad.
+ *
+ * RadialGamePad is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * RadialGamePad is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package com.swordfish.radialgamepad.library.dials
+
+import android.content.Context
+import android.graphics.*
+import android.graphics.drawable.Drawable
+import android.view.KeyEvent
+import com.jakewharton.rxrelay2.PublishRelay
+import com.swordfish.radialgamepad.library.config.ButtonConfig
+import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
+import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.utils.Constants
+import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
+import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
+import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.utils.TouchUtils
+import io.reactivex.Observable
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.sin
+
+class PrimaryButtonsDial(
+    context: Context,
+    private val circleActions: List<ButtonConfig>,
+    private val centerAction: ButtonConfig?,
+    private val rotationRadians: Float = 0f,
+    private val theme: RadialGamePadTheme
+) : Dial {
+
+    private val actionAngle = Constants.PI2 / circleActions.size
+
+    private val eventsRelay = PublishRelay.create<Event>()
+
+    private val paint = BasePaint()
+    private val textPaint = TextPaint()
+
+    private var pressed: Set<Int> = setOf()
+
+    private val drawables = loadRequiredDrawables(context)
+
+    private var drawingBox = RectF()
+    private var buttonRadius = 0f
+    private var distanceToCenter = 0f
+    private var center: PointF = PointF(0f, 0f)
+    private var centerLabelDrawingBox: RectF = RectF()
+    private var labelsDrawingBoxes: MutableMap<Int, RectF> = mutableMapOf()
+
+    private fun loadRequiredDrawables(context: Context): Map<Int, Drawable?> {
+        val iconIds = (circleActions + centerAction).mapNotNull { it?.iconId }
+
+        return iconIds
+            .map { it to context.getDrawable(it) }
+            .toMap()
+    }
+
+    override fun drawingBox(): RectF = drawingBox
+
+    override fun trackedPointerId(): Int? = null
+
+    override fun measure(drawingBox: RectF) {
+        this.drawingBox = drawingBox
+        val dialDiameter = minOf(drawingBox.width(), drawingBox.height())
+        distanceToCenter = dialDiameter / 4f
+        buttonRadius = computeButtonRadius(dialDiameter)
+
+        center = PointF(
+            drawingBox.left + drawingBox.width() / 2,
+            drawingBox.top + drawingBox.height() / 2
+        )
+
+        if (centerAction != null && circleActions.isNotEmpty()) {
+            distanceToCenter += buttonRadius * 0.5f
+        } else {
+            buttonRadius *= BUTTON_SCALING
+        }
+
+        centerLabelDrawingBox = RectF(
+            center.x - buttonRadius,
+            center.y - buttonRadius,
+            center.x + buttonRadius,
+            center.y + buttonRadius
+        )
+
+        circleActions
+            .filter { it.visible }
+            .forEachIndexed { index, button ->
+                val buttonAngle = actionAngle * index + rotationRadians
+                updatePainterForButton(button)
+
+                val subDialX = center.x + cos(buttonAngle) * distanceToCenter
+                val subDialY = center.y - sin(buttonAngle) * distanceToCenter
+
+                labelsDrawingBoxes[index] = RectF(
+                    subDialX - buttonRadius,
+                    subDialY - buttonRadius,
+                    subDialX + buttonRadius,
+                    subDialY + buttonRadius
+                )
+
+                drawables[button.iconId]?.let {
+                    it.bounds = RectF(
+                        subDialX - buttonRadius,
+                        subDialY - buttonRadius,
+                        subDialX + buttonRadius,
+                        subDialY + buttonRadius
+                    ).scaleCentered(0.5f).roundToInt()
+                }
+            }
+    }
+
+    override fun draw(canvas: Canvas) {
+        if (centerAction != null && centerAction.visible) {
+            updatePainterForButton(centerAction)
+            canvas.drawCircle(center.x, center.y, buttonRadius, paint)
+
+            if (centerAction.label != null) {
+                textPaint.paintText(
+                    centerLabelDrawingBox,
+                    centerAction.label,
+                    canvas,
+                    centerAction.theme ?: theme
+                )
+            }
+
+            drawables[centerAction.iconId]?.let {
+                it.bounds = RectF(
+                    center.x - buttonRadius,
+                    center.y - buttonRadius,
+                    center.x + buttonRadius,
+                    center.y + buttonRadius
+                ).scaleCentered(0.5f).roundToInt()
+                it.draw(canvas)
+            }
+        }
+
+        circleActions
+            .filter { it.visible }
+            .forEachIndexed { index, button ->
+                val buttonAngle = actionAngle * index + rotationRadians
+                updatePainterForButton(button)
+
+                val subDialX = center.x + cos(buttonAngle) * distanceToCenter
+                val subDialY = center.y - sin(buttonAngle) * distanceToCenter
+
+                canvas.drawCircle(subDialX, subDialY, buttonRadius, paint)
+
+                if (button.label != null) {
+                    textPaint.paintText(labelsDrawingBoxes[index]!!, button.label, canvas, button.theme ?: theme)
+                }
+
+                drawables[button.iconId]?.draw(canvas)
+            }
+    }
+
+    private fun computeButtonRadius(dialDiameter: Float): Float {
+        val numButtons = maxOf(circleActions.size, 2)
+        val radialMaxSize = dialDiameter * sin(Math.PI / numButtons).toFloat() / 4
+        val linearMaxSize = BUTTON_SCALING * if (centerAction != null && circleActions.isNotEmpty()) dialDiameter / 6 else Float.MAX_VALUE
+        return minOf(radialMaxSize, linearMaxSize)
+    }
+
+    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+        val newPressed = mutableSetOf<Int>()
+        val center = PointF(0.5f, 0.5f)
+        val radius = buttonRadius / drawingBox.width()
+
+        centerAction?.keyCode?.let { keyCode ->
+            newPressed += fingers
+                .filter { MathUtils.distance(center.x, it.x, center.y, it.y) < radius }
+                .map { keyCode }
+        }
+
+        if (circleActions.isNotEmpty()) {
+            newPressed += fingers.asSequence()
+                .filter {
+                    centerAction == null || MathUtils.distance(center.x, it.x, center.y, it.y) > radius
+                }
+                .map { computeTouchAngle(it) }
+                .map { (floor(it / actionAngle).toInt()) }
+                .filter { circleActions[it].visible }
+                .map { circleActions[it].keyCode }
+                .toSet()
+        }
+
+        if (newPressed != pressed) {
+            sendNewActionDowns(newPressed, pressed)
+            sendNewActionUps(newPressed, pressed)
+            pressed = newPressed
+            return true
+        }
+
+        return false
+    }
+
+    private fun updatePainterForButton(buttonConfig: ButtonConfig) {
+        val buttonTheme = buttonConfig.theme ?: theme
+        if (buttonConfig.keyCode in pressed) {
+            paint.color = buttonTheme.pressedColor
+        } else {
+            paint.color = buttonTheme.normalColor
+        }
+    }
+
+    private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>) {
+        newPressed.asSequence()
+            .filter { it !in oldPressed }
+            .forEach { eventsRelay.accept(Event.Button(KeyEvent.ACTION_DOWN, it, true)) }
+    }
+
+    private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>) {
+        oldPressed.asSequence()
+            .filter { it !in newPressed }
+            .forEach { eventsRelay.accept(Event.Button(KeyEvent.ACTION_UP, it, false)) }
+    }
+
+    private fun computeTouchAngle(it: TouchUtils.FingerPosition): Float {
+        return (MathUtils.angle(0.5f, it.x, 0.5f, it.y) + actionAngle / 2 - rotationRadians) % Constants.PI2
+    }
+
+    override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()
+
+    companion object {
+        private const val BUTTON_SCALING = 0.8f
+    }
+}

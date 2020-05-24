@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Created by Filippo Scognamiglio.
+  ~ Copyright (c) 2020. This file is part of RadialGamePad.
+  ~
+  ~ RadialGamePad is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ RadialGamePad is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<resources>
+    <string name="vectorpath_direction_right" translatable="false">M1,15 m2,-2 l8,-8 l14,0 a17,17 0 0,1 0,20 l-14,0 l-8,-8 a3,3 0 0,1 0,-4z</string>
+</resources>
