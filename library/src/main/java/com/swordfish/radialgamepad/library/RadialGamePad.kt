@@ -104,8 +104,8 @@ class RadialGamePad @JvmOverloads constructor(
                 is SecondaryDialConfig.Cross -> CrossDial(
                     context,
                     config.motionId,
-                    R.drawable.direction_right_normal,
-                    R.drawable.direction_right_pressed,
+                    config.rightDrawableId ?: R.drawable.direction_right_normal,
+                    config.rightDrawableId ?: R.drawable.direction_right_pressed,
                     config.theme ?: gamePadConfig.theme
                 )
             }
