@@ -40,7 +40,11 @@ class ButtonDial(
 
     private val events = PublishRelay.create<Event>()
 
-    private val iconDrawable = config.iconId?.let { context.getDrawable(it) }
+    private val iconDrawable = config.iconId?.let {
+        context.getDrawable(it)?.apply {
+            setTint(theme.textColor)
+        }
+    }
 
     private val paint = BasePaint().apply {
         color = getTheme().normalColor
