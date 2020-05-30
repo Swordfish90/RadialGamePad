@@ -20,5 +20,11 @@ package com.swordfish.radialgamepad.library.event
 
 abstract class Event(open val haptic: Boolean = false) {
     data class Button(val action: Int, val keyCode: Int, override val haptic: Boolean) : Event()
-    data class Direction(val xAxis: Float, val yAxis: Float, override val haptic: Boolean) : Event()
+
+    data class Direction(
+        val motionId: Int,
+        val xAxis: Float,
+        val yAxis: Float,
+        override val haptic: Boolean
+    ) : Event()
 }

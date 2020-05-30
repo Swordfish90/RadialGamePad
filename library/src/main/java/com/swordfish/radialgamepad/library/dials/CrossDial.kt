@@ -31,6 +31,7 @@ import kotlin.math.*
 
 class CrossDial(
     context: Context,
+    private val motionId: Int,
     normalDrawable: Int,
     pressedDrawable: Int,
     theme: RadialGamePadTheme
@@ -123,7 +124,7 @@ class CrossDial(
         } else if (fingers.isEmpty()) {
             currentIndex = null
             trackedPointerId = null
-            eventsRelay.accept(Event.Direction(0f, 0f, false))
+            eventsRelay.accept(Event.Direction(motionId, 0f, 0f, false))
             return true
         }
 
@@ -157,6 +158,7 @@ class CrossDial(
             currentIndex = index
             // TODO FILIPPO... We might avoid this radians conversion
             eventsRelay.accept(Event.Direction(
+                motionId,
                 cos(index * Math.toRadians(SINGLE_BUTTON_ANGLE.toDouble())).toFloat(),
                 sin(index * Math.toRadians(SINGLE_BUTTON_ANGLE.toDouble())).toFloat(),
                 haptic

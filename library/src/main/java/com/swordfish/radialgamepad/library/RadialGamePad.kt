@@ -68,11 +68,15 @@ class RadialGamePad @JvmOverloads constructor(
         val primaryDial = when (configuration) {
             is PrimaryDialConfig.Cross -> CrossDial(
                 context,
+                configuration.motionId,
                 configuration.rightDrawableId ?: R.drawable.direction_right_normal,
                 configuration.rightDrawableId ?: R.drawable.direction_right_pressed,
                 configuration.theme ?: gamePadConfig.theme
             )
-            is PrimaryDialConfig.Stick -> StickDial(configuration.theme ?: gamePadConfig.theme)
+            is PrimaryDialConfig.Stick -> StickDial(
+                configuration.motionId,
+                configuration.theme ?: gamePadConfig.theme
+            )
             is PrimaryDialConfig.PrimaryButtons -> PrimaryButtonsDial(
                 context,
                 configuration.dials,
@@ -87,7 +91,10 @@ class RadialGamePad @JvmOverloads constructor(
     private fun initializeSecondaryInteractors(secondaryDials: List<SecondaryDialConfig>) {
         secondaryInteractors = secondaryDials.map { config ->
             val secondaryDial = when (config) {
-                is SecondaryDialConfig.Stick -> StickDial(config.theme ?: gamePadConfig.theme)
+                is SecondaryDialConfig.Stick -> StickDial(
+                    config.motionId,
+                    config.theme ?: gamePadConfig.theme
+                )
                 is SecondaryDialConfig.SingleButton -> ButtonDial(
                     context,
                     config.buttonConfig,
@@ -96,6 +103,7 @@ class RadialGamePad @JvmOverloads constructor(
                 is SecondaryDialConfig.Empty -> EmptyDial()
                 is SecondaryDialConfig.Cross -> CrossDial(
                     context,
+                    config.motionId,
                     R.drawable.direction_right_normal,
                     R.drawable.direction_right_pressed,
                     config.theme ?: gamePadConfig.theme

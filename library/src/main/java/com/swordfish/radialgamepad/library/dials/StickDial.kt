@@ -30,7 +30,7 @@ import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.sin
 
-class StickDial(theme: RadialGamePadTheme) : Dial {
+class StickDial(private val motionId: Int, theme: RadialGamePadTheme) : Dial {
 
     private val paint = BasePaint()
 
@@ -91,7 +91,7 @@ class StickDial(theme: RadialGamePadTheme) : Dial {
 
             trackedPointerId = finger.pointerId
             firstTouch = PointF(finger.x, finger.y)
-            eventsRelay.accept(Event.Direction(0f, 0f, true))
+            eventsRelay.accept(Event.Direction(motionId, 0f, 0f, true))
             handleTouchEvent(finger.x, finger.y)
             return true
         } else {
@@ -116,7 +116,7 @@ class StickDial(theme: RadialGamePadTheme) : Dial {
             strength = MathUtils.clamp(MathUtils.distance(firstTouch.x, touchX, firstTouch.y, touchY) * 2, 0f, 1f)
 
             val point = MathUtils.convertPolarCoordinatesToSquares(angle, strength)
-            eventsRelay.accept(Event.Direction(point.x, point.y, false))
+            eventsRelay.accept(Event.Direction(motionId, point.x, point.y, false))
         }
     }
 
