@@ -125,6 +125,7 @@ class StickDial(private val motionId: Int, theme: RadialGamePadTheme) : Dial {
         angle = 0f
         firstTouch = null
         trackedPointerId = null
+        eventsRelay.accept(Event.Direction(motionId, 0f, 0f, false))
     }
 
     companion object {
