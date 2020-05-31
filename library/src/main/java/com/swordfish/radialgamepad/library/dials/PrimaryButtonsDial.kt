@@ -65,11 +65,15 @@ class PrimaryButtonsDial(
     private var labelsDrawingBoxes: MutableMap<Int, RectF> = mutableMapOf()
 
     private fun loadRequiredDrawables(context: Context): Map<Int, Drawable?> {
-        val iconIds = (circleActions + centerAction).mapNotNull { it?.iconId }
-
-        return iconIds
-            .map { it to context.getDrawable(it) }
-            .toMap()
+        val iconDrawablePairs = (circleActions + centerAction).mapNotNull { buttonConfig ->
+            buttonConfig?.iconId?.let { iconId ->
+                val drawable = context.getDrawable(iconId)!!
+                val buttonTheme = buttonConfig.theme ?: theme
+                drawable.setTint(buttonTheme.textColor)
+                iconId to drawable
+            }
+        }
+        return iconDrawablePairs.toMap()
     }
 
     override fun drawingBox(): RectF = drawingBox
