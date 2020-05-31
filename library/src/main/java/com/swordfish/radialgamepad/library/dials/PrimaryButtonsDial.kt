@@ -26,6 +26,7 @@ import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.MathUtils
@@ -36,7 +37,6 @@ import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.roundToInt
 import kotlin.math.sin
 
 class PrimaryButtonsDial(
@@ -193,7 +193,7 @@ class PrimaryButtonsDial(
         val center = PointF(0.5f, 0.5f)
         val radius = buttonRadius / drawingBox.width()
 
-        centerAction?.keyCode?.let { keyCode ->
+        centerAction?.id?.let { keyCode ->
             newPressed += fingers
                 .filter { MathUtils.distance(center.x, it.x, center.y, it.y) < radius }
                 .map { keyCode }
@@ -207,7 +207,7 @@ class PrimaryButtonsDial(
                 .map { computeTouchAngle(it) }
                 .map { (floor(it / actionAngle).toInt()) }
                 .filter { circleActions[it].visible }
-                .map { circleActions[it].keyCode }
+                .map { circleActions[it].id }
                 .toSet()
         }
 
@@ -221,9 +221,13 @@ class PrimaryButtonsDial(
         return false
     }
 
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
+        // TODO FILIPPO... Here we should determine which button was pressed!
+    }
+
     private fun updatePainterForButton(buttonConfig: ButtonConfig) {
         val buttonTheme = buttonConfig.theme ?: theme
-        if (buttonConfig.keyCode in pressed) {
+        if (buttonConfig.id in pressed) {
             paint.color = buttonTheme.pressedColor
         } else {
             paint.color = buttonTheme.normalColor
@@ -233,13 +237,13 @@ class PrimaryButtonsDial(
     private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>) {
         newPressed.asSequence()
             .filter { it !in oldPressed }
-            .forEach { eventsRelay.accept(Event.Button(KeyEvent.ACTION_DOWN, it, true)) }
+            .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_DOWN, true)) }
     }
 
     private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>) {
         oldPressed.asSequence()
             .filter { it !in newPressed }
-            .forEach { eventsRelay.accept(Event.Button(KeyEvent.ACTION_UP, it, false)) }
+            .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_UP, false)) }
     }
 
     private fun computeTouchAngle(it: TouchUtils.FingerPosition): Float {

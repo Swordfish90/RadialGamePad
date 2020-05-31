@@ -22,20 +22,19 @@ import android.graphics.*
 import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.MathUtils
-import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.sin
 
-class StickDial(private val motionId: Int, private val theme: RadialGamePadTheme) : Dial {
+class StickDial(private val id: Int, private val theme: RadialGamePadTheme) : Dial {
 
     private val paint = BasePaint()
 
     private val foregroundColor: Int = theme.normalColor
-    private val backgroundColor: Int = PaintUtils.toTransparent(theme.normalColor, 0.5f)
     private val pressedColor: Int = theme.pressedColor
 
     private val eventsRelay = PublishRelay.create<Event>()
@@ -91,7 +90,7 @@ class StickDial(private val motionId: Int, private val theme: RadialGamePadTheme
 
             trackedPointerId = finger.pointerId
             firstTouch = PointF(finger.x, finger.y)
-            eventsRelay.accept(Event.Direction(motionId, 0f, 0f, true))
+            eventsRelay.accept(Event.Direction(id, 0f, 0f, true))
             handleTouchEvent(finger.x, finger.y)
             return true
         } else {
@@ -108,6 +107,10 @@ class StickDial(private val motionId: Int, private val theme: RadialGamePadTheme
         }
     }
 
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
+        eventsRelay.accept(Event.Gesture(id, gestureType))
+    }
+
     override fun events(): Observable<Event> = eventsRelay
 
     private fun handleTouchEvent(touchX: Float, touchY: Float) {
@@ -116,7 +119,7 @@ class StickDial(private val motionId: Int, private val theme: RadialGamePadTheme
             strength = MathUtils.clamp(MathUtils.distance(firstTouch.x, touchX, firstTouch.y, touchY) * 2, 0f, 1f)
 
             val point = MathUtils.convertPolarCoordinatesToSquares(angle, strength)
-            eventsRelay.accept(Event.Direction(motionId, point.x, point.y, false))
+            eventsRelay.accept(Event.Direction(id, point.x, point.y, false))
         }
     }
 
@@ -125,7 +128,7 @@ class StickDial(private val motionId: Int, private val theme: RadialGamePadTheme
         angle = 0f
         firstTouch = null
         trackedPointerId = null
-        eventsRelay.accept(Event.Direction(motionId, 0f, 0f, false))
+        eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
     }
 
     companion object {

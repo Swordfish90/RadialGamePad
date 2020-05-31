@@ -19,7 +19,7 @@
 package com.swordfish.radialgamepad.library.config
 
 data class ButtonConfig(
-    val keyCode: Int,
+    val id: Int,
     val label: String? = null,
     val visible: Boolean = true,
     val iconId: Int? = null,

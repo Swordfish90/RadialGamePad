@@ -18,6 +18,7 @@
 
 package com.swordfish.radialgamepad.library.utils
 
+import android.graphics.PointF
 import android.graphics.RectF
 import android.view.MotionEvent
 
@@ -39,6 +40,10 @@ object TouchUtils {
         return fingers.map {
             FingerPosition(it.pointerId, (it.x - rect.left) / rect.width(), (it.y -rect.top) / rect.height())
         }
+    }
+
+    fun computeRelativePosition(x: Float, y: Float, rect: RectF): PointF {
+        return PointF((x - rect.left) / rect.width(), (y - rect.top) / rect.height())
     }
 
     private fun isUpEvent(event: MotionEvent, pointerIndex: Int): Boolean {

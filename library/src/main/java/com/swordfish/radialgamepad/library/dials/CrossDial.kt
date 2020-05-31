@@ -20,12 +20,12 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Point
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
@@ -33,7 +33,7 @@ import kotlin.math.*
 
 class CrossDial(
     context: Context,
-    private val motionId: Int,
+    private val id: Int,
     normalDrawable: Int,
     pressedDrawable: Int,
     theme: RadialGamePadTheme
@@ -92,6 +92,10 @@ class CrossDial(
         this.drawingBox = drawingBox
     }
 
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
+        eventsRelay.accept(Event.Gesture(id, gestureType))
+    }
+
     override fun draw(canvas: Canvas) {
         val radius = minOf(drawingBox.width(), drawingBox.height()) / 2
         val drawableSize = (radius * DRAWABLE_SIZE_SCALING).roundToInt()
@@ -131,7 +135,7 @@ class CrossDial(
         } else if (fingers.isEmpty()) {
             currentIndex = null
             trackedPointerId = null
-            eventsRelay.accept(Event.Direction(motionId, 0f, 0f, false))
+            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
             return true
         }
 
@@ -165,7 +169,7 @@ class CrossDial(
             currentIndex = index
             // TODO FILIPPO... We might avoid this radians conversion
             eventsRelay.accept(Event.Direction(
-                motionId,
+                id,
                 cos(index * Math.toRadians(SINGLE_BUTTON_ANGLE.toDouble())).toFloat(),
                 sin(index * Math.toRadians(SINGLE_BUTTON_ANGLE.toDouble())).toFloat(),
                 haptic
