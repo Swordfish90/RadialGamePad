@@ -19,11 +19,16 @@
 package com.swordfish.radialgamepad.library.utils
 
 import android.graphics.Color
+import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
 import kotlin.math.roundToInt
 
 object PaintUtils {
+
+    fun RectF.scale(scale: Float): RectF {
+        return RectF(left * scale, top * scale, right * scale, bottom * scale)
+    }
 
     fun RectF.scaleCentered(scale: Float): RectF {
         val scaledWidth = width() * scale

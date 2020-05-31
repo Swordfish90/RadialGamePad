@@ -38,8 +38,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        val leftPad = RadialGamePad(SamplePadConfigs.GBA_LEFT, this)
-        val rightPad = RadialGamePad(SamplePadConfigs.GBA_RIGHT, this)
+        val leftPad = RadialGamePad(SamplePadConfigs.PSX_LEFT, this)
+        val rightPad = RadialGamePad(SamplePadConfigs.PSX_RIGHT, this)
 
         findViewById<FrameLayout>(R.id.left_container).addView(leftPad)
         findViewById<FrameLayout>(R.id.right_container).addView(rightPad)

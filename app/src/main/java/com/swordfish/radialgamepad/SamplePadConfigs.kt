@@ -141,7 +141,19 @@ object SamplePadConfigs {
                         label = "L2"
                     )
                 ),
-                SecondaryDialConfig.Stick(9, 2, 1.5f, 1)
+                SecondaryDialConfig.Stick(9, 1, 1.2f, 1),
+                SecondaryDialConfig.SingleButton(10, 1, 1f,
+                    ButtonConfig(
+                        keyCode = KeyEvent.KEYCODE_BUTTON_MODE,
+                        label = "MENU"
+                    )
+                ),
+                SecondaryDialConfig.SingleButton(8, 1, 1f,
+                    ButtonConfig(
+                        keyCode = KeyEvent.KEYCODE_BUTTON_MODE,
+                        label = "MENU"
+                    )
+                )
             )
         )
 
@@ -155,16 +167,16 @@ object SamplePadConfigs {
                         label = "A"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_B,
-                        label = "B"
-                    ),
-                    ButtonConfig(
                         keyCode = KeyEvent.KEYCODE_BUTTON_X,
                         label = "X"
                     ),
                     ButtonConfig(
                         keyCode = KeyEvent.KEYCODE_BUTTON_Y,
                         label = "Y"
+                    ),
+                    ButtonConfig(
+                        keyCode = KeyEvent.KEYCODE_BUTTON_B,
+                        label = "B"
                     )
                 )
             ),
@@ -187,7 +199,13 @@ object SamplePadConfigs {
                         label = "START"
                     )
                 ),
-                SecondaryDialConfig.Stick(8, 2, 1.5f, 1)
+                SecondaryDialConfig.Stick(9, 2, 2f, 1),
+                SecondaryDialConfig.SingleButton(8, 1, 1f,
+                    ButtonConfig(
+                        keyCode = KeyEvent.KEYCODE_BUTTON_MODE,
+                        label = "MENU"
+                    )
+                )
             )
         )
 

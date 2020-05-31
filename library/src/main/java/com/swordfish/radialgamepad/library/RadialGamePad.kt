@@ -36,11 +36,13 @@ import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.math.tan
 
 class RadialGamePad @JvmOverloads constructor(
     private val gamePadConfig: RadialGamePadConfig,
@@ -49,7 +51,7 @@ class RadialGamePad @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), EventsSource {
 
-    private var dials: Int = 0
+    private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
 
@@ -59,7 +61,6 @@ class RadialGamePad @JvmOverloads constructor(
     private val paint = BasePaint()
 
     init {
-        dials = gamePadConfig.sockets
         initializePrimaryInteractor(gamePadConfig.primaryDial)
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
     }
@@ -114,14 +115,14 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val extendedSize = getExtendedSize()
+        val extendedSize = computeTotalSizeAsSizeMultipliers()
 
         applyMeasuredDimensions(widthMeasureSpec, heightMeasureSpec, extendedSize)
 
         size = minOf(measuredWidth / extendedSize.width(), measuredHeight / extendedSize.height()) * 0.9f
 
         center.x = measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
-        center.y = measuredHeight / 2f + (extendedSize.top + extendedSize.bottom) * size * 0.5f
+        center.y = measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
 
         measurePrimaryDial()
         measureSecondaryDials()
@@ -164,19 +165,16 @@ class RadialGamePad @JvmOverloads constructor(
     /** Different dial configurations cause the view to grow in different directions. This functions
      *  returns a bounding box as multipliers of 'size' that contains the whole view. They are later
      *  used to compute the actual size. */
-    private fun getExtendedSize(): RectF {
+    private fun computeTotalSizeAsSizeMultipliers(): RectF {
         val allSockets = gamePadConfig.secondaryDials
-        val socketAngle = Constants.PI2 / gamePadConfig.sockets
 
-        val sizes = allSockets
-            .flatMap { socket -> (0 until socket.spread).map { socket.index + it to socket.scale } }
-            .map { (index, scale) -> (1 + scale) * cos(index * socketAngle) to (1 + scale) * sin(index * socketAngle) }
+        val sizes = allSockets.map { measureSecondaryDialAsSizeMultiplier(it) }
 
-        val minX = minOf(sizes.map { it.first }.min() ?: -1f, -1f)
-        val minY = minOf(sizes.map { it.second }.min() ?: -1f, -1f)
+        val minX = minOf(sizes.map { it.left }.min() ?: -1f, -1f)
+        val minY = minOf(sizes.map { it.top }.min() ?: -1f, -1f)
 
-        val maxX = maxOf(sizes.map { it.first }.max() ?: 1f, 1f)
-        val maxY = maxOf(sizes.map { it.second }.max() ?: 1f, 1f)
+        val maxX = maxOf(sizes.map { it.right }.max() ?: 1f, 1f)
+        val maxY = maxOf(sizes.map { it.bottom }.max() ?: 1f, 1f)
 
         return RectF(minX, minY, maxX, maxY)
     }
@@ -195,18 +193,11 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun measureSecondaryDial(config: SecondaryDialConfig): Pair<RectF, TouchBound> {
+        val rect = measureSecondaryDialAsSizeMultiplier(config).scale(size)
+        rect.offset(center.x, center.y)
+
         val dialAngle = Constants.PI2 / dials
-        val distanceToCenter = size + (config.scale * size / 2)
-        val dialSize = minOf(2.0f * distanceToCenter * sin(Math.PI / dials).toFloat(), size) * config.scale
-
-        val index = config.index + (config.spread - 1) * 0.5f
-
-        val rect = RectF(
-            center.x + (cos(index * dialAngle) * distanceToCenter - dialSize / 2f),
-            center.y + (-sin(index * dialAngle) * distanceToCenter - dialSize / 2f),
-            center.x + (cos(index * dialAngle) * distanceToCenter + dialSize / 2f),
-            center.y + (-sin(index * dialAngle) * distanceToCenter + dialSize / 2f)
-        )
+        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * size * config.scale
 
         val touchBound = SectorTouchBound(
             PointF(center.x, center.y),
@@ -217,6 +208,21 @@ class RadialGamePad @JvmOverloads constructor(
         )
 
         return rect to touchBound
+    }
+
+    private fun measureSecondaryDialAsSizeMultiplier(config: SecondaryDialConfig): RectF {
+        val dialAngle = Constants.PI2 / dials
+        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * config.scale
+        val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * config.spread / 2f), 1.0f + dialSize / 2f)
+
+        val index = config.index + (config.spread - 1) * 0.5f
+
+        return RectF(
+            (cos(index * dialAngle) * distanceToCenter - dialSize / 2f),
+            (-sin(index * dialAngle) * distanceToCenter - dialSize / 2f),
+            (cos(index * dialAngle) * distanceToCenter + dialSize / 2f),
+            (-sin(index * dialAngle) * distanceToCenter + dialSize / 2f)
+        )
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -280,4 +286,8 @@ class RadialGamePad @JvmOverloads constructor(
 
     private fun allInteractors(): List<DialInteractor> =
         listOf(primaryInteractor) + secondaryInteractors.values
+
+    companion object {
+        const val DEFAULT_SECONDARY_DIAL_SCALE = 0.75f
+    }
 }
