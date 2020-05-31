@@ -81,6 +81,28 @@ class RadialGamePad @JvmOverloads constructor(
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
     }
 
+    fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
+        val updated = allDials()
+            .filterIsInstance<MotionDial>()
+            .map { it.simulateMotion(id, relativeX, relativeY) }
+            .any { it }
+
+        if (updated) {
+            postInvalidate()
+        }
+    }
+
+    fun clearMotionEvent(id: Int) {
+        val updated = allDials()
+            .filterIsInstance<MotionDial>()
+            .map { it.clearMotion(id) }
+            .any { it }
+
+        if (updated) {
+            postInvalidate()
+        }
+    }
+
     private fun initializePrimaryInteractor(configuration: PrimaryDialConfig) {
         val primaryDial = when (configuration) {
             is PrimaryDialConfig.Cross -> CrossDial(
