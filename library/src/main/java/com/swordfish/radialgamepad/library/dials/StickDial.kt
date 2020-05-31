@@ -30,7 +30,7 @@ import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.sin
 
-class StickDial(private val motionId: Int, theme: RadialGamePadTheme) : Dial {
+class StickDial(private val motionId: Int, private val theme: RadialGamePadTheme) : Dial {
 
     private val paint = BasePaint()
 
@@ -59,7 +59,7 @@ class StickDial(private val motionId: Int, theme: RadialGamePadTheme) : Dial {
     }
 
     override fun draw(canvas: Canvas) {
-        paint.color = backgroundColor
+        paint.color = theme.primaryDialBackground
         canvas.drawCircle(
             drawingBox.left + radius,
             drawingBox.top + radius,

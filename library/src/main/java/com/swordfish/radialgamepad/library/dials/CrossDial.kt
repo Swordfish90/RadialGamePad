@@ -20,11 +20,13 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Point
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.*
@@ -72,6 +74,10 @@ class CrossDial(
         setTint(theme.pressedColor)
     }
 
+    private val paint = BasePaint().apply {
+        color = theme.primaryDialBackground
+    }
+
     private var trackedPointerId: Int? = null
 
     private var currentIndex: Int? = null
@@ -86,10 +92,11 @@ class CrossDial(
         this.drawingBox = drawingBox
     }
 
-
     override fun draw(canvas: Canvas) {
         val radius = minOf(drawingBox.width(), drawingBox.height()) / 2
         val drawableSize = (radius * DRAWABLE_SIZE_SCALING).roundToInt()
+
+        canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paint)
 
         val pressedButtons = convertDiagonals(currentIndex)
 

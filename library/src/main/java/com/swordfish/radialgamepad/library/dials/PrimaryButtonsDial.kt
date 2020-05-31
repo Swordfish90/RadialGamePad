@@ -36,6 +36,7 @@ import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 class PrimaryButtonsDial(
@@ -132,6 +133,11 @@ class PrimaryButtonsDial(
     }
 
     override fun draw(canvas: Canvas) {
+        val radius = minOf(drawingBox.width(), drawingBox.height()) / 2
+
+        paint.color = theme.primaryDialBackground
+        canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paint)
+
         if (centerAction != null && centerAction.visible) {
             updatePainterForButton(centerAction)
             canvas.drawCircle(center.x, center.y, buttonRadius, paint)

@@ -30,7 +30,6 @@ import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
 import com.swordfish.radialgamepad.library.dials.*
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
-import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
@@ -57,8 +56,6 @@ class RadialGamePad @JvmOverloads constructor(
 
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: Map<Int, DialInteractor>
-
-    private val paint = BasePaint()
 
     init {
         initializePrimaryInteractor(gamePadConfig.primaryDial)
@@ -227,12 +224,6 @@ class RadialGamePad @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-
-        paint.color = gamePadConfig.theme.primaryDialBackground
-        canvas.drawCircle(center.x, center.y, size, paint)
-
-        paint.color = gamePadConfig.theme.secondaryDialBackground
-        canvas.drawCircle(center.x, center.y, size * 2, paint)
 
         primaryInteractor.draw(canvas)
 
