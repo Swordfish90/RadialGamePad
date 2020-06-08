@@ -13,27 +13,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
+ * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.config
+package com.swordfish.radialgamepad.library.event
 
-sealed class PrimaryDialConfig {
-    data class Cross(
-        val id: Int,
-        val rightDrawableId: Int? = null,
-        val theme: RadialGamePadTheme? = null
-    ) : PrimaryDialConfig()
-
-    data class Stick(
-        val id: Int,
-        val theme: RadialGamePadTheme? = null
-    ) : PrimaryDialConfig()
-
-    data class PrimaryButtons(
-        val dials: List<ButtonConfig>,
-        val center: ButtonConfig? = null,
-        val rotationInDegrees: Float = 0f,
-        val theme: RadialGamePadTheme? = null
-    ) : PrimaryDialConfig()
+enum class GestureType {
+    SINGLE_TAP,
+    DOUBLE_TAP
 }

@@ -33,7 +33,7 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     4, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_START,
+                        id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "SELECT"
                     )
                 )
@@ -46,11 +46,11 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.PrimaryButtons(
                 dials = listOf(
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_A,
+                        id = KeyEvent.KEYCODE_BUTTON_A,
                         label = "A"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_B,
+                        id = KeyEvent.KEYCODE_BUTTON_B,
                         label = "B"
                     )
                 ),
@@ -59,7 +59,7 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_START,
+                        id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
                     )
                 )
@@ -73,13 +73,13 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_SELECT,
+                        id = KeyEvent.KEYCODE_BUTTON_SELECT,
                         label = "SELECT"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     3, 2, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_L1,
+                        id = KeyEvent.KEYCODE_BUTTON_L1,
                         label = "L"
                     )
                 )
@@ -92,11 +92,11 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.PrimaryButtons(
                 dials = listOf(
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_A,
+                        id = KeyEvent.KEYCODE_BUTTON_A,
                         label = "A"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_B,
+                        id = KeyEvent.KEYCODE_BUTTON_B,
                         label = "B"
                     )
                 ),
@@ -105,13 +105,13 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 2, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_R1,
+                        id = KeyEvent.KEYCODE_BUTTON_R1,
                         label = "R"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     4, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_START,
+                        id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
                     )
                 )
@@ -125,32 +125,32 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_SELECT,
+                        id = KeyEvent.KEYCODE_BUTTON_SELECT,
                         label = "SELECT"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     3, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_L1,
+                        id = KeyEvent.KEYCODE_BUTTON_L1,
                         label = "L1"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     4, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_L2,
+                        id = KeyEvent.KEYCODE_BUTTON_L2,
                         label = "L2"
                     )
                 ),
                 SecondaryDialConfig.Stick(9, 1, 1.2f, 1),
                 SecondaryDialConfig.SingleButton(10, 1, 1f,
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_MODE,
+                        id = KeyEvent.KEYCODE_BUTTON_MODE,
                         label = "MENU"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(8, 1, 1f,
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_MODE,
+                        id = KeyEvent.KEYCODE_BUTTON_MODE,
                         label = "MENU"
                     )
                 )
@@ -163,19 +163,19 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.PrimaryButtons(
                 listOf(
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_A,
+                        id = KeyEvent.KEYCODE_BUTTON_A,
                         label = "A"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_X,
+                        id = KeyEvent.KEYCODE_BUTTON_X,
                         label = "X"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_Y,
+                        id = KeyEvent.KEYCODE_BUTTON_Y,
                         label = "Y"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_B,
+                        id = KeyEvent.KEYCODE_BUTTON_B,
                         label = "B"
                     )
                 )
@@ -183,26 +183,26 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_R2,
+                        id = KeyEvent.KEYCODE_BUTTON_R2,
                         label = "R2"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     3, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_R1,
+                        id = KeyEvent.KEYCODE_BUTTON_R1,
                         label = "R1"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     4, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_START,
+                        id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
                     )
                 ),
                 SecondaryDialConfig.Stick(9, 2, 2f, 1),
                 SecondaryDialConfig.SingleButton(8, 1, 1f,
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_MODE,
+                        id = KeyEvent.KEYCODE_BUTTON_MODE,
                         label = "MENU"
                     )
                 )
@@ -216,13 +216,13 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_L2,
+                        id = KeyEvent.KEYCODE_BUTTON_L2,
                         label = "Z"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     3, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_L1,
+                        id = KeyEvent.KEYCODE_BUTTON_L1,
                         label = "L"
                     )
                 ),
@@ -236,15 +236,15 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.PrimaryButtons(
                 listOf(
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_B,
+                        id = KeyEvent.KEYCODE_BUTTON_B,
                         label = "A"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_Y,
+                        id = KeyEvent.KEYCODE_BUTTON_Y,
                         label = "B"
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_L2,
+                        id = KeyEvent.KEYCODE_BUTTON_L2,
                         label = "Z"
                     )
                 )
@@ -252,13 +252,13 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_R1,
+                        id = KeyEvent.KEYCODE_BUTTON_R1,
                         label = "R"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
                     3, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_START,
+                        id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
                     )
                 ),
@@ -273,7 +273,7 @@ object SamplePadConfigs {
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     4, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_SELECT,
+                        id = KeyEvent.KEYCODE_BUTTON_SELECT,
                         label = "S"
                     )
                 )
@@ -286,30 +286,30 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.PrimaryButtons(
                 dials = listOf(
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_A
+                        id = KeyEvent.KEYCODE_BUTTON_A
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_R1
+                        id = KeyEvent.KEYCODE_BUTTON_R1
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_L1
+                        id = KeyEvent.KEYCODE_BUTTON_L1
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_START
+                        id = KeyEvent.KEYCODE_BUTTON_START
                     ),
                     ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_MODE
+                        id = KeyEvent.KEYCODE_BUTTON_MODE
                     ),
-                    ButtonConfig(keyCode = -1, visible = false)
+                    ButtonConfig(id = -1, visible = false)
                 ),
                 center = ButtonConfig(
-                    keyCode = KeyEvent.KEYCODE_BUTTON_B
+                    id = KeyEvent.KEYCODE_BUTTON_B
                 )
             ),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, 1f, ButtonConfig(
-                        keyCode = KeyEvent.KEYCODE_BUTTON_START
+                        id = KeyEvent.KEYCODE_BUTTON_START
                     )
                 )
             )

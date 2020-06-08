@@ -25,6 +25,7 @@ import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
@@ -93,11 +94,15 @@ class ButtonDial(
             pressed = newPressed
 
             val action = if (pressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
-            events.accept(Event.Button(action, config.keyCode, pressed))
+            events.accept(Event.Button(config.id, action, pressed))
 
             return true
         }
         return false
+    }
+
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
+        events.accept(Event.Gesture(config.id, gestureType))
     }
 
     override fun events(): Observable<Event> = events.distinctUntilChanged()

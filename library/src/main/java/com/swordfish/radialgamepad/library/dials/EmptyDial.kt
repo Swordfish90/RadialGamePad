@@ -21,6 +21,7 @@ package com.swordfish.radialgamepad.library.dials
 import android.graphics.Canvas
 import android.graphics.RectF
 import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 
@@ -37,4 +38,6 @@ class EmptyDial : Dial {
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean = false
 
     override fun events(): Observable<Event> = Observable.empty()
+
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {}
 }

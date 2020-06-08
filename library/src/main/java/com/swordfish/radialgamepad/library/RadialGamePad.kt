@@ -21,15 +21,18 @@ package com.swordfish.radialgamepad.library
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.view.GestureDetectorCompat
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
 import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
 import com.swordfish.radialgamepad.library.dials.*
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
+import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
@@ -57,22 +60,62 @@ class RadialGamePad @JvmOverloads constructor(
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: Map<Int, DialInteractor>
 
+    private val gestureDetector: GestureDetectorCompat = GestureDetectorCompat(context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onDoubleTap(e: MotionEvent): Boolean {
+            allInteractors().forEach {
+                it.gesture(e.x, e.y, GestureType.DOUBLE_TAP)
+            }
+            return true
+        }
+
+        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            allInteractors().forEach {
+                it.gesture(e.x, e.y, GestureType.SINGLE_TAP)
+            }
+            return true
+        }
+    })
+
     init {
         initializePrimaryInteractor(gamePadConfig.primaryDial)
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
+    }
+
+    /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
+    fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
+        val updated = allDials()
+            .filterIsInstance<MotionDial>()
+            .map { it.simulateMotion(id, relativeX, relativeY) }
+            .any { it }
+
+        if (updated) {
+            postInvalidate()
+        }
+    }
+
+    /** Programmatically clear motion events associated with the id. */
+    fun simulateClearMotionEvent(id: Int) {
+        val updated = allDials()
+            .filterIsInstance<MotionDial>()
+            .map { it.simulateClearMotion(id) }
+            .any { it }
+
+        if (updated) {
+            postInvalidate()
+        }
     }
 
     private fun initializePrimaryInteractor(configuration: PrimaryDialConfig) {
         val primaryDial = when (configuration) {
             is PrimaryDialConfig.Cross -> CrossDial(
                 context,
-                configuration.motionId,
+                configuration.id,
                 configuration.rightDrawableId ?: R.drawable.direction_right_normal,
                 configuration.rightDrawableId ?: R.drawable.direction_right_pressed,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
-                configuration.motionId,
+                configuration.id,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.PrimaryButtons -> PrimaryButtonsDial(
@@ -90,7 +133,7 @@ class RadialGamePad @JvmOverloads constructor(
         secondaryInteractors = secondaryDials.map { config ->
             val secondaryDial = when (config) {
                 is SecondaryDialConfig.Stick -> StickDial(
-                    config.motionId,
+                    config.id,
                     config.theme ?: gamePadConfig.theme
                 )
                 is SecondaryDialConfig.SingleButton -> ButtonDial(
@@ -101,7 +144,7 @@ class RadialGamePad @JvmOverloads constructor(
                 is SecondaryDialConfig.Empty -> EmptyDial()
                 is SecondaryDialConfig.Cross -> CrossDial(
                     context,
-                    config.motionId,
+                    config.id,
                     config.rightDrawableId ?: R.drawable.direction_right_normal,
                     config.rightDrawableId ?: R.drawable.direction_right_pressed,
                     config.theme ?: gamePadConfig.theme
@@ -246,6 +289,8 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(event)
+
         val fingers = TouchUtils.extractFingerPositions(event)
 
         val trackedFingers = allDials().mapNotNull { it.trackedPointerId() }

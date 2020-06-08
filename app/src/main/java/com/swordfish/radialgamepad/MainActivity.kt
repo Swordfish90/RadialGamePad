@@ -33,10 +33,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-    }
-
-    override fun onResume() {
-        super.onResume()
 
         val leftPad = RadialGamePad(SamplePadConfigs.PSX_LEFT, this)
         val rightPad = RadialGamePad(SamplePadConfigs.PSX_RIGHT, this)
@@ -50,8 +46,8 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroy() {
+        super.onDestroy()
         compositeDisposable.clear()
     }
 }

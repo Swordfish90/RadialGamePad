@@ -31,7 +31,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         index: Int,
         spread: Int,
         scale: Float,
-        val motionId: Int,
+        val id: Int,
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, spread, scale)
 
@@ -39,7 +39,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         index: Int,
         spread: Int,
         scale: Float,
-        val motionId: Int,
+        val id: Int,
         val rightDrawableId: Int? = null,
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, spread, scale)
