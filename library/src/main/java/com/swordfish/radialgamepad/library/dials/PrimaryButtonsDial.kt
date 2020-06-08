@@ -62,6 +62,8 @@ class PrimaryButtonsDial(
     private var buttonRadius = 0f
     private var distanceToCenter = 0f
     private var center: PointF = PointF(0f, 0f)
+    private var normalizedCenter: PointF = PointF(0.5f, 0.5f)
+    private var normalizedButtonRadius = 0.5f
     private var centerLabelDrawingBox: RectF = RectF()
     private var labelsDrawingBoxes: MutableMap<Int, RectF> = mutableMapOf()
 
@@ -104,6 +106,8 @@ class PrimaryButtonsDial(
             center.x + buttonRadius,
             center.y + buttonRadius
         )
+
+        normalizedButtonRadius = buttonRadius / drawingBox.width()
 
         circleActions
             .filter { it.visible }
@@ -189,27 +193,9 @@ class PrimaryButtonsDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        val newPressed = mutableSetOf<Int>()
-        val center = PointF(0.5f, 0.5f)
-        val radius = buttonRadius / drawingBox.width()
-
-        centerAction?.id?.let { keyCode ->
-            newPressed += fingers
-                .filter { MathUtils.distance(center.x, it.x, center.y, it.y) < radius }
-                .map { keyCode }
-        }
-
-        if (circleActions.isNotEmpty()) {
-            newPressed += fingers.asSequence()
-                .filter {
-                    centerAction == null || MathUtils.distance(center.x, it.x, center.y, it.y) > radius
-                }
-                .map { computeTouchAngle(it) }
-                .map { (floor(it / actionAngle).toInt()) }
-                .filter { circleActions[it].visible }
-                .map { circleActions[it].id }
-                .toSet()
-        }
+        val newPressed = fingers
+            .map { getAssociatedId(it.x, it.y) }
+            .toSet()
 
         if (newPressed != pressed) {
             sendNewActionDowns(newPressed, pressed)
@@ -221,8 +207,18 @@ class PrimaryButtonsDial(
         return false
     }
 
+    private fun getAssociatedId(x: Float, y: Float): Int {
+        if (centerAction != null && MathUtils.distance(normalizedCenter.x, x, normalizedCenter.y, y) < normalizedButtonRadius) {
+            return centerAction.id
+        }
+
+        val index = (floor(computeTouchAngle(x, y) / actionAngle).toInt())
+        return circleActions[index].id
+    }
+
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
-        // TODO FILIPPO... Here we should determine which button was pressed!
+        val id = getAssociatedId(relativeX, relativeY)
+        eventsRelay.accept(Event.Gesture(id, gestureType))
     }
 
     private fun updatePainterForButton(buttonConfig: ButtonConfig) {
@@ -246,8 +242,8 @@ class PrimaryButtonsDial(
             .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_UP, false)) }
     }
 
-    private fun computeTouchAngle(it: TouchUtils.FingerPosition): Float {
-        return (MathUtils.angle(0.5f, it.x, 0.5f, it.y) + actionAngle / 2 - rotationRadians) % Constants.PI2
+    private fun computeTouchAngle(x: Float, y: Float): Float {
+        return (MathUtils.angle(0.5f, x, 0.5f, y) + actionAngle / 2 - rotationRadians) % Constants.PI2
     }
 
     override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()
