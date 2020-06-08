@@ -27,8 +27,10 @@ import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
+import java.lang.Math.toDegrees
 import kotlin.math.*
 
 class CrossDial(
@@ -42,8 +44,8 @@ class CrossDial(
     companion object {
         private const val DRAWABLE_SIZE_SCALING = 0.75
         private const val BUTTON_COUNT = 8
-        private const val ROTATE_BUTTONS = 22.5f
-        private const val SINGLE_BUTTON_ANGLE = 360f / BUTTON_COUNT
+        private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
+        private const val ROTATE_BUTTONS = Constants.PI2 / 16f
 
         const val BUTTON_RIGHT = 0
         const val BUTTON_DOWN_RIGHT = 1
@@ -110,21 +112,21 @@ class CrossDial(
             val isPressed = i in pressedButtons
 
             getStateDrawable(i, isPressed)?.let {
-                val height = drawableSize
-                val width = drawableSize
-                val angle =
-                    Math.toRadians((cAngle - ROTATE_BUTTONS + SINGLE_BUTTON_ANGLE / 2f).toDouble())
-                val left = drawingBox.left + (radius * buttonCenterDistance * cos(angle) + radius).toInt() - width / 2
-                val top = drawingBox.top + (radius * buttonCenterDistance * sin(angle) + radius).toInt() - height / 2
-                val xPivot = left + width / 2f
-                val yPivot = top + height / 2f
+                val angle = (cAngle - ROTATE_BUTTONS + SINGLE_BUTTON_ANGLE / 2f).toDouble()
+                val left = drawingBox.left + (radius * buttonCenterDistance * cos(angle) + radius).toInt() - drawableSize / 2
+                val top = drawingBox.top + (radius * buttonCenterDistance * sin(angle) + radius).toInt() - drawableSize / 2
+                val xPivot = left + drawableSize / 2f
+                val yPivot = top + drawableSize / 2f
 
-                canvas.rotate(i * SINGLE_BUTTON_ANGLE, xPivot, yPivot)
+                val rotationInDegrees = i * toDegrees(SINGLE_BUTTON_ANGLE.toDouble()).toFloat()
 
-                it.setBounds(left.roundToInt(), top.roundToInt(), (left + width).roundToInt(), (top + height).roundToInt())
+                canvas.save()
+
+                canvas.rotate(rotationInDegrees, xPivot, yPivot)
+                it.setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
                 it.draw(canvas)
 
-                canvas.rotate(-i * SINGLE_BUTTON_ANGLE, xPivot, yPivot)
+                canvas.restore()
             }
         }
     }
@@ -160,18 +162,17 @@ class CrossDial(
 
     private fun handleTouchEvent(x: Float, y: Float): Boolean {
 
-        val angle = (atan2(y, x) * 180 / Math.PI + 360f) % 360f
+        val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
         val index = (angle / SINGLE_BUTTON_ANGLE).roundToInt() % BUTTON_COUNT
 
         if (index != currentIndex) {
             val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
 
             currentIndex = index
-            // TODO FILIPPO... We might avoid this radians conversion
             eventsRelay.accept(Event.Direction(
                 id,
-                cos(index * Math.toRadians(SINGLE_BUTTON_ANGLE.toDouble())).toFloat(),
-                sin(index * Math.toRadians(SINGLE_BUTTON_ANGLE.toDouble())).toFloat(),
+                cos(index * SINGLE_BUTTON_ANGLE),
+                sin(index * SINGLE_BUTTON_ANGLE),
                 haptic
             ))
             return true
