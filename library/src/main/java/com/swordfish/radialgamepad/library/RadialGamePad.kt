@@ -81,6 +81,7 @@ class RadialGamePad @JvmOverloads constructor(
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
     }
 
+    /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
     fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
         val updated = allDials()
             .filterIsInstance<MotionDial>()
@@ -92,10 +93,11 @@ class RadialGamePad @JvmOverloads constructor(
         }
     }
 
-    fun clearMotionEvent(id: Int) {
+    /** Programmatically clear motion events associated with the id. */
+    fun simulateClearMotionEvent(id: Int) {
         val updated = allDials()
             .filterIsInstance<MotionDial>()
-            .map { it.clearMotion(id) }
+            .map { it.simulateClearMotion(id) }
             .any { it }
 
         if (updated) {

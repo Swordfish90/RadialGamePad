@@ -21,5 +21,5 @@ package com.swordfish.radialgamepad.library.dials
 interface MotionDial : Dial {
     fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean
 
-    fun clearMotion(id: Int): Boolean
+    fun simulateClearMotion(id: Int): Boolean
 }

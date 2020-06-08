@@ -116,15 +116,13 @@ class StickDial(private val id: Int, private val theme: RadialGamePadTheme) : Mo
     override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
         if (id != this.id) return false
 
-        angle = -MathUtils.angle(0.5f, relativeX, 0.5f, relativeY)
-        strength = MathUtils.clamp(MathUtils.distance(0.5f, relativeX, 0.5f, relativeY) * 2, 0f, 1f)
+        firstTouch = PointF(0.5f, 0.5f)
 
-        val point = MathUtils.convertPolarCoordinatesToSquares(angle, strength)
-        eventsRelay.accept(Event.Direction(id, point.x, point.y, false))
+        handleTouchEvent(relativeX, relativeY)
         return true
     }
 
-    override fun clearMotion(id: Int): Boolean {
+    override fun simulateClearMotion(id: Int): Boolean {
         if (id != this.id) return false
         reset()
         return true
