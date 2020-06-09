@@ -57,7 +57,7 @@ class RadialGamePad @JvmOverloads constructor(
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
 
-    var secondaryDialRotation: Float = gamePadConfig.rotation
+    var secondaryDialRotation: Float = 0f
         set(value) {
             field = toRadians(value)
             requestLayout()
