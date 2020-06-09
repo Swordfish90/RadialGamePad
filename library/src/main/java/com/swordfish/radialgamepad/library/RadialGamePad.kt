@@ -37,7 +37,7 @@ import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
-import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.utils.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
@@ -56,6 +56,12 @@ class RadialGamePad @JvmOverloads constructor(
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
+
+    var secondaryDialRotation: Float = gamePadConfig.rotation
+        set(value) {
+            field = toRadians(value)
+            requestLayout()
+        }
 
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: Map<Int, DialInteractor>
@@ -122,7 +128,7 @@ class RadialGamePad @JvmOverloads constructor(
                 context,
                 configuration.dials,
                 configuration.center,
-                MathUtils.toRadians(configuration.rotationInDegrees),
+                toRadians(configuration.rotationInDegrees),
                 configuration.theme ?: gamePadConfig.theme
             )
         }
@@ -243,8 +249,8 @@ class RadialGamePad @JvmOverloads constructor(
             PointF(center.x, center.y),
             size,
             size + dialSize * config.scale,
-            config.index * dialAngle - dialAngle / 2,
-            (config.index + config.spread - 1) * dialAngle + dialAngle / 2
+            secondaryDialRotation + config.index * dialAngle - dialAngle / 2,
+            secondaryDialRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
         )
 
         return rect to touchBound
@@ -257,11 +263,13 @@ class RadialGamePad @JvmOverloads constructor(
 
         val index = config.index + (config.spread - 1) * 0.5f
 
+        val finalAngle = index * dialAngle + secondaryDialRotation
+
         return RectF(
-            (cos(index * dialAngle) * distanceToCenter - dialSize / 2f),
-            (-sin(index * dialAngle) * distanceToCenter - dialSize / 2f),
-            (cos(index * dialAngle) * distanceToCenter + dialSize / 2f),
-            (-sin(index * dialAngle) * distanceToCenter + dialSize / 2f)
+            (cos(finalAngle) * distanceToCenter - dialSize / 2f),
+            (-sin(finalAngle) * distanceToCenter - dialSize / 2f),
+            (cos(finalAngle) * distanceToCenter + dialSize / 2f),
+            (-sin(finalAngle) * distanceToCenter + dialSize / 2f)
         )
     }
 
