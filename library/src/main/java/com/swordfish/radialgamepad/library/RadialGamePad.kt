@@ -58,25 +58,13 @@ class RadialGamePad @JvmOverloads constructor(
     private var center = PointF(0f, 0f)
 
     // It's better to set padding inside in other to catch touch events happening there.
-    var bottomPadding: Float = 0f
+    var offsetX: Float = 0.0f
         set(value) {
             field = value
             requestLayoutAndInvalidate()
         }
 
-    var topPadding: Float = 0f
-        set(value) {
-            field = value
-            requestLayoutAndInvalidate()
-        }
-
-    var rightPadding: Float = 0f
-        set(value) {
-            field = value
-            requestLayoutAndInvalidate()
-        }
-
-    var leftPadding: Float = 0f
+    var offsetY: Float = 0.0f
         set(value) {
             field = value
             requestLayoutAndInvalidate()
@@ -190,13 +178,13 @@ class RadialGamePad @JvmOverloads constructor(
 
         applyMeasuredDimensions(widthMeasureSpec, heightMeasureSpec, extendedSize)
 
-        val finalWidth = measuredWidth - leftPadding - rightPadding
-        val finalHeight = measuredHeight - topPadding - bottomPadding
+        size = minOf(measuredWidth / extendedSize.width(), measuredHeight / extendedSize.height()) * 0.9f
 
-        size = minOf(finalWidth / extendedSize.width(), finalHeight / extendedSize.height()) * 0.9f
+        val maxDisplacementX = (measuredWidth - size * extendedSize.width()) / 2f
+        val maxDisplacementY = (measuredHeight - size * extendedSize.height()) / 2f
 
-        center.x = leftPadding + finalWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
-        center.y = topPadding + finalHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
+        center.x = offsetX * maxDisplacementX + measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
+        center.y = offsetY * maxDisplacementY + measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
 
         measurePrimaryDial()
         measureSecondaryDials()
