@@ -78,7 +78,7 @@ class StickDial(private val id: Int, private val theme: RadialGamePadTheme) : Mo
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        if (fingers.isEmpty() && firstTouch == null) {
+        if (fingers.isEmpty() && trackedPointerId == null) {
             return false
         } else if (fingers.isEmpty()) {
             reset()
