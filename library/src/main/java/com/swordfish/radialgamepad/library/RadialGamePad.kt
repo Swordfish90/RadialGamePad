@@ -57,10 +57,35 @@ class RadialGamePad @JvmOverloads constructor(
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
 
+    // It's better to set padding inside in other to catch touch events happening there.
+    var bottomPadding: Float = 0f
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
+    var topPadding: Float = 0f
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
+    var rightPadding: Float = 0f
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
+    var leftPadding: Float = 0f
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
     var secondaryDialRotation: Float = 0f
         set(value) {
             field = toRadians(value)
-            requestLayout()
+            requestLayoutAndInvalidate()
         }
 
     private lateinit var primaryInteractor: DialInteractor
@@ -165,10 +190,13 @@ class RadialGamePad @JvmOverloads constructor(
 
         applyMeasuredDimensions(widthMeasureSpec, heightMeasureSpec, extendedSize)
 
-        size = minOf(measuredWidth / extendedSize.width(), measuredHeight / extendedSize.height()) * 0.9f
+        val finalWidth = measuredWidth - leftPadding - rightPadding
+        val finalHeight = measuredHeight - topPadding - bottomPadding
 
-        center.x = measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
-        center.y = measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
+        size = minOf(finalWidth / extendedSize.width(), finalHeight / extendedSize.height()) * 0.9f
+
+        center.x = leftPadding + finalWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
+        center.y = topPadding + finalHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
 
         measurePrimaryDial()
         measureSecondaryDials()
@@ -271,6 +299,11 @@ class RadialGamePad @JvmOverloads constructor(
             (cos(finalAngle) * distanceToCenter + dialSize / 2f),
             (-sin(finalAngle) * distanceToCenter + dialSize / 2f)
         )
+    }
+
+    private fun requestLayoutAndInvalidate() {
+        requestLayout()
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
