@@ -20,10 +20,16 @@ package com.swordfish.radialgamepad.library.paint
 
 import android.graphics.*
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
+import com.swordfish.radialgamepad.library.utils.memoize
+import java.util.concurrent.ConcurrentHashMap
 
 class TextPaint {
 
     private var textBounds: Rect = Rect()
+
+    private val cachedTextAspectRatio = { text: String ->
+        computeTextAspectRatio(text)
+    }.memoize()
 
     private val textPaint = BasePaint().apply {
         this.typeface = Typeface.DEFAULT_BOLD
@@ -35,7 +41,7 @@ class TextPaint {
     }
 
     private fun paintText(left: Float, top: Float, width: Float, height: Float, text: String, canvas: Canvas, theme: RadialGamePadTheme) {
-        val textAspectRatio = computeTextAspectRatio(text)
+        val textAspectRatio = cachedTextAspectRatio(text)
 
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.style = Paint.Style.FILL
