@@ -37,7 +37,7 @@ import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
-import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.utils.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
@@ -56,6 +56,25 @@ class RadialGamePad @JvmOverloads constructor(
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
+
+    // It's better to set padding inside in other to catch touch events happening there.
+    var offsetX: Float = 0.0f
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
+    var offsetY: Float = 0.0f
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
+    var secondaryDialRotation: Float = 0f
+        set(value) {
+            field = toRadians(value)
+            requestLayoutAndInvalidate()
+        }
 
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: Map<Int, DialInteractor>
@@ -122,7 +141,7 @@ class RadialGamePad @JvmOverloads constructor(
                 context,
                 configuration.dials,
                 configuration.center,
-                MathUtils.toRadians(configuration.rotationInDegrees),
+                toRadians(configuration.rotationInDegrees),
                 configuration.theme ?: gamePadConfig.theme
             )
         }
@@ -161,8 +180,11 @@ class RadialGamePad @JvmOverloads constructor(
 
         size = minOf(measuredWidth / extendedSize.width(), measuredHeight / extendedSize.height()) * 0.9f
 
-        center.x = measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
-        center.y = measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
+        val maxDisplacementX = (measuredWidth - size * extendedSize.width()) / 2f
+        val maxDisplacementY = (measuredHeight - size * extendedSize.height()) / 2f
+
+        center.x = offsetX * maxDisplacementX + measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
+        center.y = offsetY * maxDisplacementY + measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
 
         measurePrimaryDial()
         measureSecondaryDials()
@@ -243,8 +265,8 @@ class RadialGamePad @JvmOverloads constructor(
             PointF(center.x, center.y),
             size,
             size + dialSize * config.scale,
-            config.index * dialAngle - dialAngle / 2,
-            (config.index + config.spread - 1) * dialAngle + dialAngle / 2
+            secondaryDialRotation + config.index * dialAngle - dialAngle / 2,
+            secondaryDialRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
         )
 
         return rect to touchBound
@@ -257,12 +279,19 @@ class RadialGamePad @JvmOverloads constructor(
 
         val index = config.index + (config.spread - 1) * 0.5f
 
+        val finalAngle = index * dialAngle + secondaryDialRotation
+
         return RectF(
-            (cos(index * dialAngle) * distanceToCenter - dialSize / 2f),
-            (-sin(index * dialAngle) * distanceToCenter - dialSize / 2f),
-            (cos(index * dialAngle) * distanceToCenter + dialSize / 2f),
-            (-sin(index * dialAngle) * distanceToCenter + dialSize / 2f)
+            (cos(finalAngle) * distanceToCenter - dialSize / 2f),
+            (-sin(finalAngle) * distanceToCenter - dialSize / 2f),
+            (cos(finalAngle) * distanceToCenter + dialSize / 2f),
+            (-sin(finalAngle) * distanceToCenter + dialSize / 2f)
         )
+    }
+
+    private fun requestLayoutAndInvalidate() {
+        requestLayout()
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
