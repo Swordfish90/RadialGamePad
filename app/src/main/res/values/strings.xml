@@ -17,5 +17,8 @@
   -->
 
 <resources>
-    <string name="app_name">DialGamePad</string>
+    <string name="app_name">RadialGamePad</string>
+    <string name="page_gb">GamePad GB</string>
+    <string name="page_psx">GamePad PSX</string>
+    <string name="page_remote">Remote</string>
 </resources>

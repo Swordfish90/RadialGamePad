@@ -20,34 +20,19 @@ package com.swordfish.radialgamepad
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.widget.FrameLayout
-import com.swordfish.radialgamepad.library.RadialGamePad
-import io.reactivex.Observable
-import io.reactivex.disposables.CompositeDisposable
+import androidx.navigation.findNavController
+import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
-
-    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val leftPad = RadialGamePad(SamplePadConfigs.PSX_LEFT, 8f, this)
-        val rightPad = RadialGamePad(SamplePadConfigs.PSX_RIGHT, 8f,this)
+        val navView: BottomNavigationView = findViewById(R.id.nav_view)
+        val navController = findNavController(R.id.nav_host_fragment)
 
-        findViewById<FrameLayout>(R.id.left_container).addView(leftPad)
-        findViewById<FrameLayout>(R.id.right_container).addView(rightPad)
-
-        compositeDisposable.add(
-            Observable.merge(leftPad.events(), rightPad.events())
-                .subscribe { Log.e("EVENT", it.toString()) }
-        )
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        compositeDisposable.clear()
+        navView.setupWithNavController(navController)
     }
 }

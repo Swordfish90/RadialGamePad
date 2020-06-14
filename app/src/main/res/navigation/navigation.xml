@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/navigation.xml"
+    app:startDestination="@+id/navigation_gb">
+
+    <fragment
+        android:id="@+id/navigation_gb"
+        android:name="com.swordfish.radialgamepad.FragmentGB"
+        android:label="GamePad GB" />
+
+    <fragment
+        android:id="@+id/navigation_psx"
+        android:name="com.swordfish.radialgamepad.FragmentPSX"
+        android:label="GamePad PSX" />
+
+    <fragment
+        android:id="@+id/navigation_remote"
+        android:name="com.swordfish.radialgamepad.FragmentRemote"
+        android:label="Remote" />
+
+</navigation>

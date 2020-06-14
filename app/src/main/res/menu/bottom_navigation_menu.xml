@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_gb"
+        android:icon="@drawable/ic_gb"
+        android:title="@string/page_gb" />
+
+    <item
+        android:id="@+id/navigation_psx"
+        android:icon="@drawable/ic_psx"
+        android:title="@string/page_psx" />
+
+    <item
+        android:id="@+id/navigation_remote"
+        android:icon="@drawable/ic_remote"
+        android:title="@string/page_remote" />
+
+</menu>
