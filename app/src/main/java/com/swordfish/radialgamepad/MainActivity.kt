@@ -34,8 +34,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val leftPad = RadialGamePad(SamplePadConfigs.PSX_LEFT, this)
-        val rightPad = RadialGamePad(SamplePadConfigs.PSX_RIGHT, this)
+        val leftPad = RadialGamePad(SamplePadConfigs.PSX_LEFT, 8f, this)
+        val rightPad = RadialGamePad(SamplePadConfigs.PSX_RIGHT, 8f,this)
 
         findViewById<FrameLayout>(R.id.left_container).addView(leftPad)
         findViewById<FrameLayout>(R.id.right_container).addView(rightPad)

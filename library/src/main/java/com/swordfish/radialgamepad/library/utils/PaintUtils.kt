@@ -18,10 +18,10 @@
 
 package com.swordfish.radialgamepad.library.utils
 
-import android.graphics.Color
-import android.graphics.PointF
+import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
+import android.util.DisplayMetrics
 import kotlin.math.roundToInt
 
 object PaintUtils {
@@ -42,8 +42,8 @@ object PaintUtils {
         left.roundToInt(), top.roundToInt(), right.roundToInt(), bottom.roundToInt()
     )
 
-    fun toTransparent(color: Int, transparency: Float): Int {
-        val alpha = (255 * transparency).roundToInt()
-        return Color.argb(alpha, Color.red(color), Color.green(color), Color.blue(color))
+    fun convertDpToPixel(dp: Float, context: Context): Float {
+        val density = context.resources.displayMetrics.densityDpi.toFloat()
+        return dp * (density / DisplayMetrics.DENSITY_DEFAULT)
     }
 }

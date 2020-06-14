@@ -38,6 +38,7 @@ import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.MathUtils.toRadians
+import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
@@ -48,10 +49,13 @@ import kotlin.math.tan
 
 class RadialGamePad @JvmOverloads constructor(
     private val gamePadConfig: RadialGamePadConfig,
+    marginsInDp: Float = 16f,
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), EventsSource {
+
+    private val marginsInPixel: Int = PaintUtils.convertDpToPixel(marginsInDp, context).roundToInt()
 
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
@@ -178,10 +182,13 @@ class RadialGamePad @JvmOverloads constructor(
 
         applyMeasuredDimensions(widthMeasureSpec, heightMeasureSpec, extendedSize)
 
-        size = minOf(measuredWidth / extendedSize.width(), measuredHeight / extendedSize.height()) * 0.9f
+        size = minOf(
+            (measuredWidth - marginsInPixel * 2) / extendedSize.width(),
+            (measuredHeight - marginsInPixel * 2) / extendedSize.height()
+        )
 
-        val maxDisplacementX = (measuredWidth - size * extendedSize.width()) / 2f
-        val maxDisplacementY = (measuredHeight - size * extendedSize.height()) / 2f
+        val maxDisplacementX = (measuredWidth - marginsInPixel * 2 - size * extendedSize.width()) / 2f
+        val maxDisplacementY = (measuredHeight - marginsInPixel * 2 - size * extendedSize.height()) / 2f
 
         center.x = offsetX * maxDisplacementX + measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
         center.y = offsetY * maxDisplacementY + measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
