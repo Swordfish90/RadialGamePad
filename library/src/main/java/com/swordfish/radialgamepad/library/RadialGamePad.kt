@@ -211,22 +211,25 @@ class RadialGamePad @JvmOverloads constructor(
         val (widthMode, width) = extractModeAndDimension(widthMeasureSpec)
         val (heightMode, height) = extractModeAndDimension(heightMeasureSpec)
 
+        val usableWidth = width - marginsInPixel * 2
+        val usableHeight = height - marginsInPixel * 2
+
         when {
             widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.AT_MOST -> {
                 setMeasuredDimension(
                     width,
                     minOf(
-                        height,
-                        (width * extendedSize.height() / extendedSize.width()).roundToInt()
-                    )
+                        usableHeight,
+                        (usableWidth * extendedSize.height() / extendedSize.width()).roundToInt()
+                    ) + marginsInPixel * 2
                 )
             }
             widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.EXACTLY -> {
                 setMeasuredDimension(
                     minOf(
-                        width,
-                        (height * extendedSize.width() / extendedSize.height()).roundToInt()
-                    ), height
+                        usableWidth,
+                        (usableHeight * extendedSize.width() / extendedSize.height()).roundToInt()
+                    ) + marginsInPixel * 2, height
                 )
             }
             else -> setMeasuredDimension(width, height)
