@@ -18,6 +18,14 @@
 
 package com.swordfish.radialgamepad.library.config
 
+/**
+ * The configuration object for a RadialGamePad.
+ * @property sockets The maximum number of secondary dials the pad has
+ * @property primaryDial Configuration for the central dial
+ * @property secondaryDials List of configurations for the surrounding secondary dials
+ * @property haptic Enable haptic feedback when an event is detected
+ * @property theme RadialGamePadTheme for the whole view
+ */
 data class RadialGamePadConfig(
     val sockets: Int,
     val primaryDial: PrimaryDialConfig,

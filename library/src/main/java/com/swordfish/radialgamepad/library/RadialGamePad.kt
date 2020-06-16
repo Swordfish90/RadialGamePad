@@ -97,6 +97,12 @@ class RadialGamePad @JvmOverloads constructor(
             }
             return true
         }
+
+        override fun onLongPress(e: MotionEvent) {
+            allInteractors().forEach {
+                it.gesture(e.x, e.y, GestureType.LONG_PRESS)
+            }
+        }
     })
 
     init {

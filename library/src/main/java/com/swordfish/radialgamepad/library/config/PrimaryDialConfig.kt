@@ -18,18 +18,40 @@
 
 package com.swordfish.radialgamepad.library.config
 
+/**
+ * The configuration object for a PrimaryDial.
+ */
 sealed class PrimaryDialConfig {
+
+    /**
+     * The Cross dial represents a simple DPAD with diagonals.
+     * @property id The control id. It is passed back to discriminate events.
+     * @property rightDrawableId A resource drawable id for the left arrow (other arrows are obtained by rotating it)
+     * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
+     */
     data class Cross(
         val id: Int,
         val rightDrawableId: Int? = null,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 
+    /**
+     * The Stick dial represents a simple touch stick.
+     * @property id The control id. It is passed back to discriminate events.
+     * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
+     */
     data class Stick(
         val id: Int,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 
+    /**
+     * The PrimaryButtonDial represents the primary set of action buttons.
+     * @property dials A list of buttons, distributed on a circle around the center.
+     * @property center A single, optional button to be displayed at the center.
+     * @property rotationInDegrees Optional rotation (in degrees) for the button disposed in circle.
+     * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
+     */
     data class PrimaryButtons(
         val dials: List<ButtonConfig>,
         val center: ButtonConfig? = null,

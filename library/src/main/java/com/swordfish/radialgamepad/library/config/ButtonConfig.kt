@@ -18,6 +18,14 @@
 
 package com.swordfish.radialgamepad.library.config
 
+/**
+ * Configuration for a single button.
+ * @property id The control id. It is passed back to discriminate events.
+ * @property label A text string to be displayed on top of the button
+ * @property visible Prevent this button from being shown on screen
+ * @property iconId A drawable resource id to an icon which is displayed on top of the button
+ * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
+ */
 data class ButtonConfig(
     val id: Int,
     val label: String? = null,

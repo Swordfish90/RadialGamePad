@@ -18,6 +18,12 @@
 
 package com.swordfish.radialgamepad.library.config
 
+/**
+ * The base secondary dial configuration.
+ * @property index The position of the control in the outer circle. It starts from 3:00 and increases counterclockwise.
+ * @property spread Defines how many secondary dials is occupies
+ * @property scale Defines a scaling factor. Used to make some controls more prominent.
+ */
 sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Float) {
     class SingleButton(
         index: Int,

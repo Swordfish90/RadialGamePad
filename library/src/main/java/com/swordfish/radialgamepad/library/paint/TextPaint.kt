@@ -21,7 +21,6 @@ package com.swordfish.radialgamepad.library.paint
 import android.graphics.*
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.utils.memoize
-import java.util.concurrent.ConcurrentHashMap
 
 class TextPaint {
 
