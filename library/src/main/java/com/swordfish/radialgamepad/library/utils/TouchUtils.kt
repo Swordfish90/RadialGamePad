@@ -30,7 +30,7 @@ object TouchUtils {
         return (0 until event.pointerCount)
             .map { event.getPointerId(it) }
             .map { id -> id to event.findPointerIndex(id) }
-            .filter { (_, index) -> !isUpEvent(event, index) }
+            .filter { (_, index) -> !isCancelEvent(event, index) }
             .map { (id, index) ->
                 FingerPosition(id, event.getX(index), event.getY(index))
             }
@@ -46,8 +46,8 @@ object TouchUtils {
         return PointF((x - rect.left) / rect.width(), (y - rect.top) / rect.height())
     }
 
-    private fun isUpEvent(event: MotionEvent, pointerIndex: Int): Boolean {
-        val isUpAction = event.actionMasked in setOf(MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP)
+    private fun isCancelEvent(event: MotionEvent, pointerIndex: Int): Boolean {
+        val isUpAction = event.actionMasked in setOf(MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_CANCEL)
         val isRelatedToCurrentIndex = event.actionIndex == pointerIndex
         return isUpAction && isRelatedToCurrentIndex
     }
