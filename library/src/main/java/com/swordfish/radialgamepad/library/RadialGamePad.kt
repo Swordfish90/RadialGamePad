@@ -61,6 +61,8 @@ class RadialGamePad @JvmOverloads constructor(
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
 
+    val aspectRatio: Float
+
     // It's better to set padding inside in other to catch touch events happening there.
     var offsetX: Float = 0.0f
         set(value) {
@@ -108,6 +110,9 @@ class RadialGamePad @JvmOverloads constructor(
     init {
         initializePrimaryInteractor(gamePadConfig.primaryDial)
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
+        aspectRatio = computeTotalSizeAsSizeMultipliers().let {
+            it.width() / it.height()
+        }
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
