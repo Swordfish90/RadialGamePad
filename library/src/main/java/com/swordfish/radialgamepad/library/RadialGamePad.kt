@@ -146,6 +146,7 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.id,
                 configuration.rightDrawableId ?: R.drawable.direction_right_normal,
                 configuration.rightDrawableId ?: R.drawable.direction_right_pressed,
+                configuration.rightDrawableForegroundId,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
@@ -181,6 +182,7 @@ class RadialGamePad @JvmOverloads constructor(
                     config.id,
                     config.rightDrawableId ?: R.drawable.direction_right_normal,
                     config.rightDrawableId ?: R.drawable.direction_right_pressed,
+                    config.rightDrawableForegroundId,
                     config.theme ?: gamePadConfig.theme
                 )
             }

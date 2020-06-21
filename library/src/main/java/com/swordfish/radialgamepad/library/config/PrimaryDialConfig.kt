@@ -32,6 +32,7 @@ sealed class PrimaryDialConfig {
     data class Cross(
         val id: Int,
         val rightDrawableId: Int? = null,
+        val rightDrawableForegroundId: Int? = null,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 

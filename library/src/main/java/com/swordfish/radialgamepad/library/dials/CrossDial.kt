@@ -36,8 +36,9 @@ import kotlin.math.*
 class CrossDial(
     context: Context,
     private val id: Int,
-    normalDrawable: Int,
-    pressedDrawable: Int,
+    normalDrawableId: Int,
+    pressedDrawableId: Int,
+    foregroundDrawableId: Int?,
     theme: RadialGamePadTheme
 ) : Dial {
 
@@ -68,12 +69,16 @@ class CrossDial(
 
     private var buttonCenterDistance: Float = 0.45f
 
-    private var normalDrawable: Drawable = context.getDrawable(normalDrawable)!!.apply {
+    private var normalDrawable: Drawable = context.getDrawable(normalDrawableId)!!.apply {
         setTint(theme.normalColor)
     }
 
-    private var pressedDrawable: Drawable = context.getDrawable(pressedDrawable)!!.apply {
+    private var pressedDrawable: Drawable = context.getDrawable(pressedDrawableId)!!.apply {
         setTint(theme.pressedColor)
+    }
+
+    private var foregroundDrawable: Drawable? = foregroundDrawableId?.let {
+        context.getDrawable(it)!!.apply { setTint(theme.textColor) }
     }
 
     private val paint = BasePaint().apply {
@@ -125,6 +130,11 @@ class CrossDial(
                 canvas.rotate(rotationInDegrees, xPivot, yPivot)
                 it.setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
                 it.draw(canvas)
+
+                foregroundDrawable?.apply {
+                    it.setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
+                    it.draw(canvas)
+                }
 
                 canvas.restore()
             }
