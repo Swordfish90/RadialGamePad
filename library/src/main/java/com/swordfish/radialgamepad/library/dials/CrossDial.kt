@@ -132,8 +132,8 @@ class CrossDial(
                 it.draw(canvas)
 
                 foregroundDrawable?.apply {
-                    it.setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
-                    it.draw(canvas)
+                    setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
+                    draw(canvas)
                 }
 
                 canvas.restore()
