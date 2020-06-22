@@ -21,5 +21,5 @@ package com.swordfish.radialgamepad.library.event
 enum class GestureType {
     SINGLE_TAP,
     DOUBLE_TAP,
-    LONG_PRESS
+    TRIPLE_TAP
 }

@@ -99,8 +99,9 @@ class CrossDial(
         this.drawingBox = drawingBox
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
         eventsRelay.accept(Event.Gesture(id, gestureType))
+        return false
     }
 
     override fun draw(canvas: Canvas) {

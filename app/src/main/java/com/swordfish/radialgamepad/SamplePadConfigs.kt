@@ -88,13 +88,7 @@ object SamplePadConfigs {
                         label = "L2"
                     )
                 ),
-                SecondaryDialConfig.Stick(9, 2, 2f, 1),
-                SecondaryDialConfig.SingleButton(8, 1, 1f,
-                    ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_MODE,
-                        label = "L3"
-                    )
-                )
+                SecondaryDialConfig.Stick(9, 2, 2.2f, 1, KeyEvent.KEYCODE_BUTTON_THUMBL)
             )
         )
 
@@ -140,13 +134,7 @@ object SamplePadConfigs {
                         label = "START"
                     )
                 ),
-                SecondaryDialConfig.Stick(8, 2, 2f, 2),
-                SecondaryDialConfig.SingleButton(10, 1, 1f,
-                    ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_MODE,
-                        label = "R3"
-                    )
-                )
+                SecondaryDialConfig.Stick(8, 2, 2.2f, 2, KeyEvent.KEYCODE_BUTTON_THUMBL)
             )
         )
 

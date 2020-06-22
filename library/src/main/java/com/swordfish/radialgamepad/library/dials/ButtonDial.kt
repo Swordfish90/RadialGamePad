@@ -101,8 +101,9 @@ class ButtonDial(
         return false
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
         events.accept(Event.Gesture(config.id, gestureType))
+        return false
     }
 
     override fun events(): Observable<Event> = events.distinctUntilChanged()

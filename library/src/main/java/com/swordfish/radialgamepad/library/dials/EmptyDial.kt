@@ -39,5 +39,5 @@ class EmptyDial : Dial {
 
     override fun events(): Observable<Event> = Observable.empty()
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {}
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean = false
 }

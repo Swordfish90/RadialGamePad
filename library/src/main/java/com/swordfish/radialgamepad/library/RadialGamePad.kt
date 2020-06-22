@@ -21,11 +21,9 @@ package com.swordfish.radialgamepad.library
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.view.GestureDetectorCompat
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
 import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
@@ -38,6 +36,7 @@ import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.MathUtils.toRadians
+import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
@@ -83,27 +82,24 @@ class RadialGamePad @JvmOverloads constructor(
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: Map<Int, DialInteractor>
 
-    private val gestureDetector: GestureDetectorCompat = GestureDetectorCompat(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onDoubleTap(e: MotionEvent): Boolean {
-            allInteractors().forEach {
-                it.gesture(e.x, e.y, GestureType.DOUBLE_TAP)
-            }
-            return true
+    private val gestureDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
+        if (!isConfirmed) return@MultiTapDetector
+
+        val gestureType = when (taps) {
+            1 -> GestureType.SINGLE_TAP
+            2 -> GestureType.DOUBLE_TAP
+            3 -> GestureType.TRIPLE_TAP
+            else -> null
+        } ?: return@MultiTapDetector
+
+        val updated = allInteractors().map {
+            it.gesture(x, y, gestureType)
         }
 
-        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-            allInteractors().forEach {
-                it.gesture(e.x, e.y, GestureType.SINGLE_TAP)
-            }
-            return true
+        if (updated.any { it }) {
+            postInvalidate()
         }
-
-        override fun onLongPress(e: MotionEvent) {
-            allInteractors().forEach {
-                it.gesture(e.x, e.y, GestureType.LONG_PRESS)
-            }
-        }
-    })
+    }
 
     init {
         initializePrimaryInteractor(gamePadConfig.primaryDial)
@@ -146,6 +142,7 @@ class RadialGamePad @JvmOverloads constructor(
             )
             is PrimaryDialConfig.Stick -> StickDial(
                 configuration.id,
+                configuration.buttonPressId,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.PrimaryButtons -> PrimaryButtonsDial(
@@ -164,6 +161,7 @@ class RadialGamePad @JvmOverloads constructor(
             val secondaryDial = when (config) {
                 is SecondaryDialConfig.Stick -> StickDial(
                     config.id,
+                    config.buttonPressId,
                     config.theme ?: gamePadConfig.theme
                 )
                 is SecondaryDialConfig.SingleButton -> ButtonDial(
@@ -336,7 +334,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        gestureDetector.onTouchEvent(event)
+        gestureDetector.handleEvent(event)
 
         val fingers = TouchUtils.extractFingerPositions(event)
 

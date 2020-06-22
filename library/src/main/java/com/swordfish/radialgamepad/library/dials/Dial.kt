@@ -37,5 +37,6 @@ interface Dial : EventsSource {
     /** Pass the touch event to the appropriate dial. Returns true if requires redraw. */
     abstract fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean
 
-    abstract fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType)
+    /** Pass the gesture to the appropriate dial. Returns true if requires redraw. */
+    abstract fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean
 }

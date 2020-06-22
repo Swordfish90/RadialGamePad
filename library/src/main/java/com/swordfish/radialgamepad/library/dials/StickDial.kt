@@ -19,6 +19,8 @@
 package com.swordfish.radialgamepad.library.dials
 
 import android.graphics.*
+import android.view.KeyEvent
+import androidx.core.graphics.ColorUtils
 import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
@@ -30,15 +32,17 @@ import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.sin
 
-class StickDial(private val id: Int, private val theme: RadialGamePadTheme) : MotionDial {
+class StickDial(private val id: Int, private val keyPressId: Int?, private val theme: RadialGamePadTheme) : MotionDial {
 
     private val paint = BasePaint()
 
     private val foregroundColor: Int = theme.normalColor
     private val pressedColor: Int = theme.pressedColor
+    private val buttonPressedColor = ColorUtils.blendARGB(foregroundColor, pressedColor, 0.5f)
 
     private val eventsRelay = PublishRelay.create<Event>()
 
+    private var isButtonPressed: Boolean = false
     private var firstTouch: PointF? = null
     private var trackedPointerId: Int? = null
 
@@ -58,7 +62,7 @@ class StickDial(private val id: Int, private val theme: RadialGamePadTheme) : Mo
     }
 
     override fun draw(canvas: Canvas) {
-        paint.color = theme.primaryDialBackground
+        paint.color = if (isButtonPressed) buttonPressedColor else theme.primaryDialBackground
         canvas.drawCircle(
             drawingBox.left + radius,
             drawingBox.top + radius,
@@ -107,8 +111,15 @@ class StickDial(private val id: Int, private val theme: RadialGamePadTheme) : Mo
         }
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
-        eventsRelay.accept(Event.Gesture(id, gestureType))
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+        if (gestureType == GestureType.SINGLE_TAP && keyPressId != null && firstTouch != null) {
+            isButtonPressed = true
+            eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_DOWN, false))
+            return true
+        } else {
+            eventsRelay.accept(Event.Gesture(id, gestureType))
+            return false
+        }
     }
 
     override fun events(): Observable<Event> = eventsRelay
@@ -144,6 +155,11 @@ class StickDial(private val id: Int, private val theme: RadialGamePadTheme) : Mo
         firstTouch = null
         trackedPointerId = null
         eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+
+        if (keyPressId != null && isButtonPressed) {
+            isButtonPressed = false
+            eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_UP, false))
+        }
     }
 
     companion object {

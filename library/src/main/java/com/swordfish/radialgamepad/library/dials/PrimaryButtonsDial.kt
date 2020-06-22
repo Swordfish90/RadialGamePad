@@ -216,9 +216,10 @@ class PrimaryButtonsDial(
         return circleActions[index].id
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
         val id = getAssociatedId(relativeX, relativeY)
         eventsRelay.accept(Event.Gesture(id, gestureType))
+        return false
     }
 
     private fun updatePainterForButton(buttonConfig: ButtonConfig) {

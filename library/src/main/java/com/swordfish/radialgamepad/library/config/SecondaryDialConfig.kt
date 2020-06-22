@@ -38,6 +38,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         spread: Int,
         scale: Float,
         val id: Int,
+        val buttonPressId: Int? = null,
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, spread, scale)
 

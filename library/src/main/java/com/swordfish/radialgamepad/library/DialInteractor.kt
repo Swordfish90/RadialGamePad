@@ -45,10 +45,12 @@ internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = Empty
         return dial.touch(TouchUtils.computeRelativeFingerPosition(goodFingers, dial.drawingBox()))
     }
 
-    fun gesture(x: Float, y: Float, gestureType: GestureType) {
+    fun gesture(x: Float, y: Float, gestureType: GestureType): Boolean {
         if (touchBound.contains(x, y)) {
             val relativePosition = TouchUtils.computeRelativePosition(x, y, dial.drawingBox())
-            dial.gesture(relativePosition.x, relativePosition.y, gestureType)
+            return dial.gesture(relativePosition.x, relativePosition.y, gestureType)
         }
+
+        return false
     }
 }

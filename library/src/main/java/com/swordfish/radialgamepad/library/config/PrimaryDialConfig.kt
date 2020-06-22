@@ -43,6 +43,7 @@ sealed class PrimaryDialConfig {
      */
     data class Stick(
         val id: Int,
+        val buttonPressId: Int? = null,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 
