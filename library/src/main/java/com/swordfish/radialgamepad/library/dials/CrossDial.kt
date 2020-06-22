@@ -40,13 +40,15 @@ class CrossDial(
     pressedDrawableId: Int,
     foregroundDrawableId: Int?,
     theme: RadialGamePadTheme
-) : Dial {
+) : MotionDial {
 
     companion object {
         private const val DRAWABLE_SIZE_SCALING = 0.75
         private const val BUTTON_COUNT = 8
         private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
         private const val ROTATE_BUTTONS = Constants.PI2 / 16f
+
+        private const val GESTURE_RADIUS = 0.1f
 
         const val BUTTON_RIGHT = 0
         const val BUTTON_DOWN_RIGHT = 1
@@ -100,7 +102,12 @@ class CrossDial(
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        eventsRelay.accept(Event.Gesture(id, gestureType))
+        // Gestures are fired only when pressing in the middle. There is a huge risk of false events in CrossDials.
+        if (abs(relativeX - 0.5) < GESTURE_RADIUS && abs(relativeY - 0.5) < GESTURE_RADIUS) {
+            eventsRelay.accept(Event.Gesture(id, gestureType))
+            return false
+        }
+
         return false
     }
 
@@ -142,16 +149,24 @@ class CrossDial(
         }
     }
 
+    override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
+        if (id != this.id) return false
+        return handleTouchEvent(relativeX - 0.5f, relativeY - 0.5f)
+    }
+
+    override fun simulateClearMotion(id: Int): Boolean {
+        if (id != this.id) return false
+        reset()
+        return true
+    }
+
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
         if (fingers.isEmpty() && currentIndex == null) {
             return false
         } else if (fingers.isEmpty()) {
-            currentIndex = null
-            trackedPointerId = null
-            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+            reset()
             return true
         }
-
 
         if (trackedPointerId == null) {
             val finger = fingers.first()
@@ -169,6 +184,12 @@ class CrossDial(
 
             return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
         }
+    }
+
+    private fun reset() {
+        currentIndex = null
+        trackedPointerId = null
+        eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
     }
 
     private fun handleTouchEvent(x: Float, y: Float): Boolean {
