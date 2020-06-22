@@ -173,7 +173,7 @@ class CrossDial(
     private fun handleTouchEvent(x: Float, y: Float): Boolean {
 
         val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
-        val index = (angle / SINGLE_BUTTON_ANGLE).roundToInt() % BUTTON_COUNT
+        val index = angleToIndex(angle)
 
         if (index != currentIndex) {
             val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
@@ -189,6 +189,20 @@ class CrossDial(
         }
 
         return false
+    }
+
+    private fun angleToIndex(angle: Float): Int {
+        val sector = Constants.PI2 / 12f
+        return when (floor(angle / sector).toInt()) {
+            1 -> BUTTON_DOWN_RIGHT
+            2, 3 -> BUTTON_DOWN
+            4 -> BUTTON_DOWN_LEFT
+            5, 6 -> BUTTON_LEFT
+            7 -> BUTTON_UP_LEFT
+            8, 9 -> BUTTON_UP
+            10 -> BUTTON_UP_RIGHT
+            else -> BUTTON_RIGHT
+        }
     }
 
     override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()
