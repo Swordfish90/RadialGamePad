@@ -48,7 +48,7 @@ class CrossDial(
         private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
         private const val ROTATE_BUTTONS = Constants.PI2 / 16f
 
-        private const val GESTURE_RADIUS = 0.1f
+        private const val DEADZONE = 0.1f
 
         const val BUTTON_RIGHT = 0
         const val BUTTON_DOWN_RIGHT = 1
@@ -102,8 +102,8 @@ class CrossDial(
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        // Gestures are fired only when pressing in the middle. There is a huge risk of false events in CrossDials.
-        if (abs(relativeX - 0.5) < GESTURE_RADIUS && abs(relativeY - 0.5) < GESTURE_RADIUS) {
+        // Gestures are fired only when happening in the dead zone. There is a huge risk of false events in CrossDials.
+        if (abs(relativeX - 0.5) < DEADZONE && abs(relativeY - 0.5) < DEADZONE) {
             eventsRelay.accept(Event.Gesture(id, gestureType))
             return false
         }
@@ -193,20 +193,29 @@ class CrossDial(
     }
 
     private fun handleTouchEvent(x: Float, y: Float): Boolean {
-
-        val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
-        val index = angleToIndex(angle)
+        val index = if (abs(x) < DEADZONE && abs(y) < DEADZONE) {
+            null
+        } else {
+            val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
+            angleToIndex(angle)
+        }
 
         if (index != currentIndex) {
-            val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
+            if (index == null) {
+                eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+            } else {
+                val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
+                eventsRelay.accept(
+                    Event.Direction(
+                        id,
+                        cos(index * SINGLE_BUTTON_ANGLE),
+                        sin(index * SINGLE_BUTTON_ANGLE),
+                        haptic
+                    )
+                )
+            }
 
             currentIndex = index
-            eventsRelay.accept(Event.Direction(
-                id,
-                cos(index * SINGLE_BUTTON_ANGLE),
-                sin(index * SINGLE_BUTTON_ANGLE),
-                haptic
-            ))
             return true
         }
 
