@@ -44,6 +44,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
 
     private var isButtonPressed: Boolean = false
     private var firstTouch: PointF? = null
+    private var simulatedFirstTouch: PointF? = null
     private var trackedPointerId: Int? = null
 
     private var angle: Float = 0f
@@ -72,7 +73,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
 
         val smallRadius = 0.5f * radius
 
-        paint.color = if (firstTouch != null) pressedColor else foregroundColor
+        paint.color = if (firstTouch ?: simulatedFirstTouch != null) pressedColor else foregroundColor
         canvas.drawCircle(
             drawingBox.left + radius + cos(angle) * strength * smallRadius,
             drawingBox.top + radius + sin(angle) * strength * smallRadius,
@@ -127,7 +128,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
     override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
         if (id != this.id) return false
 
-        firstTouch = PointF(0.5f, 0.5f)
+        simulatedFirstTouch = PointF(0.5f, 0.5f)
 
         handleTouchEvent(relativeX, relativeY)
         return true
@@ -140,7 +141,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
     }
 
     private fun handleTouchEvent(touchX: Float, touchY: Float) {
-        firstTouch?.let { firstTouch ->
+        (firstTouch ?: simulatedFirstTouch)?.let { firstTouch ->
             angle = -MathUtils.angle(firstTouch.x, touchX, firstTouch.y, touchY)
             strength = MathUtils.clamp(MathUtils.distance(firstTouch.x, touchX, firstTouch.y, touchY) * 2, 0f, 1f)
 
@@ -153,6 +154,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
         strength = 0f
         angle = 0f
         firstTouch = null
+        simulatedFirstTouch = null
         trackedPointerId = null
         eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
 
