@@ -26,17 +26,17 @@ import com.swordfish.radialgamepad.library.utils.TouchUtils
 
 interface Dial : EventsSource {
 
-    abstract fun drawingBox(): RectF
+    fun drawingBox(): RectF
 
-    abstract fun trackedPointerId(): Int?
+    fun trackedPointerId(): Int?
 
-    abstract fun measure(drawingBox: RectF)
+    fun measure(drawingBox: RectF)
 
-    abstract fun draw(canvas: Canvas)
+    fun draw(canvas: Canvas)
 
     /** Pass the touch event to the appropriate dial. Returns true if requires redraw. */
-    abstract fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean
+    fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean
 
     /** Pass the gesture to the appropriate dial. Returns true if requires redraw. */
-    abstract fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean
+    fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean
 }

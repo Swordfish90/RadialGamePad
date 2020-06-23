@@ -39,6 +39,7 @@ sealed class PrimaryDialConfig {
     /**
      * The Stick dial represents a simple touch stick.
      * @property id The control id. It is passed back to discriminate events.
+     * @property buttonPressId Specify a button action when the Stick is double pressed. Useful for platforms with clickable thumb sticks.
      * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
      */
     data class Stick(

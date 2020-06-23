@@ -48,7 +48,7 @@ class CrossDial(
         private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
         private const val ROTATE_BUTTONS = Constants.PI2 / 16f
 
-        private const val DEADZONE = 0.1f
+        private const val DEAD_ZONE = 0.1f
 
         const val BUTTON_RIGHT = 0
         const val BUTTON_DOWN_RIGHT = 1
@@ -102,8 +102,9 @@ class CrossDial(
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        // Gestures are fired only when happening in the dead zone. There is a huge risk of false events in CrossDials.
-        if (abs(relativeX - 0.5) < DEADZONE && abs(relativeY - 0.5) < DEADZONE) {
+        // Gestures are fired only when happening in the dead zone.
+        // There is a huge risk of false events in CrossDials.
+        if (isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)) {
             eventsRelay.accept(Event.Gesture(id, gestureType))
             return false
         }
@@ -173,16 +174,14 @@ class CrossDial(
             trackedPointerId = finger.pointerId
             return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
         } else {
-            val finger = fingers
-                .filter { it.pointerId == trackedPointerId }
-                .firstOrNull()
+            val trackedFinger = fingers.firstOrNull { it.pointerId == trackedPointerId }
 
-            if (finger == null) {
+            if (trackedFinger == null) {
                 trackedPointerId = null
                 return true
             }
 
-            return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
+            return handleTouchEvent(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f)
         }
     }
 
@@ -193,12 +192,7 @@ class CrossDial(
     }
 
     private fun handleTouchEvent(x: Float, y: Float): Boolean {
-        val index = if (abs(x) < DEADZONE && abs(y) < DEADZONE) {
-            null
-        } else {
-            val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
-            angleToIndex(angle)
-        }
+        val index = computeIndexForPosition(x, y)
 
         if (index != currentIndex) {
             if (index == null) {
@@ -221,6 +215,17 @@ class CrossDial(
 
         return false
     }
+
+    private fun computeIndexForPosition(x: Float, y: Float): Int? {
+        if (isInsideDeadZone(x, y)) {
+            return null
+        }
+
+        val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
+        return angleToIndex(angle)
+    }
+
+    private fun isInsideDeadZone(x: Float, y: Float) = abs(x) < DEAD_ZONE && abs(y) < DEAD_ZONE
 
     private fun angleToIndex(angle: Float): Int {
         val sector = Constants.PI2 / 12f

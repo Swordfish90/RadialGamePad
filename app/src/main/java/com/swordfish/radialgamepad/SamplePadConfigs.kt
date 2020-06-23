@@ -88,6 +88,7 @@ object SamplePadConfigs {
                         label = "L2"
                     )
                 ),
+                // When this stick is double tapped, it's going to fire a Button event
                 SecondaryDialConfig.Stick(9, 2, 2.2f, 1, KeyEvent.KEYCODE_BUTTON_THUMBL)
             )
         )
@@ -134,6 +135,7 @@ object SamplePadConfigs {
                         label = "START"
                     )
                 ),
+                // When this stick is double tapped, it's going to fire a Button event
                 SecondaryDialConfig.Stick(8, 2, 2.2f, 2, KeyEvent.KEYCODE_BUTTON_THUMBL)
             )
         )
