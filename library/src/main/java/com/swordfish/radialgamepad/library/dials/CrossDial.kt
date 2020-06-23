@@ -26,6 +26,7 @@ import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.TouchUtils
@@ -97,7 +98,7 @@ class CrossDial(
 
     override fun trackedPointerId(): Int? = trackedPointerId
 
-    override fun measure(drawingBox: RectF) {
+    override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
     }
 

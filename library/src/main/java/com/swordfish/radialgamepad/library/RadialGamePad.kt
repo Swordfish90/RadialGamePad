@@ -32,10 +32,10 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
-import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
-import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
-import com.swordfish.radialgamepad.library.utils.MathUtils.toRadians
+import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
+import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
@@ -166,6 +166,7 @@ class RadialGamePad @JvmOverloads constructor(
                 )
                 is SecondaryDialConfig.SingleButton -> ButtonDial(
                     context,
+                    config.spread,
                     config.buttonConfig,
                     config.theme ?: gamePadConfig.theme
                 )
@@ -259,9 +260,9 @@ class RadialGamePad @JvmOverloads constructor(
 
     private fun measureSecondaryDials() {
         gamePadConfig.secondaryDials.forEach { config ->
-            val (rect, bounds) = measureSecondaryDial(config)
-            secondaryInteractors[config.index]?.touchBound = bounds
-            secondaryInteractors[config.index]?.measure(rect)
+            val (rect, sector) = measureSecondaryDial(config)
+            secondaryInteractors[config.index]?.touchBound = SectorTouchBound(sector)
+            secondaryInteractors[config.index]?.measure(rect, sector)
         }
     }
 
@@ -270,14 +271,14 @@ class RadialGamePad @JvmOverloads constructor(
         primaryInteractor.touchBound = CircleTouchBound(center, size)
     }
 
-    private fun measureSecondaryDial(config: SecondaryDialConfig): Pair<RectF, TouchBound> {
+    private fun measureSecondaryDial(config: SecondaryDialConfig): Pair<RectF, Sector> {
         val rect = measureSecondaryDialAsSizeMultiplier(config).scale(size)
         rect.offset(center.x, center.y)
 
         val dialAngle = Constants.PI2 / dials
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * size * config.scale
 
-        val touchBound = SectorTouchBound(
+        val sector = Sector(
             PointF(center.x, center.y),
             size,
             size + dialSize * config.scale,
@@ -285,7 +286,7 @@ class RadialGamePad @JvmOverloads constructor(
             secondaryDialRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
         )
 
-        return rect to touchBound
+        return rect to sector
     }
 
     private fun measureSecondaryDialAsSizeMultiplier(config: SecondaryDialConfig): RectF {

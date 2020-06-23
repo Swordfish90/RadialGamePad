@@ -19,7 +19,7 @@
 package com.swordfish.radialgamepad.library.touchbound
 
 import android.graphics.PointF
-import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.math.MathUtils
 
 class CircleTouchBound(private val center: PointF, private val radius: Float) : TouchBound {
     override fun contains(x: Float, y: Float): Boolean {

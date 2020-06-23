@@ -22,6 +22,7 @@ import android.graphics.Canvas
 import android.graphics.RectF
 import com.swordfish.radialgamepad.library.dials.Dial
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.touchbound.EmptyTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.TouchUtils
@@ -30,8 +31,8 @@ internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = Empty
 
     fun trackedPointerId() = dial.trackedPointerId()
 
-    fun measure(drawingRect: RectF) {
-        dial.measure(drawingRect)
+    fun measure(drawingRect: RectF, secondarySector: Sector? = null) {
+        dial.measure(drawingRect, secondarySector)
     }
 
     fun draw(canvas: Canvas) {

@@ -18,20 +18,18 @@
 
 package com.swordfish.radialgamepad.library.touchbound
 
-import android.graphics.PointF
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.Constants
-import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.math.MathUtils
 
-class SectorTouchBound(
-    private val center: PointF,
-    private val minRadius: Float,
-    private val maxRadius: Float,
-    private val minAngle: Float,
-    private val maxAngle: Float) : TouchBound {
+class SectorTouchBound(private val sector: Sector) : TouchBound {
 
     override fun contains(x: Float, y: Float): Boolean {
-        val currentAngle = MathUtils.angle(center.x, x, center.y, y) % (Constants.PI2)
-        val currentDistance = MathUtils.distance(x, center.x, y, center.y)
-        return currentDistance > minRadius && currentDistance < maxRadius && MathUtils.isAngleInRange(currentAngle, minAngle, maxAngle)
+        val currentAngle = MathUtils.angle(sector.center.x, x, sector.center.y, y) % (Constants.PI2)
+        val currentDistance = MathUtils.distance(x, sector.center.x, y, sector.center.y)
+
+        return currentDistance > sector.minRadius &&
+            currentDistance < sector.maxRadius &&
+            MathUtils.isAngleInRange(currentAngle, sector.minAngle, sector.maxAngle)
     }
 }

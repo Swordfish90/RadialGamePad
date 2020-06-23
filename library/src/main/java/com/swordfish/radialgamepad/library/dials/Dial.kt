@@ -22,6 +22,7 @@ import android.graphics.Canvas
 import android.graphics.RectF
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 
 interface Dial : EventsSource {
@@ -30,7 +31,7 @@ interface Dial : EventsSource {
 
     fun trackedPointerId(): Int?
 
-    fun measure(drawingBox: RectF)
+    fun measure(drawingBox: RectF, secondarySector: Sector? = null)
 
     fun draw(canvas: Canvas)
 

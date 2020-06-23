@@ -26,7 +26,8 @@ import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
-import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.math.MathUtils
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
@@ -57,7 +58,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
 
     override fun trackedPointerId(): Int? = trackedPointerId
 
-    override fun measure(drawingBox: RectF) {
+    override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
         this.radius = minOf(drawingBox.width(), drawingBox.height()) / 2
     }
