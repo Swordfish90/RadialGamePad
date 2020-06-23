@@ -80,7 +80,7 @@ class RadialGamePad @JvmOverloads constructor(
         }
 
     private lateinit var primaryInteractor: DialInteractor
-    private lateinit var secondaryInteractors: Map<Int, DialInteractor>
+    private lateinit var secondaryInteractors: List<DialInteractor>
 
     private val gestureDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
         if (!isConfirmed) return@MultiTapDetector
@@ -180,8 +180,8 @@ class RadialGamePad @JvmOverloads constructor(
                     config.theme ?: gamePadConfig.theme
                 )
             }
-            config.index to DialInteractor(secondaryDial)
-        }.toMap()
+            DialInteractor(secondaryDial)
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -259,10 +259,10 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun measureSecondaryDials() {
-        gamePadConfig.secondaryDials.forEach { config ->
+        gamePadConfig.secondaryDials.forEachIndexed { index, config ->
             val (rect, sector) = measureSecondaryDial(config)
-            secondaryInteractors[config.index]?.touchBound = SectorTouchBound(sector)
-            secondaryInteractors[config.index]?.measure(rect, sector)
+            secondaryInteractors[index].touchBound = SectorTouchBound(sector)
+            secondaryInteractors[index].measure(rect, sector)
         }
     }
 
@@ -316,7 +316,7 @@ class RadialGamePad @JvmOverloads constructor(
 
         primaryInteractor.draw(canvas)
 
-        secondaryInteractors.values.forEach {
+        secondaryInteractors.forEach {
             it.draw(canvas)
         }
     }
@@ -367,7 +367,7 @@ class RadialGamePad @JvmOverloads constructor(
     private fun allDials(): List<Dial> = allInteractors().map { it.dial }
 
     private fun allInteractors(): List<DialInteractor> =
-        listOf(primaryInteractor) + secondaryInteractors.values
+        listOf(primaryInteractor) + secondaryInteractors
 
     companion object {
         const val DEFAULT_SECONDARY_DIAL_SCALE = 0.75f
