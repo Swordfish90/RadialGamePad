@@ -32,7 +32,7 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.Cross(0),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    10, 1, 1f, ButtonConfig(
+                    10, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "SELECT"
                     )
@@ -58,7 +58,7 @@ object SamplePadConfigs {
             ),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    8, 1, 1f, ButtonConfig(
+                    8, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
                     )
@@ -71,30 +71,25 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.Cross(0),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    2, 1, 1f, ButtonConfig(
+                    2, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_SELECT,
                         label = "SELECT"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    3, 1, 1f, ButtonConfig(
+                    3, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_L1,
                         label = "L1"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    4, 1, 1f, ButtonConfig(
+                    4, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_L2,
                         label = "L2"
                     )
                 ),
-                SecondaryDialConfig.Stick(9, 2, 2f, 1),
-                SecondaryDialConfig.SingleButton(8, 1, 1f,
-                    ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_MODE,
-                        label = "L3"
-                    )
-                )
+                // When this stick is double tapped, it's going to fire a Button event
+                SecondaryDialConfig.Stick(9, 2.2f, 1, KeyEvent.KEYCODE_BUTTON_THUMBL)
             )
         )
 
@@ -123,30 +118,25 @@ object SamplePadConfigs {
             ),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    2, 1, 1f, ButtonConfig(
+                    2, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_R2,
                         label = "R2"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    3, 1, 1f, ButtonConfig(
+                    3, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_R1,
                         label = "R1"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    4, 1, 1f, ButtonConfig(
+                    4, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
                     )
                 ),
-                SecondaryDialConfig.Stick(8, 2, 2f, 2),
-                SecondaryDialConfig.SingleButton(10, 1, 1f,
-                    ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_MODE,
-                        label = "R3"
-                    )
-                )
+                // When this stick is double tapped, it's going to fire a Button event
+                SecondaryDialConfig.Stick(8, 2.2f, 2, KeyEvent.KEYCODE_BUTTON_THUMBL)
             )
         )
 
@@ -156,24 +146,24 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.Cross(0),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    1, 1, 1f, ButtonConfig(
+                    1, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_SELECT,
                         iconId = R.drawable.ic_play
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    2, 1, 1f, ButtonConfig(
+                    2, 1, ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_L1,
                         iconId = R.drawable.ic_stop
                     )
                 ),
-                SecondaryDialConfig.SingleButton(4, 1, 1f,
+                SecondaryDialConfig.SingleButton(4, 1,
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_MODE,
                         iconId = R.drawable.ic_volume_down
                     )
                 ),
-                SecondaryDialConfig.SingleButton(5, 1, 1f,
+                SecondaryDialConfig.SingleButton(5, 1,
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_MODE,
                         iconId = R.drawable.ic_volume_up

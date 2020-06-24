@@ -29,7 +29,8 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.Constants
-import com.swordfish.radialgamepad.library.utils.MathUtils
+import com.swordfish.radialgamepad.library.math.MathUtils
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
@@ -83,7 +84,7 @@ class PrimaryButtonsDial(
 
     override fun trackedPointerId(): Int? = null
 
-    override fun measure(drawingBox: RectF) {
+    override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
         val dialDiameter = minOf(drawingBox.width(), drawingBox.height())
         distanceToCenter = dialDiameter / 4f
@@ -194,7 +195,7 @@ class PrimaryButtonsDial(
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
         val newPressed = fingers
-            .map { getAssociatedId(it.x, it.y) }
+            .mapNotNull { getAssociatedId(it.x, it.y) }
             .toSet()
 
         if (newPressed != pressed) {
@@ -207,18 +208,24 @@ class PrimaryButtonsDial(
         return false
     }
 
-    private fun getAssociatedId(x: Float, y: Float): Int {
+    private fun getAssociatedId(x: Float, y: Float): Int? {
         if (centerAction != null && MathUtils.distance(normalizedCenter.x, x, normalizedCenter.y, y) < normalizedButtonRadius) {
             return centerAction.id
         }
 
-        val index = (floor(computeTouchAngle(x, y) / actionAngle).toInt())
-        return circleActions[index].id
+        if (circleActions.isNotEmpty()) {
+            val index = (floor(computeTouchAngle(x, y) / actionAngle).toInt())
+            return circleActions[index].id
+        }
+
+        return null
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
-        val id = getAssociatedId(relativeX, relativeY)
-        eventsRelay.accept(Event.Gesture(id, gestureType))
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+        getAssociatedId(relativeX, relativeY)?.let {
+            eventsRelay.accept(Event.Gesture(it, gestureType))
+        }
+        return false
     }
 
     private fun updatePainterForButton(buttonConfig: ButtonConfig) {

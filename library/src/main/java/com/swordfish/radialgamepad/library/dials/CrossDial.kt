@@ -26,6 +26,7 @@ import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.TouchUtils
@@ -36,16 +37,19 @@ import kotlin.math.*
 class CrossDial(
     context: Context,
     private val id: Int,
-    normalDrawable: Int,
-    pressedDrawable: Int,
+    normalDrawableId: Int,
+    pressedDrawableId: Int,
+    foregroundDrawableId: Int?,
     theme: RadialGamePadTheme
-) : Dial {
+) : MotionDial {
 
     companion object {
         private const val DRAWABLE_SIZE_SCALING = 0.75
         private const val BUTTON_COUNT = 8
         private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
         private const val ROTATE_BUTTONS = Constants.PI2 / 16f
+
+        private const val DEAD_ZONE = 0.1f
 
         const val BUTTON_RIGHT = 0
         const val BUTTON_DOWN_RIGHT = 1
@@ -68,12 +72,16 @@ class CrossDial(
 
     private var buttonCenterDistance: Float = 0.45f
 
-    private var normalDrawable: Drawable = context.getDrawable(normalDrawable)!!.apply {
+    private var normalDrawable: Drawable = context.getDrawable(normalDrawableId)!!.apply {
         setTint(theme.normalColor)
     }
 
-    private var pressedDrawable: Drawable = context.getDrawable(pressedDrawable)!!.apply {
+    private var pressedDrawable: Drawable = context.getDrawable(pressedDrawableId)!!.apply {
         setTint(theme.pressedColor)
+    }
+
+    private var foregroundDrawable: Drawable? = foregroundDrawableId?.let {
+        context.getDrawable(it)!!.apply { setTint(theme.textColor) }
     }
 
     private val paint = BasePaint().apply {
@@ -90,12 +98,19 @@ class CrossDial(
 
     override fun trackedPointerId(): Int? = trackedPointerId
 
-    override fun measure(drawingBox: RectF) {
+    override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {
-        eventsRelay.accept(Event.Gesture(id, gestureType))
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+        // Gestures are fired only when happening in the dead zone.
+        // There is a huge risk of false events in CrossDials.
+        if (isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)) {
+            eventsRelay.accept(Event.Gesture(id, gestureType))
+            return false
+        }
+
+        return false
     }
 
     override fun draw(canvas: Canvas) {
@@ -126,59 +141,105 @@ class CrossDial(
                 it.setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
                 it.draw(canvas)
 
+                foregroundDrawable?.apply {
+                    setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
+                    draw(canvas)
+                }
+
                 canvas.restore()
             }
         }
+    }
+
+    override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
+        if (id != this.id) return false
+        return handleTouchEvent(relativeX - 0.5f, relativeY - 0.5f)
+    }
+
+    override fun simulateClearMotion(id: Int): Boolean {
+        if (id != this.id) return false
+        reset()
+        return true
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
         if (fingers.isEmpty() && currentIndex == null) {
             return false
         } else if (fingers.isEmpty()) {
-            currentIndex = null
-            trackedPointerId = null
-            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+            reset()
             return true
         }
-
 
         if (trackedPointerId == null) {
             val finger = fingers.first()
             trackedPointerId = finger.pointerId
             return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
         } else {
-            val finger = fingers
-                .filter { it.pointerId == trackedPointerId }
-                .firstOrNull()
+            val trackedFinger = fingers.firstOrNull { it.pointerId == trackedPointerId }
 
-            if (finger == null) {
+            if (trackedFinger == null) {
                 trackedPointerId = null
                 return true
             }
 
-            return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
+            return handleTouchEvent(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f)
         }
     }
 
-    private fun handleTouchEvent(x: Float, y: Float): Boolean {
+    private fun reset() {
+        currentIndex = null
+        trackedPointerId = null
+        eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+    }
 
-        val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
-        val index = (angle / SINGLE_BUTTON_ANGLE).roundToInt() % BUTTON_COUNT
+    private fun handleTouchEvent(x: Float, y: Float): Boolean {
+        val index = computeIndexForPosition(x, y)
 
         if (index != currentIndex) {
-            val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
+            if (index == null) {
+                eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+            } else {
+                val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
+                eventsRelay.accept(
+                    Event.Direction(
+                        id,
+                        cos(index * SINGLE_BUTTON_ANGLE),
+                        sin(index * SINGLE_BUTTON_ANGLE),
+                        haptic
+                    )
+                )
+            }
 
             currentIndex = index
-            eventsRelay.accept(Event.Direction(
-                id,
-                cos(index * SINGLE_BUTTON_ANGLE),
-                sin(index * SINGLE_BUTTON_ANGLE),
-                haptic
-            ))
             return true
         }
 
         return false
+    }
+
+    private fun computeIndexForPosition(x: Float, y: Float): Int? {
+        if (isInsideDeadZone(x, y)) {
+            return null
+        }
+
+        val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
+        return angleToIndex(angle)
+    }
+
+    private fun isInsideDeadZone(x: Float, y: Float) = abs(x) < DEAD_ZONE && abs(y) < DEAD_ZONE
+
+    private fun angleToIndex(angle: Float): Int {
+        val sector = Constants.PI2 / 12f
+        return when (floor(angle / sector).toInt()) {
+            1 -> BUTTON_DOWN_RIGHT
+            2, 3 -> BUTTON_DOWN
+            4 -> BUTTON_DOWN_LEFT
+            5, 6 -> BUTTON_LEFT
+            7 -> BUTTON_UP_LEFT
+            8, 9 -> BUTTON_UP
+            10 -> BUTTON_UP_RIGHT
+            else -> BUTTON_RIGHT
+        }
     }
 
     override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()

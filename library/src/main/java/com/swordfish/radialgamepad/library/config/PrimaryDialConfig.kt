@@ -32,16 +32,19 @@ sealed class PrimaryDialConfig {
     data class Cross(
         val id: Int,
         val rightDrawableId: Int? = null,
+        val rightDrawableForegroundId: Int? = null,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 
     /**
      * The Stick dial represents a simple touch stick.
      * @property id The control id. It is passed back to discriminate events.
+     * @property buttonPressId Specify a button action when the Stick is double pressed. Useful for platforms with clickable thumb sticks.
      * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
      */
     data class Stick(
         val id: Int,
+        val buttonPressId: Int? = null,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 

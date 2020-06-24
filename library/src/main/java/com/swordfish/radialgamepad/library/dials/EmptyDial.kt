@@ -22,6 +22,7 @@ import android.graphics.Canvas
 import android.graphics.RectF
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 
@@ -31,7 +32,7 @@ class EmptyDial : Dial {
 
     override fun drawingBox(): RectF = RectF()
 
-    override fun measure(drawingBox: RectF) {}
+    override fun measure(drawingBox: RectF, secondarySector: Sector?) {}
 
     override fun draw(canvas: Canvas) {}
 
@@ -39,5 +40,5 @@ class EmptyDial : Dial {
 
     override fun events(): Observable<Event> = Observable.empty()
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType) {}
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean = false
 }

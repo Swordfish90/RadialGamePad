@@ -16,9 +16,10 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.utils
+package com.swordfish.radialgamepad.library.math
 
 import android.graphics.PointF
+import com.swordfish.radialgamepad.library.utils.Constants
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -27,6 +28,8 @@ import kotlin.math.sqrt
 object MathUtils {
 
     fun toRadians(degrees: Float) = Math.toRadians(degrees.toDouble()).toFloat()
+
+    fun toDegrees(radians: Float) = Math.toDegrees(radians.toDouble()).toFloat()
 
     /** Compute the angle with the x axis of the line between two points. Results in range [0,2pi[.*/
     fun angle(x1: Float, x2: Float, y1: Float, y2: Float): Float {
@@ -50,7 +53,10 @@ object MathUtils {
     fun convertPolarCoordinatesToSquares(angle: Float, strength: Float): PointF {
         val u = strength * cos(angle)
         val v = strength * sin(angle)
-        return mapEllipticalDiskCoordinatesToSquare(u, v)
+        return mapEllipticalDiskCoordinatesToSquare(
+            u,
+            v
+        )
     }
 
     private fun mapEllipticalDiskCoordinatesToSquare(u: Float, v: Float): PointF {
