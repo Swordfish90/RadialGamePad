@@ -195,7 +195,7 @@ class PrimaryButtonsDial(
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
         val newPressed = fingers
-            .map { getAssociatedId(it.x, it.y) }
+            .mapNotNull { getAssociatedId(it.x, it.y) }
             .toSet()
 
         if (newPressed != pressed) {
@@ -208,18 +208,23 @@ class PrimaryButtonsDial(
         return false
     }
 
-    private fun getAssociatedId(x: Float, y: Float): Int {
+    private fun getAssociatedId(x: Float, y: Float): Int? {
         if (centerAction != null && MathUtils.distance(normalizedCenter.x, x, normalizedCenter.y, y) < normalizedButtonRadius) {
             return centerAction.id
         }
 
-        val index = (floor(computeTouchAngle(x, y) / actionAngle).toInt())
-        return circleActions[index].id
+        if (circleActions.isNotEmpty()) {
+            val index = (floor(computeTouchAngle(x, y) / actionAngle).toInt())
+            return circleActions[index].id
+        }
+
+        return null
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        val id = getAssociatedId(relativeX, relativeY)
-        eventsRelay.accept(Event.Gesture(id, gestureType))
+        getAssociatedId(relativeX, relativeY)?.let {
+            eventsRelay.accept(Event.Gesture(it, gestureType))
+        }
         return false
     }
 
