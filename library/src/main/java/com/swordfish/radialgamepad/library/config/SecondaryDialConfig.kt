@@ -18,6 +18,8 @@
 
 package com.swordfish.radialgamepad.library.config
 
+import kotlin.math.roundToInt
+
 /**
  * The base secondary dial configuration.
  * @property index The position of the control in the outer circle. It starts from 3:00 and increases counterclockwise.
@@ -36,10 +38,9 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
     class SingleButton(
         index: Int,
         spread: Int,
-        scale: Float,
         val buttonConfig: ButtonConfig,
         val theme: RadialGamePadTheme? = null
-    ) : SecondaryDialConfig(index, spread, scale)
+    ) : SecondaryDialConfig(index, spread, 1f)
 
     /**
      * A secondary Stick dial.
@@ -53,12 +54,11 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      */
     class Stick(
         index: Int,
-        spread: Int,
         scale: Float,
         val id: Int,
         val buttonPressId: Int? = null,
         val theme: RadialGamePadTheme? = null
-    ) : SecondaryDialConfig(index, spread, scale)
+    ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
 
     /**
      * A DPAD secondary dial.
@@ -72,13 +72,12 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      */
     class Cross(
         index: Int,
-        spread: Int,
         scale: Float,
         val id: Int,
         val rightDrawableId: Int? = null,
         val rightDrawableForegroundId: Int? = null,
         val theme: RadialGamePadTheme? = null
-    ) : SecondaryDialConfig(index, spread, scale)
+    ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
 
     /**
      * An empty dial, that gets considered when measuring the gamepad. Useful for creating symmetric pads.
