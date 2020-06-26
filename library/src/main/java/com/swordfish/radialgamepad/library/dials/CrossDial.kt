@@ -41,7 +41,7 @@ class CrossDial(
     pressedDrawableId: Int,
     foregroundDrawableId: Int?,
     theme: RadialGamePadTheme
-) : MotionDial {
+) : Dial {
 
     companion object {
         private const val DRAWABLE_SIZE_SCALING = 0.75
@@ -149,16 +149,6 @@ class CrossDial(
                 canvas.restore()
             }
         }
-    }
-
-    override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
-        if (id != this.id) return false
-        return handleTouchEvent(relativeX - 0.5f, relativeY - 0.5f)
-    }
-
-    override fun simulateClearMotion(id: Int): Boolean {
-        if (id != this.id) return false
-        return reset()
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {

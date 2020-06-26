@@ -84,6 +84,9 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+        // We ignore touch input when simulating motion externally
+        if (simulatedFirstTouch != null) return false
+
         if (fingers.isEmpty()) return reset()
 
         if (trackedPointerId == null) {
