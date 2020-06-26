@@ -84,12 +84,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        if (fingers.isEmpty() && trackedPointerId == null) {
-            return false
-        } else if (fingers.isEmpty()) {
-            reset()
-            return true
-        }
+        if (fingers.isEmpty()) return reset()
 
         if (trackedPointerId == null) {
             val finger = fingers.first()
@@ -102,11 +97,7 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
         } else {
             val finger = fingers
                 .firstOrNull { it.pointerId == trackedPointerId }
-
-            if (finger == null) {
-                reset()
-                return true
-            }
+                ?: return reset()
 
             handleTouchEvent(finger.x, finger.y)
             return true
@@ -151,18 +142,26 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
         }
     }
 
-    private fun reset() {
+    private fun reset(): Boolean {
+        val isStickActive = firstTouch != null || simulatedFirstTouch != null
+        val isStickPressed = isButtonPressed
+
         strength = 0f
         angle = 0f
         firstTouch = null
         simulatedFirstTouch = null
         trackedPointerId = null
-        eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+        isButtonPressed = false
 
-        if (keyPressId != null && isButtonPressed) {
-            isButtonPressed = false
+        if (isStickActive) {
+            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+        }
+
+        if (keyPressId != null && isStickPressed) {
             eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_UP, false))
         }
+
+        return isStickActive || isStickPressed
     }
 
     companion object {

@@ -158,38 +158,34 @@ class CrossDial(
 
     override fun simulateClearMotion(id: Int): Boolean {
         if (id != this.id) return false
-        reset()
-        return true
+        return reset()
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        if (fingers.isEmpty() && currentIndex == null) {
-            return false
-        } else if (fingers.isEmpty()) {
-            reset()
-            return true
-        }
+        if (fingers.isEmpty()) return reset()
 
         if (trackedPointerId == null) {
             val finger = fingers.first()
             trackedPointerId = finger.pointerId
             return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
         } else {
-            val trackedFinger = fingers.firstOrNull { it.pointerId == trackedPointerId }
-
-            if (trackedFinger == null) {
-                trackedPointerId = null
-                return true
-            }
+            val trackedFinger = fingers
+                .firstOrNull { it.pointerId == trackedPointerId } ?: return reset()
 
             return handleTouchEvent(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f)
         }
     }
 
-    private fun reset() {
+    private fun reset(): Boolean {
+        val emitUpdate = currentIndex != null
+
         currentIndex = null
         trackedPointerId = null
-        eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+
+        if (emitUpdate) {
+            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+        }
+        return emitUpdate
     }
 
     private fun handleTouchEvent(x: Float, y: Float): Boolean {
