@@ -33,6 +33,7 @@ sealed class PrimaryDialConfig {
         val id: Int,
         val rightDrawableId: Int? = null,
         val rightDrawableForegroundId: Int? = null,
+        val contentDescription: String = "D-Pad",
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 
@@ -45,6 +46,7 @@ sealed class PrimaryDialConfig {
     data class Stick(
         val id: Int,
         val buttonPressId: Int? = null,
+        val contentDescription: String = "Stick",
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 

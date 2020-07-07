@@ -21,8 +21,10 @@ package com.swordfish.radialgamepad.library.dials
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.KeyEvent
 import com.jakewharton.rxrelay2.PublishRelay
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
@@ -235,6 +237,22 @@ class PrimaryButtonsDial(
         } else {
             paint.color = buttonTheme.normalColor
         }
+    }
+
+    override fun accessibilityBoxes(): List<AccessibilityBox> {
+        val result = mutableListOf<AccessibilityBox>()
+
+        result += circleActions
+            .filter { it.visible && it.contentDescription != null }
+            .mapIndexed { index, button ->
+                AccessibilityBox(labelsDrawingBoxes[index]!!.roundToInt(), button.contentDescription!!)
+            }
+
+        if (centerAction?.contentDescription != null) {
+            result += AccessibilityBox(centerLabelDrawingBox.roundToInt(), centerAction.contentDescription)
+        }
+
+        return result
     }
 
     private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>) {

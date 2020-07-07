@@ -23,12 +23,14 @@ import android.graphics.Canvas
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import com.jakewharton.rxrelay2.PublishRelay
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.Constants
+import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import java.lang.Math.toDegrees
@@ -40,6 +42,7 @@ class CrossDial(
     normalDrawableId: Int,
     pressedDrawableId: Int,
     foregroundDrawableId: Int?,
+    private val contentDescription: String,
     theme: RadialGamePadTheme
 ) : Dial {
 
@@ -226,6 +229,10 @@ class CrossDial(
             10 -> BUTTON_UP_RIGHT
             else -> BUTTON_RIGHT
         }
+    }
+
+    override fun accessibilityBoxes(): List<AccessibilityBox> {
+        return listOf(AccessibilityBox(drawingBox.roundToInt(), contentDescription))
     }
 
     override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()

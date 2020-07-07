@@ -20,10 +20,15 @@ package com.swordfish.radialgamepad.library
 
 import android.content.Context
 import android.graphics.*
+import android.os.Bundle
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.customview.widget.ExploreByTouchHelper
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
 import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
@@ -53,6 +58,44 @@ class RadialGamePad @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), EventsSource {
+
+    private val exploreByTouchHelper = object : ExploreByTouchHelper(this) {
+
+        private fun computeVirtualViews(): Map<Int, AccessibilityBox> {
+            return allInteractors()
+                .flatMap { it.dial.accessibilityBoxes() }
+                .mapIndexed { index, accessibilityBox -> index to accessibilityBox }
+                .toMap()
+        }
+
+        override fun getVirtualViewAt(x: Float, y: Float): Int {
+            return computeVirtualViews().entries
+                .filter { (_, accessibilityBox) -> accessibilityBox.rect.contains(x.roundToInt(), y.roundToInt()) }
+                .map { (id, _) -> id }
+                .firstOrNull() ?: INVALID_ID
+        }
+
+        override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
+            computeVirtualViews().forEach { (id, _) ->  virtualViewIds.add(id) }
+        }
+
+        override fun onPerformActionForVirtualView(
+            virtualViewId: Int,
+            action: Int,
+            arguments: Bundle?
+        ): Boolean {
+            return false
+        }
+
+        override fun onPopulateNodeForVirtualView(
+            virtualViewId: Int,
+            node: AccessibilityNodeInfoCompat
+        ) {
+            val virtualView = computeVirtualViews()[virtualViewId]
+            node.setBoundsInParent(virtualView!!.rect)
+            node.contentDescription = virtualView!!.text
+        }
+    }
 
     private val marginsInPixel: Int = PaintUtils.convertDpToPixel(marginsInDp, context).roundToInt()
 
@@ -104,6 +147,7 @@ class RadialGamePad @JvmOverloads constructor(
     init {
         initializePrimaryInteractor(gamePadConfig.primaryDial)
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
+        ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
@@ -138,11 +182,13 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.rightDrawableId ?: R.drawable.direction_right_normal,
                 configuration.rightDrawableId ?: R.drawable.direction_right_pressed,
                 configuration.rightDrawableForegroundId,
+                configuration.contentDescription,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
                 configuration.id,
                 configuration.buttonPressId,
+                configuration.contentDescription,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.PrimaryButtons -> PrimaryButtonsDial(
@@ -162,6 +208,7 @@ class RadialGamePad @JvmOverloads constructor(
                 is SecondaryDialConfig.Stick -> StickDial(
                     config.id,
                     config.buttonPressId,
+                    config.contentDescription,
                     config.theme ?: gamePadConfig.theme
                 )
                 is SecondaryDialConfig.SingleButton -> ButtonDial(
@@ -177,6 +224,7 @@ class RadialGamePad @JvmOverloads constructor(
                     config.rightDrawableId ?: R.drawable.direction_right_normal,
                     config.rightDrawableId ?: R.drawable.direction_right_pressed,
                     config.rightDrawableForegroundId,
+                    config.contentDescription,
                     config.theme ?: gamePadConfig.theme
                 )
             }
@@ -368,6 +416,13 @@ class RadialGamePad @JvmOverloads constructor(
 
     private fun allInteractors(): List<DialInteractor> =
         listOf(primaryInteractor) + secondaryInteractors
+
+    override fun dispatchHoverEvent(event: MotionEvent): Boolean {
+        if (exploreByTouchHelper.dispatchHoverEvent(event)) {
+            return true
+        }
+        return super.dispatchHoverEvent(event)
+    }
 
     companion object {
         const val DEFAULT_SECONDARY_DIAL_SCALE = 0.75f
