@@ -64,6 +64,7 @@ class RadialGamePad @JvmOverloads constructor(
         private fun computeVirtualViews(): Map<Int, AccessibilityBox> {
             return allInteractors()
                 .flatMap { it.dial.accessibilityBoxes() }
+                .sortedBy { it.rect.top }
                 .mapIndexed { index, accessibilityBox -> index to accessibilityBox }
                 .toMap()
         }
