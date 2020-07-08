@@ -117,6 +117,12 @@ class RadialGamePad @JvmOverloads constructor(
             requestLayoutAndInvalidate()
         }
 
+    var primaryDialMaxSizeDp: Float = Float.MAX_VALUE
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
     var secondaryDialRotation: Float = 0f
         set(value) {
             field = toRadians(value)
@@ -240,7 +246,8 @@ class RadialGamePad @JvmOverloads constructor(
 
         size = minOf(
             (measuredWidth - marginsInPixel * 2) / extendedSize.width(),
-            (measuredHeight - marginsInPixel * 2) / extendedSize.height()
+            (measuredHeight - marginsInPixel * 2) / extendedSize.height(),
+            PaintUtils.convertDpToPixel(primaryDialMaxSizeDp, context) / 2f
         )
 
         val maxDisplacementX = (measuredWidth - marginsInPixel * 2 - size * extendedSize.width()) / 2f
