@@ -26,6 +26,14 @@ import kotlin.math.roundToInt
 
 object PaintUtils {
 
+    fun mergeRectangles(rectangles: Iterable<RectF>): RectF {
+        val result = rectangles.first()
+        rectangles.drop(1).forEach {
+            result.union(it)
+        }
+        return result
+    }
+
     fun RectF.scale(scale: Float): RectF {
         return RectF(left * scale, top * scale, right * scale, bottom * scale)
     }

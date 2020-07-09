@@ -303,15 +303,15 @@ class RadialGamePad @JvmOverloads constructor(
     private fun computeTotalSizeAsSizeMultipliers(): RectF {
         val allSockets = gamePadConfig.secondaryDials
 
-        val sizes = allSockets.map { measureSecondaryDialAsSizeMultiplier(it) }
+        val sizes = allSockets.map { config ->
+            if (config.avoidClipping) {
+                measureSecondaryDialDrawingBoxNoClipping(config)
+            } else {
+                measureSecondaryDialDrawingBox(config)
+            }
+        }
 
-        val minX = minOf(sizes.map { it.left }.min() ?: -1f, -1f)
-        val minY = minOf(sizes.map { it.top }.min() ?: -1f, -1f)
-
-        val maxX = maxOf(sizes.map { it.right }.max() ?: 1f, 1f)
-        val maxY = maxOf(sizes.map { it.bottom }.max() ?: 1f, 1f)
-
-        return RectF(minX, minY, maxX, maxY)
+        return PaintUtils.mergeRectangles(listOf(RectF(-1f, -1f, 1f, 1f)) + sizes)
     }
 
     private fun measureSecondaryDials() {
@@ -328,7 +328,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun measureSecondaryDial(config: SecondaryDialConfig): Pair<RectF, Sector> {
-        val rect = measureSecondaryDialAsSizeMultiplier(config).scale(size)
+        val rect = measureSecondaryDialDrawingBox(config).scale(size)
         rect.offset(center.x, center.y)
 
         val dialAngle = Constants.PI2 / dials
@@ -345,12 +345,23 @@ class RadialGamePad @JvmOverloads constructor(
         return rect to sector
     }
 
-    private fun measureSecondaryDialAsSizeMultiplier(config: SecondaryDialConfig): RectF {
-        val dialAngle = Constants.PI2 / dials
-        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * config.scale
-        val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * config.spread / 2f), 1.0f + dialSize / 2f)
+    private fun measureSecondaryDialDrawingBoxNoClipping(config: SecondaryDialConfig): RectF {
+        val drawingBoxes = (config.index until (config.index + config.spread))
+            .map { measureSecondaryDialDrawingBox(config.scale, it, 1) }
 
-        val index = config.index + (config.spread - 1) * 0.5f
+        return PaintUtils.mergeRectangles(drawingBoxes)
+    }
+
+    private fun measureSecondaryDialDrawingBox(config: SecondaryDialConfig): RectF {
+        return measureSecondaryDialDrawingBox(config.scale, config.index, config.spread)
+    }
+
+    private fun measureSecondaryDialDrawingBox(scale: Float, index: Int, spread: Int): RectF {
+        val dialAngle = Constants.PI2 / dials
+        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * scale
+        val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * spread / 2f), 1.0f + dialSize / 2f)
+
+        val index = index + (spread - 1) * 0.5f
 
         val finalAngle = index * dialAngle + secondaryDialRotation
 
