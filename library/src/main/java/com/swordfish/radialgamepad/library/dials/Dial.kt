@@ -20,6 +20,7 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.graphics.Canvas
 import android.graphics.RectF
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
@@ -40,4 +41,6 @@ interface Dial : EventsSource {
 
     /** Pass the gesture to the appropriate dial. Returns true if requires redraw. */
     fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean
+
+    fun accessibilityBoxes(): List<AccessibilityBox>
 }

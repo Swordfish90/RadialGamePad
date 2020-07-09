@@ -22,6 +22,7 @@ import android.content.Context
 import android.graphics.*
 import android.view.KeyEvent
 import com.jakewharton.rxrelay2.PublishRelay
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
@@ -180,6 +181,12 @@ class ButtonDial(
     }
 
     override fun events(): Observable<Event> = events.distinctUntilChanged()
+
+    override fun accessibilityBoxes(): List<AccessibilityBox> {
+        return config.contentDescription?.let {
+            return listOf(AccessibilityBox(drawingBox.roundToInt(), it))
+        } ?: listOf()
+    }
 
     private fun getTheme() = (config.theme ?: theme)
 

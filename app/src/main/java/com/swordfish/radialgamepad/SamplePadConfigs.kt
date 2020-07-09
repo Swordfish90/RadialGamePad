@@ -89,7 +89,13 @@ object SamplePadConfigs {
                     )
                 ),
                 // When this stick is double tapped, it's going to fire a Button event
-                SecondaryDialConfig.Stick(9, 2.2f, 1, KeyEvent.KEYCODE_BUTTON_THUMBL)
+                SecondaryDialConfig.Stick(
+                    9,
+                    2.2f,
+                    1,
+                    KeyEvent.KEYCODE_BUTTON_THUMBL,
+                    contentDescription = "Left Stick"
+                )
             )
         )
 
@@ -100,19 +106,23 @@ object SamplePadConfigs {
                 listOf(
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_A,
-                        iconId = R.drawable.psx_circle
+                        iconId = R.drawable.psx_circle,
+                        contentDescription = "Circle"
                     ),
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_X,
-                        iconId = R.drawable.psx_triangle
+                        iconId = R.drawable.psx_triangle,
+                        contentDescription = "Triangle"
                     ),
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_Y,
-                        iconId = R.drawable.psx_square
+                        iconId = R.drawable.psx_square,
+                        contentDescription = "Square"
                     ),
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_B,
-                        iconId = R.drawable.psx_cross
+                        iconId = R.drawable.psx_cross,
+                        contentDescription = "Cross"
                     )
                 )
             ),
@@ -136,7 +146,13 @@ object SamplePadConfigs {
                     )
                 ),
                 // When this stick is double tapped, it's going to fire a Button event
-                SecondaryDialConfig.Stick(8, 2.2f, 2, KeyEvent.KEYCODE_BUTTON_THUMBL)
+                SecondaryDialConfig.Stick(
+                    8,
+                    2.2f,
+                    2,
+                    KeyEvent.KEYCODE_BUTTON_THUMBL,
+                    contentDescription = "Right Stick"
+                )
             )
         )
 

@@ -18,20 +18,10 @@
 
 package com.swordfish.radialgamepad.library.config
 
-/**
- * Configuration for a single button.
- * @property id The control id. It is passed back to discriminate events.
- * @property label A text string to be displayed on top of the button
- * @property visible Prevent this button from being shown on screen
- * @property iconId A drawable resource id to an icon which is displayed on top of the button
- * @property contentDescription Content description read by screen reader. By default is label.
- * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
- */
-data class ButtonConfig(
-    val id: Int,
-    val label: String? = null,
-    val visible: Boolean = true,
-    val iconId: Int? = null,
-    val contentDescription: String? = label,
-    val theme: RadialGamePadTheme? = null
+data class CrossContentDescription(
+    val baseName: String = "d-pad",
+    val up: String = "up",
+    val down: String = "down",
+    val left: String = "left",
+    val right: String = "right"
 )

@@ -22,18 +22,25 @@ import android.graphics.*
 import android.view.KeyEvent
 import androidx.core.graphics.ColorUtils
 import com.jakewharton.rxrelay2.PublishRelay
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.sin
 
-class StickDial(private val id: Int, private val keyPressId: Int?, private val theme: RadialGamePadTheme) : MotionDial {
+class StickDial(
+    private val id: Int,
+    private val keyPressId: Int?,
+    private val contentDescription: String? = null,
+    private val theme: RadialGamePadTheme
+) : MotionDial {
 
     private val paint = BasePaint()
 
@@ -165,6 +172,12 @@ class StickDial(private val id: Int, private val keyPressId: Int?, private val t
         }
 
         return isStickActive || isStickPressed
+    }
+
+    override fun accessibilityBoxes(): List<AccessibilityBox> {
+        return contentDescription?.let {
+            listOf(AccessibilityBox(drawingBox.roundToInt(), it))
+        } ?: listOf()
     }
 
     companion object {

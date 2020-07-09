@@ -20,10 +20,15 @@ package com.swordfish.radialgamepad.library
 
 import android.content.Context
 import android.graphics.*
+import android.os.Bundle
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.customview.widget.ExploreByTouchHelper
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
 import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
@@ -54,6 +59,45 @@ class RadialGamePad @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), EventsSource {
 
+    private val exploreByTouchHelper = object : ExploreByTouchHelper(this) {
+
+        private fun computeVirtualViews(): Map<Int, AccessibilityBox> {
+            return allInteractors()
+                .flatMap { it.dial.accessibilityBoxes() }
+                .sortedBy { it.rect.top }
+                .mapIndexed { index, accessibilityBox -> index to accessibilityBox }
+                .toMap()
+        }
+
+        override fun getVirtualViewAt(x: Float, y: Float): Int {
+            return computeVirtualViews().entries
+                .filter { (_, accessibilityBox) -> accessibilityBox.rect.contains(x.roundToInt(), y.roundToInt()) }
+                .map { (id, _) -> id }
+                .firstOrNull() ?: INVALID_ID
+        }
+
+        override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
+            computeVirtualViews().forEach { (id, _) ->  virtualViewIds.add(id) }
+        }
+
+        override fun onPerformActionForVirtualView(
+            virtualViewId: Int,
+            action: Int,
+            arguments: Bundle?
+        ): Boolean {
+            return false
+        }
+
+        override fun onPopulateNodeForVirtualView(
+            virtualViewId: Int,
+            node: AccessibilityNodeInfoCompat
+        ) {
+            val virtualView = computeVirtualViews()[virtualViewId]
+            node.setBoundsInParent(virtualView!!.rect)
+            node.contentDescription = virtualView!!.text
+        }
+    }
+
     private val marginsInPixel: Int = PaintUtils.convertDpToPixel(marginsInDp, context).roundToInt()
 
     private var dials: Int = gamePadConfig.sockets
@@ -68,6 +112,12 @@ class RadialGamePad @JvmOverloads constructor(
         }
 
     var offsetY: Float = 0.0f
+        set(value) {
+            field = value
+            requestLayoutAndInvalidate()
+        }
+
+    var primaryDialMaxSizeDp: Float = Float.MAX_VALUE
         set(value) {
             field = value
             requestLayoutAndInvalidate()
@@ -104,6 +154,7 @@ class RadialGamePad @JvmOverloads constructor(
     init {
         initializePrimaryInteractor(gamePadConfig.primaryDial)
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
+        ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
@@ -138,11 +189,13 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.rightDrawableId ?: R.drawable.direction_right_normal,
                 configuration.rightDrawableId ?: R.drawable.direction_right_pressed,
                 configuration.rightDrawableForegroundId,
+                configuration.contentDescription,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
                 configuration.id,
                 configuration.buttonPressId,
+                configuration.contentDescription,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.PrimaryButtons -> PrimaryButtonsDial(
@@ -162,6 +215,7 @@ class RadialGamePad @JvmOverloads constructor(
                 is SecondaryDialConfig.Stick -> StickDial(
                     config.id,
                     config.buttonPressId,
+                    config.contentDescription,
                     config.theme ?: gamePadConfig.theme
                 )
                 is SecondaryDialConfig.SingleButton -> ButtonDial(
@@ -177,6 +231,7 @@ class RadialGamePad @JvmOverloads constructor(
                     config.rightDrawableId ?: R.drawable.direction_right_normal,
                     config.rightDrawableId ?: R.drawable.direction_right_pressed,
                     config.rightDrawableForegroundId,
+                    config.contentDescription,
                     config.theme ?: gamePadConfig.theme
                 )
             }
@@ -191,7 +246,8 @@ class RadialGamePad @JvmOverloads constructor(
 
         size = minOf(
             (measuredWidth - marginsInPixel * 2) / extendedSize.width(),
-            (measuredHeight - marginsInPixel * 2) / extendedSize.height()
+            (measuredHeight - marginsInPixel * 2) / extendedSize.height(),
+            PaintUtils.convertDpToPixel(primaryDialMaxSizeDp, context) / 2f
         )
 
         val maxDisplacementX = (measuredWidth - marginsInPixel * 2 - size * extendedSize.width()) / 2f
@@ -247,15 +303,15 @@ class RadialGamePad @JvmOverloads constructor(
     private fun computeTotalSizeAsSizeMultipliers(): RectF {
         val allSockets = gamePadConfig.secondaryDials
 
-        val sizes = allSockets.map { measureSecondaryDialAsSizeMultiplier(it) }
+        val sizes = allSockets.map { config ->
+            if (config.avoidClipping) {
+                measureSecondaryDialDrawingBoxNoClipping(config)
+            } else {
+                measureSecondaryDialDrawingBox(config)
+            }
+        }
 
-        val minX = minOf(sizes.map { it.left }.min() ?: -1f, -1f)
-        val minY = minOf(sizes.map { it.top }.min() ?: -1f, -1f)
-
-        val maxX = maxOf(sizes.map { it.right }.max() ?: 1f, 1f)
-        val maxY = maxOf(sizes.map { it.bottom }.max() ?: 1f, 1f)
-
-        return RectF(minX, minY, maxX, maxY)
+        return PaintUtils.mergeRectangles(listOf(RectF(-1f, -1f, 1f, 1f)) + sizes)
     }
 
     private fun measureSecondaryDials() {
@@ -272,7 +328,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun measureSecondaryDial(config: SecondaryDialConfig): Pair<RectF, Sector> {
-        val rect = measureSecondaryDialAsSizeMultiplier(config).scale(size)
+        val rect = measureSecondaryDialDrawingBox(config).scale(size)
         rect.offset(center.x, center.y)
 
         val dialAngle = Constants.PI2 / dials
@@ -289,12 +345,23 @@ class RadialGamePad @JvmOverloads constructor(
         return rect to sector
     }
 
-    private fun measureSecondaryDialAsSizeMultiplier(config: SecondaryDialConfig): RectF {
-        val dialAngle = Constants.PI2 / dials
-        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * config.scale
-        val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * config.spread / 2f), 1.0f + dialSize / 2f)
+    private fun measureSecondaryDialDrawingBoxNoClipping(config: SecondaryDialConfig): RectF {
+        val drawingBoxes = (config.index until (config.index + config.spread))
+            .map { measureSecondaryDialDrawingBox(config.scale, it, 1) }
 
-        val index = config.index + (config.spread - 1) * 0.5f
+        return PaintUtils.mergeRectangles(drawingBoxes)
+    }
+
+    private fun measureSecondaryDialDrawingBox(config: SecondaryDialConfig): RectF {
+        return measureSecondaryDialDrawingBox(config.scale, config.index, config.spread)
+    }
+
+    private fun measureSecondaryDialDrawingBox(scale: Float, index: Int, spread: Int): RectF {
+        val dialAngle = Constants.PI2 / dials
+        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * scale
+        val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * spread / 2f), 1.0f + dialSize / 2f)
+
+        val index = index + (spread - 1) * 0.5f
 
         val finalAngle = index * dialAngle + secondaryDialRotation
 
@@ -368,6 +435,13 @@ class RadialGamePad @JvmOverloads constructor(
 
     private fun allInteractors(): List<DialInteractor> =
         listOf(primaryInteractor) + secondaryInteractors
+
+    override fun dispatchHoverEvent(event: MotionEvent): Boolean {
+        if (exploreByTouchHelper.dispatchHoverEvent(event)) {
+            return true
+        }
+        return super.dispatchHoverEvent(event)
+    }
 
     companion object {
         const val DEFAULT_SECONDARY_DIAL_SCALE = 0.75f

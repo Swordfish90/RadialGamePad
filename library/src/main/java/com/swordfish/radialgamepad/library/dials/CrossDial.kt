@@ -23,12 +23,16 @@ import android.graphics.Canvas
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import com.jakewharton.rxrelay2.PublishRelay
+import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
+import com.swordfish.radialgamepad.library.config.CrossContentDescription
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.Constants
+import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
+import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import java.lang.Math.toDegrees
@@ -40,10 +44,12 @@ class CrossDial(
     normalDrawableId: Int,
     pressedDrawableId: Int,
     foregroundDrawableId: Int?,
+    private val contentDescription: CrossContentDescription,
     theme: RadialGamePadTheme
 ) : Dial {
 
     companion object {
+        private const val ACCESSIBILITY_BOX_SCALE = 0.33f
         private const val DRAWABLE_SIZE_SCALING = 0.75
         private const val BUTTON_COUNT = 8
         private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
@@ -97,6 +103,10 @@ class CrossDial(
     override fun drawingBox(): RectF = drawingBox
 
     override fun trackedPointerId(): Int? = trackedPointerId
+
+    private fun composeDescriptionString(direction: String): String {
+        return "${contentDescription.baseName} $direction"
+    }
 
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
@@ -226,6 +236,34 @@ class CrossDial(
             10 -> BUTTON_UP_RIGHT
             else -> BUTTON_RIGHT
         }
+    }
+
+    override fun accessibilityBoxes(): List<AccessibilityBox> {
+        val offsetSize = drawingBox.width() * 0.25f
+
+        val upRect = drawingBox.scaleCentered(ACCESSIBILITY_BOX_SCALE).apply {
+            offset(0f, -offsetSize)
+        }
+
+        val leftRect = drawingBox.scaleCentered(ACCESSIBILITY_BOX_SCALE).apply {
+            offset(-offsetSize, 0f)
+        }
+
+        val rightRect = drawingBox.scaleCentered(ACCESSIBILITY_BOX_SCALE).apply {
+            offset(offsetSize, 0f)
+        }
+
+        val downRect = drawingBox.scaleCentered(ACCESSIBILITY_BOX_SCALE).apply {
+            offset(0f, offsetSize)
+        }
+
+
+        return listOf(
+            AccessibilityBox(upRect.roundToInt(), composeDescriptionString(contentDescription.up)),
+            AccessibilityBox(leftRect.roundToInt(), composeDescriptionString(contentDescription.left)),
+            AccessibilityBox(rightRect.roundToInt(), composeDescriptionString(contentDescription.right)),
+            AccessibilityBox(downRect.roundToInt(), composeDescriptionString(contentDescription.down))
+        )
     }
 
     override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()

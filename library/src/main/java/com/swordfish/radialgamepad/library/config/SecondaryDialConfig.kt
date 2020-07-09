@@ -25,8 +25,9 @@ import kotlin.math.roundToInt
  * @property index The position of the control in the outer circle. It starts from 3:00 and increases counterclockwise.
  * @property spread Defines how many secondary dials is occupies
  * @property scale Defines a scaling factor. Used to make some controls more prominent.
+ * @property avoidClipping When measuring, the library is not allowed to clip the area not occupied by the drawing box.
  */
-sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Float) {
+sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Float, val avoidClipping: Boolean = false) {
     /**
      * A simple, single button secondary dial.
      * @property index The position of the control in the outer circle. It starts from 3:00 and increases counterclockwise.
@@ -40,7 +41,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         spread: Int,
         val buttonConfig: ButtonConfig,
         val theme: RadialGamePadTheme? = null
-    ) : SecondaryDialConfig(index, spread, 1f)
+    ) : SecondaryDialConfig(index, spread, 1f, spread != 1)
 
     /**
      * A secondary Stick dial.
@@ -50,6 +51,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property id The id returned when its events are fired.
      * @property id The id returned when its events are fired.
      * @property buttonPressId The optional id fired when the stick is double tapped.
+     * @property contentDescription Content description read by the screen reader. Defaults to "Stick".
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
      */
     class Stick(
@@ -57,6 +59,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         scale: Float,
         val id: Int,
         val buttonPressId: Int? = null,
+        val contentDescription: String = "Stick",
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
 
@@ -68,6 +71,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property id The id returned when its events are fired.
      * @property rightDrawableId The optional drawable that define the shape of the right button.
      * @property rightDrawableForegroundId The optional drawable that is drawn on top with text color.
+     * @property contentDescription Content description read by the screen reader. Defaults to "D-Pad".
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
      */
     class Cross(
@@ -76,6 +80,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         val id: Int,
         val rightDrawableId: Int? = null,
         val rightDrawableForegroundId: Int? = null,
+        val contentDescription: CrossContentDescription = CrossContentDescription(),
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
 
