@@ -39,54 +39,55 @@ class MainActivity : Activity() {
     private lateinit var pad: RadialGamePad
 
     private val compositeDisposable = CompositeDisposable()
-    
-    private val padConfig =
-        RadialGamePadConfig(
-            // the pad will have 6 secondary dials (not every one needs to be used)
-            sockets = 6,
-            
-            // perform haptic feedback when a control is pressed
-            haptic = true,
-            
-            // the primary dial is a DPad with id = 0
-            primaryDial = PrimaryDialConfig.Cross(0),
-            
-            // secondary dial are 4 buttons, with spread 1 and size 1.
-            secondaryDials = listOf(
-                SecondaryDialConfig.SingleButton(
-                    1, 1, 1f, ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_SELECT,
-                        iconId = R.drawable.ic_play
-                    )
-                ),
-                SecondaryDialConfig.SingleButton(
-                    2, 1, 1f, ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_L1,
-                        iconId = R.drawable.ic_stop
-                    )
-                ),
-                SecondaryDialConfig.SingleButton(4, 1, 1f,
-                    ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_MODE,
-                        iconId = R.drawable.ic_volume_down
-                    )
-                ),
-                SecondaryDialConfig.SingleButton(5, 1, 1f,
-                    ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_MODE,
-                        iconId = R.drawable.ic_volume_up
-                    )
+
+    private val padConfig = RadialGamePadConfig(
+        // The pad will have 6 secondary dials (not every one needs to be used)
+        sockets = 6,
+
+        // Perform haptic feedback when a control is pressed
+        haptic = true,
+
+        // The primary dial is a DPad with id = 0
+        primaryDial = PrimaryDialConfig.Cross(0),
+
+        // Secondary dial are 4 buttons, with spread 1.
+        secondaryDials = listOf(
+            SecondaryDialConfig.SingleButton(1, 1,
+                ButtonConfig(
+                    id = KeyEvent.KEYCODE_BUTTON_SELECT,
+                    iconId = R.drawable.ic_play
+                )
+            ),
+            SecondaryDialConfig.SingleButton(2, 1,
+                ButtonConfig(
+                    id = KeyEvent.KEYCODE_BUTTON_L1,
+                    iconId = R.drawable.ic_stop
+                )
+            ),
+            SecondaryDialConfig.SingleButton(4, 1,
+                ButtonConfig(
+                    id = KeyEvent.KEYCODE_BUTTON_MODE,
+                    iconId = R.drawable.ic_volume_down
+                )
+            ),
+            SecondaryDialConfig.SingleButton(5, 1,
+                ButtonConfig(
+                    id = KeyEvent.KEYCODE_BUTTON_MODE,
+                    iconId = R.drawable.ic_volume_up
                 )
             )
         )
+    )
 
-    override fun onCreate(): View? {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
         setContentView(R.layout.main_activity)
-        
-        // creating a pad with default theme and 8dp of margins
-        pad = RadialGamePad(SamplePadConfigs.REMOTE, 8f, requireContext())
-        
-        view.findViewById<FrameLayout>(R.id.container).addView(pad)
+
+        // Create a pad with default theme and 8dp of margins
+        pad = RadialGamePad(padConfig, 8f, requireContext())
+
+        findViewById<FrameLayout>(R.id.container).addView(pad)
     }
 
     override fun onResume() {
