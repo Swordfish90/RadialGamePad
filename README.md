@@ -30,7 +30,7 @@ Events are returned as an RxJava2 ```Observable``` and are composed of three dif
 
 * **Direction**: fired from Sticks and Crosses and indicates a direction through the two components xAxis and yAxis
 * **Button**: indicates when a control has been pressed or released (```KeyEvent.ACTION_DOWN``` or ```KeyEvent.ACTION_UP```)
-* **Gesture**: a higher level event such as tap, double tap or press and hold
+* **Gesture**: a higher level event such as tap, double tap or triple tap
 
 Here's a simple example which creates a remote control pad and handles its events:
 
