@@ -16,7 +16,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.swordfish90.radialgamepad:0.1.0'
+    implementation 'com.github.swordfish90:radialgamepad:0.1.0'
+    
+    // To handle Rx events from RadialGamePad
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
 }
 ```
 
