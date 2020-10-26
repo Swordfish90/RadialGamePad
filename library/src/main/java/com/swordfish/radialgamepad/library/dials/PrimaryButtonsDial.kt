@@ -211,13 +211,19 @@ class PrimaryButtonsDial(
     }
 
     private fun getAssociatedId(x: Float, y: Float): Int? {
-        if (centerAction != null && MathUtils.distance(normalizedCenter.x, x, normalizedCenter.y, y) < normalizedButtonRadius) {
+        if (centerAction != null
+            && centerAction.visible
+            && MathUtils.distance(normalizedCenter.x, x, normalizedCenter.y, y) < normalizedButtonRadius
+        ) {
             return centerAction.id
         }
 
         if (circleActions.isNotEmpty()) {
             val index = (floor(computeTouchAngle(x, y) / actionAngle).toInt())
-            return circleActions[index].id
+            val action = circleActions[index]
+            if (action.visible) {
+                return action.id
+            }
         }
 
         return null
