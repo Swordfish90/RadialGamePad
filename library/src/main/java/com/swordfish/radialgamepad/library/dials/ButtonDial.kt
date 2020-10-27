@@ -70,6 +70,8 @@ class ButtonDial(
 
     override fun trackedPointerId(): Int? = null
 
+    override fun updateSecondaryDialsRotation(rotationInRadians: Float) {}
+
     override fun measure(drawingBox: RectF, sector: Sector?) {
         this.drawingBox = drawingBox
         iconDrawable?.bounds = drawingBox.scaleCentered(0.5f).roundToInt()

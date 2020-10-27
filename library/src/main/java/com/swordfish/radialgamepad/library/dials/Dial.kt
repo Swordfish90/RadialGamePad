@@ -36,6 +36,8 @@ interface Dial : EventsSource {
 
     fun draw(canvas: Canvas)
 
+    fun updateSecondaryDialsRotation(rotationInRadians: Float)
+
     /** Pass the touch event to the appropriate dial. Returns true if requires redraw. */
     fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean
 

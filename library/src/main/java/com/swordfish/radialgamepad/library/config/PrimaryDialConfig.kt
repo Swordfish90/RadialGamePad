@@ -58,12 +58,14 @@ sealed class PrimaryDialConfig {
      * @property dials A list of buttons, distributed on a circle around the center.
      * @property center A single, optional button to be displayed at the center.
      * @property rotationInDegrees Optional rotation (in degrees) for the button disposed in circle.
+     * @property rotateWithSecondaryDials You can make the buttons rotate with secondary dials.
      * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
      */
     data class PrimaryButtons(
         val dials: List<ButtonConfig>,
         val center: ButtonConfig? = null,
         val rotationInDegrees: Float = 0f,
+        val rotateWithSecondaryDials: Boolean = false,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 }

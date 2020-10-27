@@ -155,6 +155,7 @@ class RadialGamePad @JvmOverloads constructor(
         initializePrimaryInteractor(gamePadConfig.primaryDial)
         initializeSecondaryInteractors(gamePadConfig.secondaryDials)
         ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
+        requestLayoutAndInvalidate()
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
@@ -203,6 +204,7 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.dials,
                 configuration.center,
                 toRadians(configuration.rotationInDegrees),
+                configuration.rotateWithSecondaryDials,
                 configuration.theme ?: gamePadConfig.theme
             )
         }
@@ -374,6 +376,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun requestLayoutAndInvalidate() {
+        allDials().forEach { it.updateSecondaryDialsRotation(secondaryDialRotation) }
         requestLayout()
         invalidate()
     }

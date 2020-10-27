@@ -21,7 +21,6 @@ package com.swordfish.radialgamepad.library.dials
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.view.KeyEvent
 import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
@@ -47,8 +46,11 @@ class PrimaryButtonsDial(
     private val circleActions: List<ButtonConfig>,
     private val centerAction: ButtonConfig?,
     private val rotationRadians: Float = 0f,
+    private val rotateWithSecondaryDials: Boolean = false,
     private val theme: RadialGamePadTheme
 ) : Dial {
+
+    private var secondaryDialsRotation: Float = 0f
 
     private val actionAngle = Constants.PI2 / circleActions.size
 
@@ -80,6 +82,10 @@ class PrimaryButtonsDial(
             }
         }
         return iconDrawablePairs.toMap()
+    }
+
+    override fun updateSecondaryDialsRotation(rotationInRadians: Float) {
+        secondaryDialsRotation = rotationInRadians
     }
 
     override fun drawingBox(): RectF = drawingBox
@@ -115,7 +121,7 @@ class PrimaryButtonsDial(
         circleActions
             .filter { it.visible }
             .forEachIndexed { index, button ->
-                val buttonAngle = actionAngle * index + rotationRadians
+                val buttonAngle = actionAngle * index + getRotation()
                 updatePainterForButton(button)
 
                 val subDialX = center.x + cos(buttonAngle) * distanceToCenter
@@ -138,6 +144,8 @@ class PrimaryButtonsDial(
                 }
             }
     }
+
+    private fun getRotation() = rotationRadians + if (rotateWithSecondaryDials) secondaryDialsRotation else 0f
 
     override fun draw(canvas: Canvas) {
         val radius = minOf(drawingBox.width(), drawingBox.height()) / 2
@@ -172,7 +180,7 @@ class PrimaryButtonsDial(
         circleActions
             .filter { it.visible }
             .forEachIndexed { index, button ->
-                val buttonAngle = actionAngle * index + rotationRadians
+                val buttonAngle = actionAngle * index + getRotation()
                 updatePainterForButton(button)
 
                 val subDialX = center.x + cos(buttonAngle) * distanceToCenter
@@ -274,7 +282,7 @@ class PrimaryButtonsDial(
     }
 
     private fun computeTouchAngle(x: Float, y: Float): Float {
-        return (MathUtils.angle(0.5f, x, 0.5f, y) + actionAngle / 2 - rotationRadians) % Constants.PI2
+        return (MathUtils.angle(0.5f, x, 0.5f, y) + actionAngle / 2 - getRotation()) % Constants.PI2
     }
 
     override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()

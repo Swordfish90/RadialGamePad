@@ -104,6 +104,8 @@ class CrossDial(
 
     override fun trackedPointerId(): Int? = trackedPointerId
 
+    override fun updateSecondaryDialsRotation(rotationInRadians: Float) {}
+
     private fun composeDescriptionString(direction: String): String {
         return "${contentDescription.baseName} $direction"
     }

@@ -41,6 +41,8 @@ class EmptyDial : Dial {
 
     override fun events(): Observable<Event> = Observable.empty()
 
+    override fun updateSecondaryDialsRotation(rotationInRadians: Float) {}
+
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean = false
 
     override fun accessibilityBoxes(): List<AccessibilityBox> = listOf()

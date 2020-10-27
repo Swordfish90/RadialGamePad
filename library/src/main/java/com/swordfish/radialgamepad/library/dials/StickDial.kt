@@ -65,6 +65,8 @@ class StickDial(
 
     override fun trackedPointerId(): Int? = trackedPointerId
 
+    override fun updateSecondaryDialsRotation(rotationInRadians: Float) {}
+
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
         this.radius = minOf(drawingBox.width(), drawingBox.height()) / 2
