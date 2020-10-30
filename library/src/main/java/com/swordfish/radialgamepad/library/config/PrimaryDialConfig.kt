@@ -18,8 +18,6 @@
 
 package com.swordfish.radialgamepad.library.config
 
-import com.swordfish.radialgamepad.library.R
-
 /**
  * The configuration object for a PrimaryDial.
  */
