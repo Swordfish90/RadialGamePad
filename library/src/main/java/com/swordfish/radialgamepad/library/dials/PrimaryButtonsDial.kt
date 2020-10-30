@@ -19,9 +19,10 @@
 package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.PointF
+import android.graphics.RectF
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.view.KeyEvent
 import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
@@ -29,13 +30,13 @@ import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
-import com.swordfish.radialgamepad.library.paint.BasePaint
-import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
-import com.swordfish.radialgamepad.library.paint.TextPaint
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos

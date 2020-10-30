@@ -33,7 +33,7 @@ abstract class Event(open val haptic: Boolean = false) {
     /**
      * Represents a low level button event.
      * @property id The control id that was passed in RadialGamePadConfig.
-     * @property type The type of action: KeyEvent.ACTION_UP or KeyEvent.ACTION_DOWN
+     * @property action The type of action: KeyEvent.ACTION_UP or KeyEvent.ACTION_DOWN
      */
     data class Button(
         val id: Int,
