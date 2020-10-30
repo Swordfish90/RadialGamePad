@@ -94,7 +94,7 @@ class RadialGamePad @JvmOverloads constructor(
         ) {
             val virtualView = computeVirtualViews()[virtualViewId]
             node.setBoundsInParent(virtualView!!.rect)
-            node.contentDescription = virtualView!!.text
+            node.contentDescription = virtualView.text
         }
     }
 
