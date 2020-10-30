@@ -115,13 +115,13 @@ class StickDial(
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        if (gestureType == GestureType.SINGLE_TAP && keyPressId != null && firstTouch != null) {
+        return if (gestureType == GestureType.SINGLE_TAP && keyPressId != null && firstTouch != null) {
             isButtonPressed = true
             eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_DOWN, true))
-            return true
+            true
         } else {
             eventsRelay.accept(Event.Gesture(id, gestureType))
-            return false
+            false
         }
     }
 
