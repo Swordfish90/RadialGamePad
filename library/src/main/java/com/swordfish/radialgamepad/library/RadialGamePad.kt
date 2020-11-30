@@ -289,7 +289,7 @@ class RadialGamePad @JvmOverloads constructor(
                     minOf(
                         usableWidth,
                         (usableHeight * extendedSize.width() / extendedSize.height()).roundToInt(),
-                        (enforcedMaxSize * extendedSize.height()).roundToInt()
+                        (enforcedMaxSize * extendedSize.width()).roundToInt()
                     ) + marginsInPixel * 2, height
                 )
             }
