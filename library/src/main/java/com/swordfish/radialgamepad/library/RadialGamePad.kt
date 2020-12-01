@@ -271,13 +271,16 @@ class RadialGamePad @JvmOverloads constructor(
         val usableWidth = width - marginsInPixel * 2
         val usableHeight = height - marginsInPixel * 2
 
+        val enforcedMaxSize = PaintUtils.convertDpToPixel(primaryDialMaxSizeDp, context) / 2
+
         when {
             widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.AT_MOST -> {
                 setMeasuredDimension(
                     width,
                     minOf(
                         usableHeight,
-                        (usableWidth * extendedSize.height() / extendedSize.width()).roundToInt()
+                        (usableWidth * extendedSize.height() / extendedSize.width()).roundToInt(),
+                        (enforcedMaxSize * extendedSize.height()).roundToInt()
                     ) + marginsInPixel * 2
                 )
             }
@@ -285,7 +288,8 @@ class RadialGamePad @JvmOverloads constructor(
                 setMeasuredDimension(
                     minOf(
                         usableWidth,
-                        (usableHeight * extendedSize.width() / extendedSize.height()).roundToInt()
+                        (usableHeight * extendedSize.width() / extendedSize.height()).roundToInt(),
+                        (enforcedMaxSize * extendedSize.width()).roundToInt()
                     ) + marginsInPixel * 2, height
                 )
             }
