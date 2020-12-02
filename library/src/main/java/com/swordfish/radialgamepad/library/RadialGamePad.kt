@@ -278,8 +278,8 @@ class RadialGamePad @JvmOverloads constructor(
         val maxDisplacementX = (usableWidth - size * extendedSize.width()) / 2f
         val maxDisplacementY = (usableHeight - size * extendedSize.height()) / 2f
 
-        val finalOffsetX = clamp(gravityX * maxDisplacementX + offsetX, 0f, maxDisplacementX)
-        val finalOffsetY = clamp(gravityY * maxDisplacementY + offsetY, 0f, maxDisplacementY)
+        val finalOffsetX = clamp(gravityX * maxDisplacementX + offsetX, -maxDisplacementX, maxDisplacementX)
+        val finalOffsetY = clamp(gravityY * maxDisplacementY + offsetY, -maxDisplacementY, maxDisplacementY)
 
         center.x = finalOffsetX + measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
         center.y = finalOffsetY + measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
