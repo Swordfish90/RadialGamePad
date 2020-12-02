@@ -36,6 +36,7 @@ import com.swordfish.radialgamepad.library.dials.*
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.MathUtils.clamp
 import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
@@ -106,17 +107,21 @@ class RadialGamePad @JvmOverloads constructor(
     private var center = PointF(0f, 0f)
 
     // It's better to set padding inside in other to catch touch events happening there.
-    var offsetX: Float = 0.0f
-        set(value) {
-            field = value
-            requestLayoutAndInvalidate()
-        }
+    var gravityX: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
 
-    var offsetY: Float = 0.0f
-        set(value) {
-            field = value
-            requestLayoutAndInvalidate()
-        }
+    var gravityY: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
+
+    var offsetX: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
+
+    var offsetY: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
 
     var primaryDialMaxSizeDp: Float = Float.MAX_VALUE
         set(value) {
@@ -273,8 +278,11 @@ class RadialGamePad @JvmOverloads constructor(
         val maxDisplacementX = (usableWidth - size * extendedSize.width()) / 2f
         val maxDisplacementY = (usableHeight - size * extendedSize.height()) / 2f
 
-        center.x = offsetX * maxDisplacementX + measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
-        center.y = offsetY * maxDisplacementY + measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
+        val finalOffsetX = clamp(gravityX * maxDisplacementX + offsetX, 0f, maxDisplacementX)
+        val finalOffsetY = clamp(gravityY * maxDisplacementY + offsetY, 0f, maxDisplacementY)
+
+        center.x = finalOffsetX + measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
+        center.y = finalOffsetY + measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
 
         measurePrimaryDial()
         measureSecondaryDials()
