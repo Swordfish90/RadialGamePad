@@ -106,47 +106,68 @@ class RadialGamePad @JvmOverloads constructor(
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
 
-    // It's better to set padding inside in other to catch touch events happening there.
+    /** Change the horizontal gravity of the gamepad. Use in range [-1, +1] you can move the pad
+     *  left or right. This value is not considered when sizing, so the actual shift depends on the
+     *  view size.*/
     var gravityX: Float by Delegates.observable(0f) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
 
+    /** Change the vertical gravity of the gamepad. Use in range [-1, +1] you can move the pad
+     *  up or down. This value is not considered when sizing, so the actual shift depends on the
+     *  view size.*/
     var gravityY: Float by Delegates.observable(0f) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
 
+    /** Shift the gamepad left or right by this size in pixel. This value is not considered when
+     *  sizing and the shift only happens if there is room for it. It is capped so that the
+     *  pad is never cropped.*/
     var offsetX: Float by Delegates.observable(0f) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
 
+    /** Shift the gamepad top or bottom by this size in pixel. This value is not considered when
+     *  sizing and the shift only happens if there is room for it. It is capped so that the
+     *  pad is never cropped.*/
     var offsetY: Float by Delegates.observable(0f) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
 
+    /** Limit the size of the actual gamepad inside the view.*/
     var primaryDialMaxSizeDp: Float = Float.MAX_VALUE
         set(value) {
             field = value
             requestLayoutAndInvalidate()
         }
 
+    /** Rotate the secondary dials by this value in degrees.*/
     var secondaryDialRotation: Float = 0f
         set(value) {
             field = toRadians(value)
             requestLayoutAndInvalidate()
         }
 
+    /** Add spacing at the top. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
     var spacingTop: Int by Delegates.observable(0) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
 
+    /** Add spacing at the bottom. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
     var spacingBottom: Int by Delegates.observable(0) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
 
+    /** Add spacing at the left. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
     var spacingLeft: Int by Delegates.observable(0) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
 
+    /** Add spacing at the right. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
     var spacingRight: Int by Delegates.observable(0) { _, _, _ ->
         requestLayoutAndInvalidate()
     }
