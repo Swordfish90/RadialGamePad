@@ -49,11 +49,11 @@ class FragmentGB : Fragment() {
         rightPad = RadialGamePad(SamplePadConfigs.GB_RIGHT, 8f,requireContext())
 
         // We want the pad anchored to the bottom of the screen
-        leftPad.offsetX = -1f
-        leftPad.offsetY = 1f
+        leftPad.gravityX = -1f
+        leftPad.gravityY = 1f
 
-        rightPad.offsetX = 1f
-        rightPad.offsetY = 1f
+        rightPad.gravityX = 1f
+        rightPad.gravityY = 1f
 
         view.findViewById<FrameLayout>(R.id.leftcontainer).addView(leftPad)
         view.findViewById<FrameLayout>(R.id.rightcontainer).addView(rightPad)

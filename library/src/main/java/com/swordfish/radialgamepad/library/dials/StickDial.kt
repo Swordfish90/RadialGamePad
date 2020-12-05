@@ -99,6 +99,9 @@ class StickDial(
         if (trackedPointerId == null) {
             val finger = fingers.first()
 
+            if (!isCloseToCenter(finger))
+                return false
+
             trackedPointerId = finger.pointerId
             firstTouch = PointF(finger.x, finger.y)
             eventsRelay.accept(Event.Direction(id, 0f, 0f, true))
@@ -112,6 +115,10 @@ class StickDial(
             handleTouchEvent(finger.x, finger.y)
             return true
         }
+    }
+
+    private fun isCloseToCenter(finger: TouchUtils.FingerPosition): Boolean {
+        return MathUtils.distance(finger.x, 0.5f, finger.y, 0.5f) < 0.6f
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {

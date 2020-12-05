@@ -25,7 +25,7 @@ import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.view.ViewCompat
+import androidx.core.view.*
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.customview.widget.ExploreByTouchHelper
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
@@ -36,6 +36,7 @@ import com.swordfish.radialgamepad.library.dials.*
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.MathUtils.clamp
 import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
@@ -50,10 +51,11 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.tan
+import kotlin.properties.Delegates
 
 class RadialGamePad @JvmOverloads constructor(
     private val gamePadConfig: RadialGamePadConfig,
-    marginsInDp: Float = 16f,
+    defaultMarginsInDp: Float = 16f,
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -98,36 +100,77 @@ class RadialGamePad @JvmOverloads constructor(
         }
     }
 
-    private val marginsInPixel: Int = PaintUtils.convertDpToPixel(marginsInDp, context).roundToInt()
+    private val marginsInPixel: Int = PaintUtils.convertDpToPixel(defaultMarginsInDp, context).roundToInt()
 
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
 
-    // It's better to set padding inside in other to catch touch events happening there.
-    var offsetX: Float = 0.0f
-        set(value) {
-            field = value
-            requestLayoutAndInvalidate()
-        }
+    /** Change the horizontal gravity of the gamepad. Use in range [-1, +1] you can move the pad
+     *  left or right. This value is not considered when sizing, so the actual shift depends on the
+     *  view size.*/
+    var gravityX: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
 
-    var offsetY: Float = 0.0f
-        set(value) {
-            field = value
-            requestLayoutAndInvalidate()
-        }
+    /** Change the vertical gravity of the gamepad. Use in range [-1, +1] you can move the pad
+     *  up or down. This value is not considered when sizing, so the actual shift depends on the
+     *  view size.*/
+    var gravityY: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
 
+    /** Shift the gamepad left or right by this size in pixel. This value is not considered when
+     *  sizing and the shift only happens if there is room for it. It is capped so that the
+     *  pad is never cropped.*/
+    var offsetX: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
+
+    /** Shift the gamepad top or bottom by this size in pixel. This value is not considered when
+     *  sizing and the shift only happens if there is room for it. It is capped so that the
+     *  pad is never cropped.*/
+    var offsetY: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
+
+    /** Limit the size of the actual gamepad inside the view.*/
     var primaryDialMaxSizeDp: Float = Float.MAX_VALUE
         set(value) {
             field = value
             requestLayoutAndInvalidate()
         }
 
+    /** Rotate the secondary dials by this value in degrees.*/
     var secondaryDialRotation: Float = 0f
         set(value) {
             field = toRadians(value)
             requestLayoutAndInvalidate()
         }
+
+    /** Add spacing at the top. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
+    var spacingTop: Int by Delegates.observable(0) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
+
+    /** Add spacing at the bottom. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
+    var spacingBottom: Int by Delegates.observable(0) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
+
+    /** Add spacing at the left. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
+    var spacingLeft: Int by Delegates.observable(0) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
+
+    /** Add spacing at the right. This space will not be considered when drawing and
+     *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
+    var spacingRight: Int by Delegates.observable(0) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
 
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: List<DialInteractor>
@@ -244,17 +287,29 @@ class RadialGamePad @JvmOverloads constructor(
 
         applyMeasuredDimensions(widthMeasureSpec, heightMeasureSpec, extendedSize)
 
+        val usableWidth = measuredWidth - spacingLeft - spacingRight - 2 * marginsInPixel
+        val usableHeight = measuredHeight - spacingTop - spacingBottom - 2 * marginsInPixel
+
         size = minOf(
-            (measuredWidth - marginsInPixel * 2) / extendedSize.width(),
-            (measuredHeight - marginsInPixel * 2) / extendedSize.height(),
+            usableWidth / extendedSize.width(),
+            usableHeight / extendedSize.height(),
             PaintUtils.convertDpToPixel(primaryDialMaxSizeDp, context) / 2f
         )
 
-        val maxDisplacementX = (measuredWidth - marginsInPixel * 2 - size * extendedSize.width()) / 2f
-        val maxDisplacementY = (measuredHeight - marginsInPixel * 2 - size * extendedSize.height()) / 2f
+        val maxDisplacementX = (usableWidth - size * extendedSize.width()) / 2f
+        val maxDisplacementY = (usableHeight - size * extendedSize.height()) / 2f
 
-        center.x = offsetX * maxDisplacementX + measuredWidth / 2f - (extendedSize.left + extendedSize.right) * size * 0.5f
-        center.y = offsetY * maxDisplacementY + measuredHeight / 2f - (extendedSize.top + extendedSize.bottom) * size * 0.5f
+        val totalDisplacementX = gravityX * maxDisplacementX + offsetX
+        val finalOffsetX = clamp(totalDisplacementX, -maxDisplacementX, maxDisplacementX)
+
+        val totalDisplacementY = gravityY * maxDisplacementY + offsetY
+        val finalOffsetY = clamp(totalDisplacementY, -maxDisplacementY, maxDisplacementY)
+
+        val baseCenterX = spacingLeft + (measuredWidth - spacingLeft - spacingRight) / 2f
+        val baseCenterY = spacingTop + (measuredHeight - spacingTop - spacingBottom) / 2f
+
+        center.x = finalOffsetX + baseCenterX - (extendedSize.left + extendedSize.right) * size * 0.5f
+        center.y = finalOffsetY + baseCenterY - (extendedSize.top + extendedSize.bottom) * size * 0.5f
 
         measurePrimaryDial()
         measureSecondaryDials()
@@ -268,8 +323,8 @@ class RadialGamePad @JvmOverloads constructor(
         val (widthMode, width) = extractModeAndDimension(widthMeasureSpec)
         val (heightMode, height) = extractModeAndDimension(heightMeasureSpec)
 
-        val usableWidth = width - marginsInPixel * 2
-        val usableHeight = height - marginsInPixel * 2
+        val usableWidth = width - spacingLeft - spacingRight - 2 * marginsInPixel
+        val usableHeight = height - spacingBottom - spacingTop - 2 * marginsInPixel
 
         val enforcedMaxSize = PaintUtils.convertDpToPixel(primaryDialMaxSizeDp, context) / 2
 
@@ -281,7 +336,7 @@ class RadialGamePad @JvmOverloads constructor(
                         usableHeight,
                         (usableWidth * extendedSize.height() / extendedSize.width()).roundToInt(),
                         (enforcedMaxSize * extendedSize.height()).roundToInt()
-                    ) + marginsInPixel * 2
+                    ) + spacingBottom + spacingTop + 2 * marginsInPixel
                 )
             }
             widthMode == MeasureSpec.AT_MOST && heightMode == MeasureSpec.EXACTLY -> {
@@ -290,7 +345,8 @@ class RadialGamePad @JvmOverloads constructor(
                         usableWidth,
                         (usableHeight * extendedSize.width() / extendedSize.height()).roundToInt(),
                         (enforcedMaxSize * extendedSize.width()).roundToInt()
-                    ) + marginsInPixel * 2, height
+                    ) + spacingLeft + spacingRight + 2 * marginsInPixel,
+                    height
                 )
             }
             else -> setMeasuredDimension(width, height)
