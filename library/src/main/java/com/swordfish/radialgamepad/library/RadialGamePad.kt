@@ -246,6 +246,7 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.dials,
                 configuration.center,
                 toRadians(configuration.rotationInDegrees),
+                configuration.allowMultiplePresses,
                 configuration.theme ?: gamePadConfig.theme
             )
         }
