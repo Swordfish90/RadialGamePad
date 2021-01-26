@@ -49,7 +49,7 @@ class PrimaryButtonsDial(
     private val circleActions: List<ButtonConfig>,
     private val centerAction: ButtonConfig?,
     private val rotationRadians: Float = 0f,
-    private val allowMultiplePresses: Boolean,
+    private val allowMultiplePressesSingleFinger: Boolean,
     private val theme: RadialGamePadTheme
 ) : Dial {
 
@@ -231,7 +231,7 @@ class PrimaryButtonsDial(
 
         return actionCentersDistances.asSequence().withIndex()
             .takeWhile { (index, it) ->
-                index == 0 || (allowMultiplePresses && abs(it.key - minDistance) < distanceThreshold)
+                index == 0 || (allowMultiplePressesSingleFinger && abs(it.key - minDistance) < distanceThreshold)
             }
             .map { (_, it) -> it.value }
     }
