@@ -18,6 +18,8 @@
 
 package com.swordfish.radialgamepad.library.config
 
+import com.swordfish.radialgamepad.library.haptics.HapticConfig
+
 /**
  * The configuration object for a RadialGamePad.
  * @property sockets The maximum number of secondary dials the pad has
@@ -30,6 +32,6 @@ data class RadialGamePadConfig(
     val sockets: Int,
     val primaryDial: PrimaryDialConfig,
     val secondaryDials: List<SecondaryDialConfig>,
-    val haptic: Boolean = true,
+    val haptic: HapticConfig = HapticConfig.SIMPLE,
     val theme: RadialGamePadTheme = RadialGamePadTheme()
 )

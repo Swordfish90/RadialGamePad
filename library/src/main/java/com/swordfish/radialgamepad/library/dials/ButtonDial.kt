@@ -21,19 +21,18 @@ package com.swordfish.radialgamepad.library.dials
 import android.content.Context
 import android.graphics.*
 import android.view.KeyEvent
-import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import io.reactivex.Observable
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.sin
@@ -44,8 +43,6 @@ class ButtonDial(
     private val config: ButtonConfig,
     private val theme: RadialGamePadTheme
 ) : Dial {
-
-    private val events = PublishRelay.create<Event>()
 
     private val iconDrawable = config.iconId?.let {
         context.getDrawable(it)?.apply {
@@ -162,30 +159,30 @@ class ButtonDial(
         iconDrawable?.draw(canvas)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<TouchUtils.FingerPosition>, events: MutableList<Event>) {
         val newPressed = fingers.isNotEmpty()
         if (newPressed != pressed) {
             pressed = newPressed
 
             val action = if (pressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
-            events.accept(Event.Button(config.id, action, pressed))
-
-            return true
+            val haptic = if (newPressed) HapticEngine.EFFECT_PRESS else HapticEngine.EFFECT_RELEASE
+            events.add(Event.Button(config.id, action, haptic))
         }
-        return false
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        events.accept(Event.Gesture(config.id, gestureType))
-        return false
+    override fun gesture(
+        relativeX: Float,
+        relativeY: Float,
+        gestureType: GestureType,
+        events: MutableList<Event>
+    ) {
+        events.add(Event.Gesture(config.id, gestureType))
     }
-
-    override fun events(): Observable<Event> = events.distinctUntilChanged()
 
     override fun accessibilityBoxes(): List<AccessibilityBox> {
         return config.contentDescription?.let {
             return listOf(AccessibilityBox(drawingBox.roundToInt(), it))
-        } ?: listOf()
+        } ?: emptyList()
     }
 
     private fun getTheme() = (config.theme ?: theme)

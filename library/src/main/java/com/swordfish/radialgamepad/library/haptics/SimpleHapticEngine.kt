@@ -13,16 +13,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.dials
+package com.swordfish.radialgamepad.library.haptics
 
+import android.view.HapticFeedbackConstants
 import com.swordfish.radialgamepad.library.event.Event
 
-interface MotionDial : Dial {
+class SimpleHapticEngine : HapticEngine {
 
-    fun simulateMotion(id: Int, relativeX: Float, relativeY: Float, events: MutableList<Event>)
-
-    fun simulateClearMotion(id: Int, events: MutableList<Event>)
+    override fun retrieveHaptics(events: List<Event>): Int? {
+        return events.asSequence()
+            .map { it.haptic }
+            .filter { it == HapticEngine.EFFECT_PRESS }
+            .map { HapticFeedbackConstants.KEYBOARD_PRESS }
+            .firstOrNull()
+    }
 }

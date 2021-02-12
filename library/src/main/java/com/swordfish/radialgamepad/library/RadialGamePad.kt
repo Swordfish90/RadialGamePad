@@ -36,6 +36,7 @@ import com.swordfish.radialgamepad.library.dials.*
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.haptics.*
 import com.swordfish.radialgamepad.library.math.MathUtils.clamp
 import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
@@ -47,6 +48,7 @@ import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -61,50 +63,14 @@ class RadialGamePad @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), EventsSource {
 
-    private val exploreByTouchHelper = object : ExploreByTouchHelper(this) {
-
-        private fun computeVirtualViews(): Map<Int, AccessibilityBox> {
-            return allInteractors()
-                .flatMap { it.dial.accessibilityBoxes() }
-                .sortedBy { it.rect.top }
-                .mapIndexed { index, accessibilityBox -> index to accessibilityBox }
-                .toMap()
-        }
-
-        override fun getVirtualViewAt(x: Float, y: Float): Int {
-            return computeVirtualViews().entries
-                .filter { (_, accessibilityBox) -> accessibilityBox.rect.contains(x.roundToInt(), y.roundToInt()) }
-                .map { (id, _) -> id }
-                .firstOrNull() ?: INVALID_ID
-        }
-
-        override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
-            computeVirtualViews().forEach { (id, _) ->  virtualViewIds.add(id) }
-        }
-
-        override fun onPerformActionForVirtualView(
-            virtualViewId: Int,
-            action: Int,
-            arguments: Bundle?
-        ): Boolean {
-            return false
-        }
-
-        override fun onPopulateNodeForVirtualView(
-            virtualViewId: Int,
-            node: AccessibilityNodeInfoCompat
-        ) {
-            val virtualView = computeVirtualViews()[virtualViewId]
-            node.setBoundsInParent(virtualView!!.rect)
-            node.contentDescription = virtualView.text
-        }
-    }
+    private val eventsSubject = PublishSubject.create<Event>()
 
     private val marginsInPixel: Int = PaintUtils.convertDpToPixel(defaultMarginsInDp, context).roundToInt()
-
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
+
+    private val hapticEngine = createHapticEngine()
 
     /** Change the horizontal gravity of the gamepad. Use in range [-1, +1] you can move the pad
      *  left or right. This value is not considered when sizing, so the actual shift depends on the
@@ -172,59 +138,65 @@ class RadialGamePad @JvmOverloads constructor(
         requestLayoutAndInvalidate()
     }
 
-    private lateinit var primaryInteractor: DialInteractor
-    private lateinit var secondaryInteractors: List<DialInteractor>
+    private val primaryInteractor: DialInteractor
+    private val secondaryInteractors: List<DialInteractor>
 
-    private val gestureDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
-        if (!isConfirmed) return@MultiTapDetector
+    private val allInteractors: List<DialInteractor>
+    private val allDials: List<Dial>
+    private val gestureDetector: MultiTapDetector = createMultiTapDetector(context)
+    private val exploreByTouchHelper = createExploreByTouchHelper()
 
-        val gestureType = when (taps) {
-            1 -> GestureType.SINGLE_TAP
-            2 -> GestureType.DOUBLE_TAP
-            3 -> GestureType.TRIPLE_TAP
-            else -> null
-        } ?: return@MultiTapDetector
+    private fun handleEvents(events: List<Event>) {
+        hapticEngine.retrieveHaptics(events)
+            ?.let {
+                val flags = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+                performHapticFeedback(it, flags)
+            }
 
-        val updated = allInteractors().map {
-            it.gesture(x, y, gestureType)
-        }
-
-        if (updated.any { it }) {
-            postInvalidate()
-        }
+        events
+            .forEach { eventsSubject.onNext(it) }
     }
 
     init {
-        initializePrimaryInteractor(gamePadConfig.primaryDial)
-        initializeSecondaryInteractors(gamePadConfig.secondaryDials)
+        primaryInteractor = createPrimaryInteractor(gamePadConfig.primaryDial)
+        secondaryInteractors = createSecondaryInteractors(gamePadConfig.secondaryDials)
+
+        allInteractors = listOf(primaryInteractor) + secondaryInteractors
+        allDials = allInteractors.map { it.dial }
+
         ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
     fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
-        val updated = allDials()
-            .filterIsInstance<MotionDial>()
-            .map { it.simulateMotion(id, relativeX, relativeY) }
-            .any { it }
+        val events = mutableListOf<Event>()
 
-        if (updated) {
+        allDials
+            .filterIsInstance<MotionDial>()
+            .forEach { it.simulateMotion(id, relativeX, relativeY, events) }
+
+        handleEvents(events)
+
+        if (events.isNotEmpty()) {
             postInvalidate()
         }
     }
 
     /** Programmatically clear motion events associated with the id. */
     fun simulateClearMotionEvent(id: Int) {
-        val updated = allDials()
+        val events = mutableListOf<Event>()
+        allDials
             .filterIsInstance<MotionDial>()
-            .map { it.simulateClearMotion(id) }
-            .any { it }
+            .forEach { it.simulateClearMotion(id, events) }
 
-        if (updated) {
+        handleEvents(events)
+
+        if (events.isNotEmpty()) {
             postInvalidate()
         }
     }
 
-    private fun initializePrimaryInteractor(configuration: PrimaryDialConfig) {
+    private fun createPrimaryInteractor(configuration: PrimaryDialConfig): DialInteractor {
         val primaryDial = when (configuration) {
             is PrimaryDialConfig.Cross -> CrossDial(
                 context,
@@ -250,11 +222,11 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.theme ?: gamePadConfig.theme
             )
         }
-        primaryInteractor = DialInteractor(primaryDial)
+        return DialInteractor(primaryDial)
     }
 
-    private fun initializeSecondaryInteractors(secondaryDials: List<SecondaryDialConfig>) {
-        secondaryInteractors = secondaryDials.map { config ->
+    private fun createSecondaryInteractors(secondaryDials: List<SecondaryDialConfig>): List<DialInteractor> {
+        return secondaryDials.map { config ->
             val secondaryDial = when (config) {
                 is SecondaryDialConfig.Stick -> StickDial(
                     config.id,
@@ -280,6 +252,83 @@ class RadialGamePad @JvmOverloads constructor(
                 )
             }
             DialInteractor(secondaryDial)
+        }
+    }
+
+    private fun createHapticEngine(): HapticEngine {
+        return when (gamePadConfig.haptic) {
+            HapticConfig.OFF -> NoHapticEngine()
+            HapticConfig.SIMPLE -> SimpleHapticEngine()
+            HapticConfig.ADVANCED -> AdvancedHapticEngine()
+        }
+    }
+
+    private fun createMultiTapDetector(context: Context): MultiTapDetector {
+        return MultiTapDetector(context) { x, y, taps, isConfirmed ->
+            if (!isConfirmed) return@MultiTapDetector
+
+            val gestureType = when (taps) {
+                1 -> GestureType.SINGLE_TAP
+                2 -> GestureType.DOUBLE_TAP
+                3 -> GestureType.TRIPLE_TAP
+                else -> null
+            } ?: return@MultiTapDetector
+
+            val events = mutableListOf<Event>()
+
+            allInteractors.forEach {
+                it.gesture(x, y, gestureType, events)
+            }
+
+            if (events.isNotEmpty()) {
+                postInvalidate()
+            }
+        }
+    }
+
+    private fun createExploreByTouchHelper(): ExploreByTouchHelper {
+        return object : ExploreByTouchHelper(this) {
+
+            private fun computeVirtualViews(): Map<Int, AccessibilityBox> {
+                return allInteractors
+                    .flatMap { it.dial.accessibilityBoxes() }
+                    .sortedBy { it.rect.top }
+                    .mapIndexed { index, accessibilityBox -> index to accessibilityBox }
+                    .toMap()
+            }
+
+            override fun getVirtualViewAt(x: Float, y: Float): Int {
+                return computeVirtualViews().entries
+                    .filter { (_, accessibilityBox) ->
+                        accessibilityBox.rect.contains(
+                            x.roundToInt(),
+                            y.roundToInt()
+                        )
+                    }
+                    .map { (id, _) -> id }
+                    .firstOrNull() ?: INVALID_ID
+            }
+
+            override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
+                computeVirtualViews().forEach { (id, _) -> virtualViewIds.add(id) }
+            }
+
+            override fun onPerformActionForVirtualView(
+                virtualViewId: Int,
+                action: Int,
+                arguments: Bundle?
+            ): Boolean {
+                return false
+            }
+
+            override fun onPopulateNodeForVirtualView(
+                virtualViewId: Int,
+                node: AccessibilityNodeInfoCompat
+            ) {
+                val virtualView = computeVirtualViews()[virtualViewId]
+                node.setBoundsInParent(virtualView!!.rect)
+                node.contentDescription = virtualView.text
+            }
         }
     }
 
@@ -450,16 +499,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     override fun events(): Observable<Event> {
-        val allEvents = allDials().map { it.events() }
-        return Observable.merge(allEvents)
-            .doOnNext {
-                if (gamePadConfig.haptic && it.haptic) performHapticFeedback()
-            }
-    }
-
-    private fun performHapticFeedback() {
-        val flags = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, flags)
+        return eventsSubject
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -467,13 +507,18 @@ class RadialGamePad @JvmOverloads constructor(
 
         val fingers = TouchUtils.extractFingerPositions(event)
 
-        val trackedFingers = allDials().mapNotNull { it.trackedPointerId() }
+        val trackedFingers = allDials.mapNotNull { it.trackedPointerId() }
 
-        val updated = allInteractors().map { dial ->
-            forwardTouchToDial(dial, fingers, trackedFingers)
+        // This is a very hot path. In order to reduce object allocation we create just one list,
+        // and we pass it to all the dials which can add their own events.
+        val events = mutableListOf<Event>()
+        allInteractors.forEach { dial ->
+            forwardTouchToDial(dial, fingers, trackedFingers, events)
         }
 
-        if (updated.any { it }) {
+        handleEvents(events)
+
+        if (events.isNotEmpty()) {
             postInvalidate()
         }
 
@@ -483,19 +528,15 @@ class RadialGamePad @JvmOverloads constructor(
     private fun forwardTouchToDial(
         dial: DialInteractor,
         fingers: List<TouchUtils.FingerPosition>,
-        trackedFingers: List<Int>
-    ): Boolean {
-        return if (dial.trackedPointerId() != null) {
-            dial.touch(fingers.filter { it.pointerId == dial.dial.trackedPointerId() })
+        trackedFingers: List<Int>,
+        events: MutableList<Event>
+    ) {
+        if (dial.trackedPointerId() != null) {
+            dial.touch(fingers.filter { it.pointerId == dial.dial.trackedPointerId() }, events)
         } else {
-            dial.touch(fingers.filter { it.pointerId !in trackedFingers })
+            dial.touch(fingers.filter { it.pointerId !in trackedFingers }, events)
         }
     }
-
-    private fun allDials(): List<Dial> = allInteractors().map { it.dial }
-
-    private fun allInteractors(): List<DialInteractor> =
-        listOf(primaryInteractor) + secondaryInteractors
 
     override fun dispatchHoverEvent(event: MotionEvent): Boolean {
         if (exploreByTouchHelper.dispatchHoverEvent(event)) {

@@ -21,12 +21,13 @@ package com.swordfish.radialgamepad.library.dials
 import android.graphics.Canvas
 import android.graphics.RectF
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
+import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 
-interface Dial : EventsSource {
+interface Dial {
 
     fun drawingBox(): RectF
 
@@ -37,10 +38,10 @@ interface Dial : EventsSource {
     fun draw(canvas: Canvas)
 
     /** Pass the touch event to the appropriate dial. Returns true if requires redraw. */
-    fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean
+    fun touch(fingers: List<TouchUtils.FingerPosition>, events: MutableList<Event>)
 
     /** Pass the gesture to the appropriate dial. Returns true if requires redraw. */
-    fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean
+    fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType, events: MutableList<Event>)
 
     fun accessibilityBoxes(): List<AccessibilityBox>
 }

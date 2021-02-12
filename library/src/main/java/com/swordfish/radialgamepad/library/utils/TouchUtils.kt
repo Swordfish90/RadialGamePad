@@ -28,12 +28,14 @@ object TouchUtils {
 
     fun extractFingerPositions(event: MotionEvent): List<FingerPosition> {
         return (0 until event.pointerCount)
+            .asSequence()
             .map { event.getPointerId(it) }
             .map { id -> id to event.findPointerIndex(id) }
             .filter { (_, index) -> !isCancelEvent(event, index) }
             .map { (id, index) ->
                 FingerPosition(id, event.getX(index), event.getY(index))
             }
+            .toList()
     }
 
     fun computeRelativeFingerPosition(fingers: List<FingerPosition>, rect: RectF): List<FingerPosition> {

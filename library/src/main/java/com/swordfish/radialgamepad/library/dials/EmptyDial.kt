@@ -37,11 +37,9 @@ class EmptyDial : Dial {
 
     override fun draw(canvas: Canvas) {}
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean = false
+    override fun touch(fingers: List<TouchUtils.FingerPosition>, events: MutableList<Event>) {}
 
-    override fun events(): Observable<Event> = Observable.empty()
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType, events: MutableList<Event>) {}
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean = false
-
-    override fun accessibilityBoxes(): List<AccessibilityBox> = listOf()
+    override fun accessibilityBoxes(): List<AccessibilityBox> = emptyList()
 }

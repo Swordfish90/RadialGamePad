@@ -13,16 +13,20 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.dials
+package com.swordfish.radialgamepad.library.haptics
 
-import com.swordfish.radialgamepad.library.event.Event
+/** Specify a behaviour when dealing with haptic feedback.*/
+enum class HapticConfig {
 
-interface MotionDial : Dial {
+    /** Do not perform any haptic feedback.*/
+    OFF,
 
-    fun simulateMotion(id: Int, relativeX: Float, relativeY: Float, events: MutableList<Event>)
+    /** Only perform haptic feedbacks when pressing a new key.*/
+    SIMPLE,
 
-    fun simulateClearMotion(id: Int, events: MutableList<Event>)
+    /** Perform haptic feedback both when pressing and releasing.*/
+    ADVANCED
 }
