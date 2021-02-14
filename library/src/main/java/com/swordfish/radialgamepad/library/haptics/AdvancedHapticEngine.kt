@@ -24,7 +24,9 @@ import com.swordfish.radialgamepad.library.event.Event
 
 class AdvancedHapticEngine : HapticEngine {
 
-    private val timeout = ViewConfiguration.getDoubleTapTimeout()
+    private val longTimeout = ViewConfiguration.getDoubleTapTimeout()
+    private val shortTimeout = ViewConfiguration.getTapTimeout()
+
     private var lastPress = 0L
 
     override fun retrieveHaptics(events: List<Event>): Int? {
@@ -37,13 +39,10 @@ class AdvancedHapticEngine : HapticEngine {
         if (types.contains(HapticEngine.EFFECT_PRESS)) {
             lastPress = currentTime
             return KEYBOARD_PRESS
-        } else if (types.contains(HapticEngine.EFFECT_TICK)) {
+        } else if (types.contains(HapticEngine.EFFECT_TICK) && currentTime - lastPress > shortTimeout) {
             lastPress = currentTime
             return KEYBOARD_TICK
-        }
-
-        if (types.contains(HapticEngine.EFFECT_RELEASE) && currentTime - lastPress > timeout) {
-            lastPress = currentTime
+        } else if (types.contains(HapticEngine.EFFECT_RELEASE) && currentTime - lastPress > longTimeout) {
             return KEYBOARD_RELEASE
         }
 
