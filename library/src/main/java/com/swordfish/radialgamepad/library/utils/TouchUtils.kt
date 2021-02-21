@@ -21,19 +21,31 @@ package com.swordfish.radialgamepad.library.utils
 import android.graphics.PointF
 import android.graphics.RectF
 import android.view.MotionEvent
+import androidx.annotation.RequiresApi
 
 object TouchUtils {
 
     data class FingerPosition(val pointerId: Int, val x: Float, val y: Float)
 
-    fun extractFingerPositions(event: MotionEvent): List<FingerPosition> {
+    @RequiresApi(29)
+    fun extractRawFingersPositions(event: MotionEvent, offsetX: Int = 0, offsetY: Int = 0): Sequence<FingerPosition> {
+        return iteratePointerIndexes(event)
+            .map { (id, index) ->
+                FingerPosition(id, event.getRawX(index) - offsetX, event.getRawY(index) - offsetY)
+            }
+    }
+
+    fun extractFingersPositions(event: MotionEvent): Sequence<FingerPosition> {
+        return iteratePointerIndexes(event)
+            .map { (id, index) -> FingerPosition(id, event.getX(index), event.getY(index)) }
+    }
+
+    private fun iteratePointerIndexes(event: MotionEvent): Sequence<Pair<Int, Int>> {
         return (0 until event.pointerCount)
+            .asSequence()
             .map { event.getPointerId(it) }
             .map { id -> id to event.findPointerIndex(id) }
             .filter { (_, index) -> !isCancelEvent(event, index) }
-            .map { (id, index) ->
-                FingerPosition(id, event.getX(index), event.getY(index))
-            }
     }
 
     fun computeRelativeFingerPosition(fingers: List<FingerPosition>, rect: RectF): List<FingerPosition> {

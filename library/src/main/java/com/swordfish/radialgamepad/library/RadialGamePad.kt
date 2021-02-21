@@ -20,6 +20,7 @@ package com.swordfish.radialgamepad.library
 
 import android.content.Context
 import android.graphics.*
+import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
@@ -105,6 +106,7 @@ class RadialGamePad @JvmOverloads constructor(
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
+    private var positionOnScreen = intArrayOf(0, 0)
 
     /** Change the horizontal gravity of the gamepad. Use in range [-1, +1] you can move the pad
      *  left or right. This value is not considered when sizing, so the actual shift depends on the
@@ -465,7 +467,7 @@ class RadialGamePad @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         gestureDetector.handleEvent(event)
 
-        val fingers = TouchUtils.extractFingerPositions(event)
+        val fingers = extractFingersPositions(event).toList()
 
         val trackedFingers = allDials().mapNotNull { it.trackedPointerId() }
 
@@ -478,6 +480,15 @@ class RadialGamePad @JvmOverloads constructor(
         }
 
         return true
+    }
+
+    private fun extractFingersPositions(event: MotionEvent): Sequence<TouchUtils.FingerPosition> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getLocationOnScreen(positionOnScreen)
+            TouchUtils.extractRawFingersPositions(event, positionOnScreen[0], positionOnScreen[1])
+        } else {
+            TouchUtils.extractFingersPositions(event)
+        }
     }
 
     private fun forwardTouchToDial(
