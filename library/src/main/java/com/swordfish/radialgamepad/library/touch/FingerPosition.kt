@@ -1,6 +1,6 @@
 /*
  * Created by Filippo Scognamiglio.
- * Copyright (c) 2020. This file is part of RadialGamePad.
+ * Copyright (c) 2021. This file is part of RadialGamePad.
  *
  * RadialGamePad is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,6 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.utils
+package com.swordfish.radialgamepad.library.touch
 
-import android.graphics.PointF
-import android.graphics.RectF
-import com.swordfish.radialgamepad.library.touch.FingerPosition
-
-object TouchUtils {
-
-    fun computeRelativeFingerPosition(fingers: List<FingerPosition>, rect: RectF): List<FingerPosition> {
-        return fingers.map {
-            FingerPosition(it.pointerId, (it.x - rect.left) / rect.width(), (it.y -rect.top) / rect.height())
-        }
-    }
-
-    fun computeRelativePosition(x: Float, y: Float, rect: RectF): PointF {
-        return PointF((x - rect.left) / rect.width(), (y - rect.top) / rect.height())
-    }
-}
+data class FingerPosition(val pointerId: Int, val x: Float, val y: Float)

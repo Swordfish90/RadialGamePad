@@ -20,7 +20,6 @@ package com.swordfish.radialgamepad.library
 
 import android.content.Context
 import android.graphics.*
-import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
@@ -42,11 +41,12 @@ import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.touch.FingerPosition
+import com.swordfish.radialgamepad.library.touch.RawTouchTracker
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
-import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -106,7 +106,8 @@ class RadialGamePad @JvmOverloads constructor(
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
-    private var positionOnScreen = intArrayOf(0, 0)
+
+    private val touchTracker = RawTouchTracker()
 
     /** Change the horizontal gravity of the gamepad. Use in range [-1, +1] you can move the pad
      *  left or right. This value is not considered when sizing, so the actual shift depends on the
@@ -482,18 +483,15 @@ class RadialGamePad @JvmOverloads constructor(
         return true
     }
 
-    private fun extractFingersPositions(event: MotionEvent): Sequence<TouchUtils.FingerPosition> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            getLocationOnScreen(positionOnScreen)
-            TouchUtils.extractRawFingersPositions(event, positionOnScreen[0], positionOnScreen[1])
-        } else {
-            TouchUtils.extractFingersPositions(event)
-        }
+    private fun extractFingersPositions(event: MotionEvent): Sequence<FingerPosition> {
+        // TODO Handle APIs < 29
+        touchTracker.onTouch(this, event)
+        return touchTracker.getCurrentPositions()
     }
 
     private fun forwardTouchToDial(
         dial: DialInteractor,
-        fingers: List<TouchUtils.FingerPosition>,
+        fingers: List<FingerPosition>,
         trackedFingers: List<Int>
     ): Boolean {
         return if (dial.trackedPointerId() != null) {

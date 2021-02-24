@@ -30,10 +30,10 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.touch.FingerPosition
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
-import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import java.lang.Math.toDegrees
 import kotlin.math.*
@@ -161,7 +161,7 @@ class CrossDial(
         }
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<FingerPosition>): Boolean {
         if (fingers.isEmpty()) return reset()
 
         if (trackedPointerId == null) {
