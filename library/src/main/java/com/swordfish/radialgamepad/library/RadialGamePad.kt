@@ -42,7 +42,9 @@ import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.touch.FingerPosition
-import com.swordfish.radialgamepad.library.touch.RawTouchTracker
+import com.swordfish.radialgamepad.library.touch.RobustTouchTracker
+import com.swordfish.radialgamepad.library.touch.SimpleTouchTracker
+import com.swordfish.radialgamepad.library.touch.TouchTracker
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
@@ -107,7 +109,7 @@ class RadialGamePad @JvmOverloads constructor(
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
 
-    private val touchTracker = RawTouchTracker()
+    private val touchTracker = buildTouchTracker()
 
     /** Change the horizontal gravity of the gamepad. Use in range [-1, +1] you can move the pad
      *  left or right. This value is not considered when sizing, so the actual shift depends on the
@@ -283,6 +285,14 @@ class RadialGamePad @JvmOverloads constructor(
                 )
             }
             DialInteractor(secondaryDial)
+        }
+    }
+
+    private fun buildTouchTracker(): TouchTracker {
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            RobustTouchTracker()
+        } else {
+            SimpleTouchTracker()
         }
     }
 
@@ -467,8 +477,9 @@ class RadialGamePad @JvmOverloads constructor(
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         gestureDetector.handleEvent(event)
+        touchTracker.onTouch(this, event)
 
-        val fingers = extractFingersPositions(event).toList()
+        val fingers = touchTracker.getCurrentPositions().toList()
 
         val trackedFingers = allDials().mapNotNull { it.trackedPointerId() }
 
@@ -481,12 +492,6 @@ class RadialGamePad @JvmOverloads constructor(
         }
 
         return true
-    }
-
-    private fun extractFingersPositions(event: MotionEvent): Sequence<FingerPosition> {
-        // TODO Handle APIs < 29
-        touchTracker.onTouch(this, event)
-        return touchTracker.getCurrentPositions()
     }
 
     private fun forwardTouchToDial(

@@ -22,47 +22,39 @@ import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
 
-class RawTouchTracker {
+class SimpleTouchTracker : TouchTracker {
 
-    private var estimatedScaling: Float = 1.0f
-    private var viewPosition = intArrayOf(0, 0)
     private val currentPositions: MutableMap<Int, PointF> = mutableMapOf()
 
-    fun onTouch(view: View, event: MotionEvent) {
-        view.getLocationOnScreen(viewPosition)
-
+    override fun onTouch(view: View, event: MotionEvent) {
         val pointerId = event.getPointerId(event.actionIndex)
         val pointerIndex = event.findPointerIndex(pointerId)
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 currentPositions[pointerId] = PointF(event.x, event.y)
-                estimatedScaling = runCatching {
-                    (viewPosition[0] + event.x) / event.rawX
-                }.getOrDefault(1.0f)
             }
 
             MotionEvent.ACTION_POINTER_DOWN -> {
                 currentPositions[pointerId] = PointF(event.getX(pointerIndex), event.getY(pointerIndex))
             }
 
-            MotionEvent.ACTION_UP -> currentPositions.remove(pointerId)
+            MotionEvent.ACTION_CANCEL -> currentPositions.clear()
+
+            MotionEvent.ACTION_UP -> currentPositions.clear()
 
             MotionEvent.ACTION_POINTER_UP -> currentPositions.remove(pointerId)
 
             MotionEvent.ACTION_MOVE -> {
                 iteratePointerIndexes(event)
                     .forEach { (id, index) ->
-                        currentPositions[id] = PointF(
-                            estimatedScaling * event.getRawX(index) - viewPosition[0],
-                            estimatedScaling * event.getRawY(index) - viewPosition[1]
-                        )
+                        currentPositions[id] = PointF(event.getX(index), event.getY(index))
                     }
             }
         }
     }
 
-    fun getCurrentPositions(): Sequence<FingerPosition> {
+    override fun getCurrentPositions(): Sequence<FingerPosition> {
         return currentPositions.asSequence()
             .map { (key, value) -> FingerPosition(key, value.x, value.y) }
     }
