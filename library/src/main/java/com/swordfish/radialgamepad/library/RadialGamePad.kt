@@ -42,6 +42,8 @@ import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
+import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
@@ -205,7 +207,7 @@ class RadialGamePad @JvmOverloads constructor(
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
     fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
         val updated = allDials()
-            .filterIsInstance<MotionDial>()
+            .filterIsInstance<SimulateMotionDial>()
             .map { it.simulateMotion(id, relativeX, relativeY) }
             .any { it }
 
@@ -217,8 +219,32 @@ class RadialGamePad @JvmOverloads constructor(
     /** Programmatically clear motion events associated with the id. */
     fun simulateClearMotionEvent(id: Int) {
         val updated = allDials()
-            .filterIsInstance<MotionDial>()
-            .map { it.simulateClearMotion(id) }
+            .filterIsInstance<SimulateMotionDial>()
+            .map { it.clearSimulatedMotion(id) }
+            .any { it }
+
+        if (updated) {
+            postInvalidate()
+        }
+    }
+
+    /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
+    fun simulateKeyEvent(id: Int, pressed: Boolean) {
+        val updated = allDials()
+            .filterIsInstance<SimulateKeyDial>()
+            .map { it.simulateKeyPress(id, pressed) }
+            .any { it }
+
+        if (updated) {
+            postInvalidate()
+        }
+    }
+
+    /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
+    fun simulateClearKeyEvent(id: Int) {
+        val updated = allDials()
+            .filterIsInstance<SimulateKeyDial>()
+            .map { it.clearSimulateKeyPress(id) }
             .any { it }
 
         if (updated) {

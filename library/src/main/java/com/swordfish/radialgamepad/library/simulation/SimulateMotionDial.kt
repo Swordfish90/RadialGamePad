@@ -16,11 +16,13 @@
  * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.dials
+package com.swordfish.radialgamepad.library.simulation
 
-interface MotionDial : Dial {
+import com.swordfish.radialgamepad.library.dials.Dial
+
+interface SimulateMotionDial : Dial {
 
     fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean
 
-    fun simulateClearMotion(id: Int): Boolean
+    fun clearSimulatedMotion(id: Int): Boolean
 }

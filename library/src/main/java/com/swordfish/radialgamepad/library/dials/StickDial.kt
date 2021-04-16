@@ -29,6 +29,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
@@ -40,7 +41,7 @@ class StickDial(
     private val keyPressId: Int?,
     private val contentDescription: String? = null,
     private val theme: RadialGamePadTheme
-) : MotionDial {
+) : SimulateMotionDial {
 
     private val paint = BasePaint()
 
@@ -143,7 +144,7 @@ class StickDial(
         return true
     }
 
-    override fun simulateClearMotion(id: Int): Boolean {
+    override fun clearSimulatedMotion(id: Int): Boolean {
         if (id != this.id) return false
         reset()
         return true

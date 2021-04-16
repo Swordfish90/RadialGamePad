@@ -32,6 +32,7 @@ import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.asin
@@ -43,7 +44,7 @@ class ButtonDial(
     private val spread: Int,
     private val config: ButtonConfig,
     private val theme: RadialGamePadTheme
-) : Dial {
+) : SimulateKeyDial {
 
     private val events = PublishRelay.create<Event>()
 
@@ -60,6 +61,7 @@ class ButtonDial(
     private val textPainter = TextPaint()
 
     private var pressed = false
+    private var simulatedKeyPress: Boolean? = null
 
     private var radius = 10f
     private var drawingBox = RectF()
@@ -69,6 +71,14 @@ class ButtonDial(
     override fun drawingBox(): RectF = drawingBox
 
     override fun trackedPointerId(): Int? = null
+
+    private fun computePressedState(pressed: Boolean, simulatedPress: Boolean?): Int {
+        return when {
+            pressed || simulatedPress == true -> PRESSED
+            simulatedPress == false -> SEMI_PRESSED
+            else -> NOT_PRESSED
+        }
+    }
 
     override fun measure(drawingBox: RectF, sector: Sector?) {
         this.drawingBox = drawingBox
@@ -141,7 +151,11 @@ class ButtonDial(
     override fun draw(canvas: Canvas) {
         val buttonTheme = getTheme()
 
-        paint.color = if (pressed) buttonTheme.pressedColor else buttonTheme.normalColor
+        paint.color = when(computePressedState(pressed, simulatedKeyPress)) {
+            PRESSED -> buttonTheme.pressedColor
+            SEMI_PRESSED -> buttonTheme.semiPressedColor
+            else -> buttonTheme.normalColor
+        }
 
         // Drawing a simple circle is faster with hw canvases so we only use it when spread is greater than one
         if (requiresDrawingBeanPath()) {
@@ -175,6 +189,29 @@ class ButtonDial(
         return false
     }
 
+    private fun updatePressed(newPressed: Boolean, newSimulatedPressed: Boolean?): Boolean {
+        val oldPressedState = computePressedState(pressed, simulatedKeyPress)
+        val newPressedState = computePressedState(newPressed, newSimulatedPressed)
+
+        if (newSimulatedPressed ?: newPressed != simulatedKeyPress ?: pressed) {
+            val action = if (newSimulatedPressed ?: newPressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
+            events.accept(Event.Button(config.id, action, newPressedState == PRESSED))
+        }
+
+        pressed = newPressed
+        simulatedKeyPress = newSimulatedPressed
+
+        return oldPressedState != newPressedState
+    }
+
+    override fun simulateKeyPress(id: Int, simulatePress: Boolean): Boolean {
+        return updatePressed(pressed, simulatedKeyPress)
+    }
+
+    override fun clearSimulateKeyPress(id: Int): Boolean {
+        return updatePressed(pressed, null)
+    }
+
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
         events.accept(Event.Gesture(config.id, gestureType))
         return false
@@ -192,5 +229,9 @@ class ButtonDial(
 
     companion object {
         const val DEFAULT_MARGIN = 0.1f
+
+        private const val NOT_PRESSED = 0
+        private const val SEMI_PRESSED = 1
+        private const val PRESSED = 2
     }
 }
