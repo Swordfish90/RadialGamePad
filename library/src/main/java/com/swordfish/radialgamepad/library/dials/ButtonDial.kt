@@ -177,16 +177,7 @@ class ButtonDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        val newPressed = fingers.isNotEmpty()
-        if (newPressed != pressed) {
-            pressed = newPressed
-
-            val action = if (pressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
-            events.accept(Event.Button(config.id, action, pressed))
-
-            return true
-        }
-        return false
+        return updatePressed(fingers.isNotEmpty(), simulatedKeyPress)
     }
 
     private fun updatePressed(newPressed: Boolean, newSimulatedPressed: Boolean?): Boolean {
@@ -206,7 +197,7 @@ class ButtonDial(
 
     override fun simulateKeyPress(id: Int, simulatePress: Boolean): Boolean {
         if (id != config.id) return false
-        return updatePressed(pressed, simulatedKeyPress)
+        return updatePressed(pressed, simulatePress)
     }
 
     override fun clearSimulateKeyPress(id: Int): Boolean {
