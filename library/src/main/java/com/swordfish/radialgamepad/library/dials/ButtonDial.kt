@@ -205,10 +205,12 @@ class ButtonDial(
     }
 
     override fun simulateKeyPress(id: Int, simulatePress: Boolean): Boolean {
+        if (id != config.id) return false
         return updatePressed(pressed, simulatedKeyPress)
     }
 
     override fun clearSimulateKeyPress(id: Int): Boolean {
+        if (id != config.id) return false
         return updatePressed(pressed, null)
     }
 
