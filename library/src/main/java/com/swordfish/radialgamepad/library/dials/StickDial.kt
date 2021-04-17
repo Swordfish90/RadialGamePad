@@ -47,6 +47,7 @@ class StickDial(
 
     private val foregroundColor: Int = theme.normalColor
     private val pressedColor: Int = theme.pressedColor
+    private val simulatedColor: Int = theme.simulatedColor
     private val buttonPressedColor = ColorUtils.blendARGB(foregroundColor, pressedColor, 0.5f)
 
     private val eventsRelay = PublishRelay.create<Event>()
@@ -81,6 +82,12 @@ class StickDial(
         )
 
         val smallRadius = 0.5f * radius
+
+        paint.color = when {
+            firstTouch != null -> pressedColor
+            simulatedFirstTouch != null -> simulatedColor
+            else -> foregroundColor
+        }
 
         paint.color = if (firstTouch ?: simulatedFirstTouch != null) pressedColor else foregroundColor
         canvas.drawCircle(
