@@ -36,7 +36,7 @@ class MultiTapDetector(context: Context, private val callback: (Float, Float, In
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 downEvent.copyFrom(event)
 
-                if (numberOfTaps == 0) {
+                if (event.eventTime - lastTapUpEvent.time > doubleTapTimeout) {
                     callback(downEvent.x, downEvent.y, 0, true)
                 }
             }
