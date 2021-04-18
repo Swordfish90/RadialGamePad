@@ -200,6 +200,7 @@ class CrossDial(
         if (emitUpdate) {
             eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
         }
+
         return emitUpdate
     }
 
