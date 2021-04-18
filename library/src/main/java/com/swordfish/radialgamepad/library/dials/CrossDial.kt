@@ -30,6 +30,7 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
@@ -47,7 +48,7 @@ class CrossDial(
     private val supportsGestures: Set<GestureType>,
     private val contentDescription: CrossContentDescription,
     theme: RadialGamePadTheme
-) : Dial {
+) : SimulateMotionDial {
 
     companion object {
         private const val ACCESSIBILITY_BOX_SCALE = 0.33f
@@ -87,6 +88,10 @@ class CrossDial(
         setTint(theme.pressedColor)
     }
 
+    private var simulatedDrawable: Drawable = context.getDrawable(pressedDrawableId)!!.apply {
+        setTint(theme.simulatedColor)
+    }
+
     private var foregroundDrawable: Drawable? = foregroundDrawableId?.let {
         context.getDrawable(it)!!.apply { setTint(theme.textColor) }
     }
@@ -98,6 +103,8 @@ class CrossDial(
     private var trackedPointerId: Int? = null
 
     private var currentIndex: Int? = null
+
+    private var simulatedCurrentIndex: Int? = null
 
     private var drawingBox = RectF()
 
@@ -168,12 +175,18 @@ class CrossDial(
         if (trackedPointerId == null) {
             val finger = fingers.first()
             trackedPointerId = finger.pointerId
-            return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
+            return handleTouchEvent(
+                computeIndexForPosition(finger.x - 0.5f, finger.y - 0.5f),
+                simulatedCurrentIndex
+            )
         } else {
             val trackedFinger = fingers
                 .firstOrNull { it.pointerId == trackedPointerId } ?: return reset()
 
-            return handleTouchEvent(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f)
+            return handleTouchEvent(
+                computeIndexForPosition(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f),
+                simulatedCurrentIndex
+            )
         }
     }
 
@@ -189,14 +202,15 @@ class CrossDial(
         return emitUpdate
     }
 
-    private fun handleTouchEvent(x: Float, y: Float): Boolean {
-        val index = computeIndexForPosition(x, y)
+    private fun handleTouchEvent(index: Int?, simulatedIndex: Int?): Boolean {
+        val finalIndex = simulatedIndex ?: index
+        val finalCurrentIndex = simulatedCurrentIndex ?: currentIndex
 
-        if (index != currentIndex) {
+        if (finalIndex != finalCurrentIndex) {
             if (index == null) {
                 eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
             } else {
-                val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
+                val haptic = finalCurrentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
                 eventsRelay.accept(
                     Event.Direction(
                         id,
@@ -206,12 +220,25 @@ class CrossDial(
                     )
                 )
             }
-
-            currentIndex = index
-            return true
         }
 
-        return false
+        currentIndex = index
+        simulatedCurrentIndex = simulatedIndex
+
+        return finalIndex != finalCurrentIndex
+    }
+
+    override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
+        if (id != this.id) return false
+
+        handleTouchEvent(currentIndex, computeIndexForPosition(relativeX, relativeY))
+        return true
+    }
+
+    override fun clearSimulatedMotion(id: Int): Boolean {
+        if (id != this.id) return false
+        reset()
+        return true
     }
 
     private fun computeIndexForPosition(x: Float, y: Float): Int? {
@@ -271,14 +298,18 @@ class CrossDial(
 
     private fun getStateDrawable(index: Int, isPressed: Boolean): Drawable? {
         return if (index in DRAWABLE_BUTTONS) {
-            if (isPressed) { pressedDrawable } else { normalDrawable }
+            when {
+                isPressed -> pressedDrawable
+                simulatedCurrentIndex != null -> simulatedDrawable
+                else -> normalDrawable
+            }
         } else {
             null
         }
     }
 
-    private fun convertDiagonals(currentIndex: Int?): Set<Int> {
-        return when (currentIndex) {
+    private fun convertDiagonals(index: Int?): Set<Int> {
+        return when (index) {
             BUTTON_DOWN_RIGHT -> setOf(
                 BUTTON_DOWN,
                 BUTTON_RIGHT
@@ -296,7 +327,7 @@ class CrossDial(
                 BUTTON_RIGHT
             )
             null -> setOf()
-            else -> setOf(currentIndex)
+            else -> setOf(index)
         }
     }
 }
