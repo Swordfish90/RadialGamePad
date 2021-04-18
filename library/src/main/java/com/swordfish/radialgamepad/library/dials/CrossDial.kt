@@ -267,7 +267,7 @@ class CrossDial(
         )
     }
 
-    override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()
+    override fun events(): Observable<Event> = eventsRelay
 
     private fun getStateDrawable(index: Int, isPressed: Boolean): Drawable? {
         return if (index in DRAWABLE_BUTTONS) {

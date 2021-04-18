@@ -288,7 +288,7 @@ class PrimaryButtonsDial(
             .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_UP, false)) }
     }
 
-    override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()
+    override fun events(): Observable<Event> = eventsRelay
 
     companion object {
         private const val BUTTON_SCALING = 0.8f

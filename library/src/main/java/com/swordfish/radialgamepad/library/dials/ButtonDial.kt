@@ -207,7 +207,7 @@ class ButtonDial(
         return false
     }
 
-    override fun events(): Observable<Event> = events.distinctUntilChanged()
+    override fun events(): Observable<Event> = events
 
     override fun accessibilityBoxes(): List<AccessibilityBox> {
         return config.contentDescription?.let {
