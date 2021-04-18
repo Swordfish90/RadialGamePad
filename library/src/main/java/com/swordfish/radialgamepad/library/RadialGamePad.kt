@@ -183,6 +183,7 @@ class RadialGamePad @JvmOverloads constructor(
         if (!isConfirmed) return@MultiTapDetector
 
         val gestureType = when (taps) {
+            0 -> GestureType.FIRST_TOUCH
             1 -> GestureType.SINGLE_TAP
             2 -> GestureType.DOUBLE_TAP
             3 -> GestureType.TRIPLE_TAP
@@ -260,12 +261,14 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.rightDrawableId ?: R.drawable.direction_right_normal,
                 configuration.rightDrawableId ?: R.drawable.direction_right_pressed,
                 configuration.rightDrawableForegroundId,
+                configuration.supportsGestures,
                 configuration.contentDescription,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
                 configuration.id,
                 configuration.buttonPressId,
+                configuration.supportsGestures,
                 configuration.contentDescription,
                 configuration.theme ?: gamePadConfig.theme
             )
@@ -287,6 +290,7 @@ class RadialGamePad @JvmOverloads constructor(
                 is SecondaryDialConfig.Stick -> StickDial(
                     config.id,
                     config.buttonPressId,
+                    config.supportsGestures,
                     config.contentDescription,
                     config.theme ?: gamePadConfig.theme
                 )
@@ -303,6 +307,7 @@ class RadialGamePad @JvmOverloads constructor(
                     config.rightDrawableId ?: R.drawable.direction_right_normal,
                     config.rightDrawableId ?: R.drawable.direction_right_pressed,
                     config.rightDrawableForegroundId,
+                    config.supportsGestures,
                     config.contentDescription,
                     config.theme ?: gamePadConfig.theme
                 )

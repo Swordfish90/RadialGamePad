@@ -18,6 +18,8 @@
 
 package com.swordfish.radialgamepad.library.config
 
+import com.swordfish.radialgamepad.library.event.GestureType
+
 /**
  * The configuration object for a PrimaryDial.
  */
@@ -27,6 +29,7 @@ sealed class PrimaryDialConfig {
      * The Cross dial represents a simple DPAD with diagonals.
      * @property id The control id. It is passed back to discriminate events.
      * @property rightDrawableId A resource drawable id for the left arrow (other arrows are obtained by rotating it)
+     * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
      * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
      */
     data class Cross(
@@ -34,6 +37,7 @@ sealed class PrimaryDialConfig {
         val rightDrawableId: Int? = null,
         val rightDrawableForegroundId: Int? = null,
         val contentDescription: CrossContentDescription = CrossContentDescription(),
+        val supportsGestures: Set<GestureType> = emptySet(),
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 
@@ -41,12 +45,14 @@ sealed class PrimaryDialConfig {
      * The Stick dial represents a simple touch stick.
      * @property id The control id. It is passed back to discriminate events.
      * @property buttonPressId Specify a button action when the Stick is double pressed. Useful for platforms with clickable thumb sticks.
+     * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
      * @property contentDescription Specify the content description name.
      * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
      */
     data class Stick(
         val id: Int,
         val buttonPressId: Int? = null,
+        val supportsGestures: Set<GestureType> = emptySet(),
         val contentDescription: String = "Stick",
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()

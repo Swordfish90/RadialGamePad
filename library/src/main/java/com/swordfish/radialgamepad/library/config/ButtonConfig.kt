@@ -18,6 +18,8 @@
 
 package com.swordfish.radialgamepad.library.config
 
+import com.swordfish.radialgamepad.library.event.GestureType
+
 /**
  * Configuration for a single button.
  * @property id The control id. It is passed back to discriminate events.
@@ -25,6 +27,8 @@ package com.swordfish.radialgamepad.library.config
  * @property visible Prevent this button from being shown on screen
  * @property iconId A drawable resource id to an icon which is displayed on top of the button
  * @property contentDescription Content description read by screen reader. By default is label.
+ * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
+ * @property supportsButtons Sets if the button sends Event.Button events. Defaults to true.
  * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
  */
 data class ButtonConfig(
@@ -33,5 +37,7 @@ data class ButtonConfig(
     val visible: Boolean = true,
     val iconId: Int? = null,
     val contentDescription: String? = label,
+    val supportsGestures: Set<GestureType> = emptySet(),
+    val supportsButtons: Boolean = true,
     val theme: RadialGamePadTheme? = null
 )

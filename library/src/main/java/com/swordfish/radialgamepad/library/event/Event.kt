@@ -27,7 +27,8 @@ abstract class Event(open val haptic: Boolean = false) {
      */
     data class Gesture(
         val id: Int,
-        val type: GestureType
+        val type: GestureType,
+        override val haptic: Boolean
     ) : Event()
 
     /**

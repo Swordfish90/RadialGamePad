@@ -39,6 +39,7 @@ import kotlin.math.sin
 class StickDial(
     private val id: Int,
     private val keyPressId: Int?,
+    private val supportsGestures: Set<GestureType>,
     private val contentDescription: String? = null,
     private val theme: RadialGamePadTheme
 ) : SimulateMotionDial {
@@ -134,8 +135,10 @@ class StickDial(
             isButtonPressed = true
             eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_DOWN, true))
             true
+        } else if (gestureType in supportsGestures) {
+            eventsRelay.accept(Event.Gesture(id, gestureType, true))
+            false
         } else {
-            eventsRelay.accept(Event.Gesture(id, gestureType))
             false
         }
     }

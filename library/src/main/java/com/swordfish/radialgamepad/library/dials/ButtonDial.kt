@@ -179,7 +179,7 @@ class ButtonDial(
         val newPressedState = newSimulatedPressed ?: newPressed
         val oldPressedState = simulatedPress ?: pressed
 
-        if (newPressedState != oldPressedState) {
+        if (newPressedState != oldPressedState && config.supportsButtons) {
             val action = if (newPressedState) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
             events.accept(Event.Button(config.id, action, newPressedState))
         }
@@ -201,7 +201,9 @@ class ButtonDial(
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        events.accept(Event.Gesture(config.id, gestureType))
+        if (gestureType in config.supportsGestures) {
+            events.accept(Event.Gesture(config.id, gestureType, true))
+        }
         return false
     }
 

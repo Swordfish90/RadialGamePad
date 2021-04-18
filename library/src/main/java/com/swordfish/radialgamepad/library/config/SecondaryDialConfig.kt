@@ -18,6 +18,7 @@
 
 package com.swordfish.radialgamepad.library.config
 
+import com.swordfish.radialgamepad.library.event.GestureType
 import kotlin.math.roundToInt
 
 /**
@@ -49,8 +50,8 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property spread Defines how many secondary dials is occupies.
      * @property scale Defines a scaling factor. Used to make some controls more prominent.
      * @property id The id returned when its events are fired.
-     * @property id The id returned when its events are fired.
      * @property buttonPressId The optional id fired when the stick is double tapped.
+     * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
      * @property contentDescription Content description read by the screen reader. Defaults to "Stick".
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
      */
@@ -59,6 +60,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         scale: Float,
         val id: Int,
         val buttonPressId: Int? = null,
+        val supportsGestures: Set<GestureType> = emptySet(),
         val contentDescription: String = "Stick",
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
@@ -71,6 +73,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property id The id returned when its events are fired.
      * @property rightDrawableId The optional drawable that define the shape of the right button.
      * @property rightDrawableForegroundId The optional drawable that is drawn on top with text color.
+     * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
      * @property contentDescription Content description read by the screen reader. Defaults to "D-Pad".
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
      */
@@ -80,6 +83,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         val id: Int,
         val rightDrawableId: Int? = null,
         val rightDrawableForegroundId: Int? = null,
+        val supportsGestures: Set<GestureType> = emptySet(),
         val contentDescription: CrossContentDescription = CrossContentDescription(),
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, scale.roundToInt(), scale)

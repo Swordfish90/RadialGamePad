@@ -44,6 +44,7 @@ class CrossDial(
     normalDrawableId: Int,
     pressedDrawableId: Int,
     foregroundDrawableId: Int?,
+    private val supportsGestures: Set<GestureType>,
     private val contentDescription: CrossContentDescription,
     theme: RadialGamePadTheme
 ) : Dial {
@@ -115,8 +116,8 @@ class CrossDial(
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
         // Gestures are fired only when happening in the dead zone.
         // There is a huge risk of false events in CrossDials.
-        if (isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)) {
-            eventsRelay.accept(Event.Gesture(id, gestureType))
+        if (isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f) && gestureType in supportsGestures) {
+            eventsRelay.accept(Event.Gesture(id, gestureType, true))
             return false
         }
 
