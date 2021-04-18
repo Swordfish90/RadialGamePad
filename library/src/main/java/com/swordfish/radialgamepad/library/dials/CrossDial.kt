@@ -137,7 +137,7 @@ class CrossDial(
 
         canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paint)
 
-        val pressedButtons = convertDiagonals(currentIndex)
+        val pressedButtons = convertDiagonals(simulatedCurrentIndex ?: currentIndex)
 
         for (i in 0..BUTTON_COUNT) {
             val cAngle = SINGLE_BUTTON_ANGLE * i
@@ -191,10 +191,11 @@ class CrossDial(
     }
 
     private fun reset(): Boolean {
-        val emitUpdate = currentIndex != null
+        val emitUpdate = simulatedCurrentIndex ?: currentIndex != null
 
         currentIndex = null
         trackedPointerId = null
+        simulatedCurrentIndex = null
 
         if (emitUpdate) {
             eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
@@ -231,7 +232,7 @@ class CrossDial(
     override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
         if (id != this.id) return false
 
-        handleTouchEvent(currentIndex, computeIndexForPosition(relativeX, relativeY))
+        handleTouchEvent(currentIndex, computeIndexForPosition(relativeX - 0.5f, relativeY - 0.5f))
         return true
     }
 
