@@ -117,7 +117,7 @@ class CrossDial(
         // Gestures are fired only when happening in the dead zone.
         // There is a huge risk of false events in CrossDials.
         if (isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f) && gestureType in supportsGestures) {
-            eventsRelay.accept(Event.Gesture(id, gestureType, true))
+            eventsRelay.accept(Event.Gesture(id, gestureType))
             return false
         }
 

@@ -246,7 +246,7 @@ class PrimaryButtonsDial(
             .mapNotNull { idToConfigMap[it] }
             .filter { gestureType in it.supportsGestures }
             .forEach {
-                eventsRelay.accept(Event.Gesture(it.id, gestureType, true))
+                eventsRelay.accept(Event.Gesture(it.id, gestureType))
             }
         return false
     }

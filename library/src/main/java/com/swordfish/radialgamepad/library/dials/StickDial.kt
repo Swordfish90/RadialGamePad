@@ -136,7 +136,7 @@ class StickDial(
             eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_DOWN, true))
             true
         } else if (gestureType in supportsGestures) {
-            eventsRelay.accept(Event.Gesture(id, gestureType, true))
+            eventsRelay.accept(Event.Gesture(id, gestureType))
             false
         } else {
             false

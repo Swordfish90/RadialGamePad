@@ -202,7 +202,7 @@ class ButtonDial(
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
         if (gestureType in config.supportsGestures) {
-            events.accept(Event.Gesture(config.id, gestureType, true))
+            events.accept(Event.Gesture(config.id, gestureType))
         }
         return false
     }
