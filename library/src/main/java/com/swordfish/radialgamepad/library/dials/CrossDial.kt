@@ -207,15 +207,15 @@ class CrossDial(
         val finalCurrentIndex = simulatedCurrentIndex ?: currentIndex
 
         if (finalIndex != finalCurrentIndex) {
-            if (index == null) {
+            if (finalIndex == null) {
                 eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
             } else {
                 val haptic = finalCurrentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
                 eventsRelay.accept(
                     Event.Direction(
                         id,
-                        cos(index * SINGLE_BUTTON_ANGLE),
-                        sin(index * SINGLE_BUTTON_ANGLE),
+                        cos(finalIndex * SINGLE_BUTTON_ANGLE),
+                        sin(finalIndex * SINGLE_BUTTON_ANGLE),
                         haptic
                     )
                 )
