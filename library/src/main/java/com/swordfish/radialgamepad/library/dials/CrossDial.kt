@@ -117,7 +117,7 @@ class CrossDial(
     }
 
     // We disable touch events when simulating external events.
-    private fun isTouchActive() = simulatedState != null
+    private fun isTouchDisabled() = simulatedState != null
 
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
@@ -126,7 +126,7 @@ class CrossDial(
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
         // Firing gestures outside the deadzone is very dangerous, as the user tends to click a
         // lot on the DPAD. That's why we disable them when touch is active.
-        val shouldFireGesture = !isTouchActive() || isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)
+        val shouldFireGesture = isTouchDisabled() || isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)
 
         if (shouldFireGesture && gestureType in supportsGestures) {
             eventsRelay.accept(Event.Gesture(id, gestureType))
@@ -185,7 +185,7 @@ class CrossDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        if (isTouchActive()) return false
+        if (isTouchDisabled()) return false
 
         if (fingers.isEmpty()) return reset()
 
