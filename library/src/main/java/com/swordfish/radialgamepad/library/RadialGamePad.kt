@@ -67,7 +67,7 @@ class RadialGamePad @JvmOverloads constructor(
     private val exploreByTouchHelper = object : ExploreByTouchHelper(this) {
 
         private fun computeVirtualViews(): Map<Int, AccessibilityBox> {
-            return allInteractors()
+            return allInteractors
                 .flatMap { it.dial.accessibilityBoxes() }
                 .sortedBy { it.rect.top }
                 .mapIndexed { index, accessibilityBox -> index to accessibilityBox }
@@ -178,6 +178,7 @@ class RadialGamePad @JvmOverloads constructor(
 
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: List<DialInteractor>
+    private lateinit var allInteractors: List<DialInteractor>
 
     private val gestureDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
         if (!isConfirmed) return@MultiTapDetector
@@ -190,7 +191,7 @@ class RadialGamePad @JvmOverloads constructor(
             else -> null
         } ?: return@MultiTapDetector
 
-        val updated = allInteractors().map {
+        val updated = allInteractors.map {
             it.gesture(x, y, gestureType)
         }
 
@@ -200,15 +201,15 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     init {
-        initializePrimaryInteractor(gamePadConfig.primaryDial)
-        initializeSecondaryInteractors(gamePadConfig.secondaryDials)
+        primaryInteractor = buildPrimaryInteractor(gamePadConfig.primaryDial)
+        secondaryInteractors = buildSecondaryInteractors(gamePadConfig.secondaryDials)
+        allInteractors = listOf(primaryInteractor) + secondaryInteractors
         ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
     fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
-        val updated = allDials()
-            .filterIsInstance<SimulateMotionDial>()
+        val updated = allDials().filterIsInstance(SimulateMotionDial::class.java)
             .map { it.simulateMotion(id, relativeX, relativeY) }
             .any { it }
 
@@ -219,8 +220,7 @@ class RadialGamePad @JvmOverloads constructor(
 
     /** Programmatically clear motion events associated with the id. */
     fun simulateClearMotionEvent(id: Int) {
-        val updated = allDials()
-            .filterIsInstance<SimulateMotionDial>()
+        val updated = allDials().filterIsInstance(SimulateMotionDial::class.java)
             .map { it.clearSimulatedMotion(id) }
             .any { it }
 
@@ -231,8 +231,7 @@ class RadialGamePad @JvmOverloads constructor(
 
     /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
     fun simulateKeyEvent(id: Int, pressed: Boolean) {
-        val updated = allDials()
-            .filterIsInstance<SimulateKeyDial>()
+        val updated = allDials().filterIsInstance(SimulateKeyDial::class.java)
             .map { it.simulateKeyPress(id, pressed) }
             .any { it }
 
@@ -243,8 +242,7 @@ class RadialGamePad @JvmOverloads constructor(
 
     /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
     fun simulateClearKeyEvent(id: Int) {
-        val updated = allDials()
-            .filterIsInstance<SimulateKeyDial>()
+        val updated = allDials().filterIsInstance(SimulateKeyDial::class.java)
             .map { it.clearSimulateKeyPress(id) }
             .any { it }
 
@@ -253,7 +251,7 @@ class RadialGamePad @JvmOverloads constructor(
         }
     }
 
-    private fun initializePrimaryInteractor(configuration: PrimaryDialConfig) {
+    private fun buildPrimaryInteractor(configuration: PrimaryDialConfig): DialInteractor {
         val primaryDial = when (configuration) {
             is PrimaryDialConfig.Cross -> CrossDial(
                 context,
@@ -281,11 +279,11 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.theme ?: gamePadConfig.theme
             )
         }
-        primaryInteractor = DialInteractor(primaryDial)
+        return DialInteractor(primaryDial)
     }
 
-    private fun initializeSecondaryInteractors(secondaryDials: List<SecondaryDialConfig>) {
-        secondaryInteractors = secondaryDials.map { config ->
+    private fun buildSecondaryInteractors(secondaryDials: List<SecondaryDialConfig>): List<DialInteractor> {
+        return secondaryDials.map { config ->
             val secondaryDial = when (config) {
                 is SecondaryDialConfig.Stick -> StickDial(
                     config.id,
@@ -486,13 +484,18 @@ class RadialGamePad @JvmOverloads constructor(
         val allEvents = allDials().map { it.events() }
         return Observable.merge(allEvents)
             .doOnNext {
-                if (gamePadConfig.haptic && it.haptic) performHapticFeedback()
+                if (it.haptic) {
+                    performHapticFeedback()
+                }
             }
     }
 
-    private fun performHapticFeedback() {
-        val flags = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, flags)
+    fun performHapticFeedback() {
+        if (gamePadConfig.haptic) {
+            val flags =
+                HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+            performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, flags)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -502,7 +505,7 @@ class RadialGamePad @JvmOverloads constructor(
 
         val trackedFingers = allDials().mapNotNull { it.trackedPointerId() }
 
-        val updated = allInteractors().map { dial ->
+        val updated = allInteractors.map { dial ->
             forwardTouchToDial(dial, fingers, trackedFingers)
         }
 
@@ -534,10 +537,7 @@ class RadialGamePad @JvmOverloads constructor(
         }
     }
 
-    private fun allDials(): List<Dial> = allInteractors().map { it.dial }
-
-    private fun allInteractors(): List<DialInteractor> =
-        listOf(primaryInteractor) + secondaryInteractors
+    private fun allDials(): List<Dial> = allInteractors.map { it.dial }
 
     override fun dispatchHoverEvent(event: MotionEvent): Boolean {
         if (exploreByTouchHelper.dispatchHoverEvent(event)) {

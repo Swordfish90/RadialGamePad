@@ -265,8 +265,10 @@ class PrimaryButtonsDial(
 
         result += circleActions
             .filter { it.visible && it.contentDescription != null }
-            .mapIndexed { index, button ->
-                AccessibilityBox(labelsDrawingBoxes[index]!!.roundToInt(), button.contentDescription!!)
+            .mapIndexedNotNull { index, button ->
+                labelsDrawingBoxes[index]?.let {
+                    AccessibilityBox(it.roundToInt(), button.contentDescription ?: "")
+                }
             }
 
         if (centerAction?.contentDescription != null) {
