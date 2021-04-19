@@ -156,11 +156,21 @@ class CrossDial(
                 canvas.save()
 
                 canvas.rotate(rotationInDegrees, xPivot, yPivot)
-                it.setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
+                it.setBounds(
+                    left.roundToInt(),
+                    top.roundToInt(),
+                    (left + drawableSize).roundToInt(),
+                    (top + drawableSize).roundToInt()
+                )
                 it.draw(canvas)
 
                 foregroundDrawable?.apply {
-                    setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
+                    setBounds(
+                        left.roundToInt(),
+                        top.roundToInt(),
+                        (left + drawableSize).roundToInt(),
+                        (top + drawableSize).roundToInt()
+                    )
                     draw(canvas)
                 }
 
@@ -244,7 +254,7 @@ class CrossDial(
 
     override fun clearSimulatedMotion(id: Int): Boolean {
         if (id != this.id) return false
-        return updateState(touchState, null)
+        return reset()
     }
 
     private fun computeStateForPosition(x: Float, y: Float): Int? {
