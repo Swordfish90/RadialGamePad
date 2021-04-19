@@ -61,7 +61,7 @@ class ButtonDial(
     private val textPainter = TextPaint()
 
     private var pressed = false
-    private var simulatedPress: Boolean? = null
+    private var simulatedPressed: Boolean? = null
 
     private var radius = 10f
     private var drawingBox = RectF()
@@ -144,8 +144,8 @@ class ButtonDial(
         val buttonTheme = getTheme()
 
         paint.color = when {
-            simulatedPress == true || pressed -> buttonTheme.pressedColor
-            simulatedPress == false -> buttonTheme.simulatedColor
+            simulatedPressed == true || pressed -> buttonTheme.pressedColor
+            simulatedPressed == false -> buttonTheme.simulatedColor
             else -> buttonTheme.normalColor
         }
 
@@ -169,15 +169,15 @@ class ButtonDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        return updatePressed(fingers.isNotEmpty(), simulatedPress)
+        return updatePressed(fingers.isNotEmpty(), simulatedPressed)
     }
 
     private fun updatePressed(newPressed: Boolean, newSimulatedPressed: Boolean?): Boolean {
-        if (pressed == newPressed && newSimulatedPressed == simulatedPress)
+        if (pressed == newPressed && newSimulatedPressed == simulatedPressed)
             return false
 
         val newPressedState = newSimulatedPressed ?: newPressed
-        val oldPressedState = simulatedPress ?: pressed
+        val oldPressedState = simulatedPressed ?: pressed
 
         if (newPressedState != oldPressedState && config.supportsButtons) {
             val action = if (newPressedState) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
@@ -185,7 +185,7 @@ class ButtonDial(
         }
 
         pressed = newPressed
-        simulatedPress = newSimulatedPressed
+        simulatedPressed = newSimulatedPressed
 
         return true
     }

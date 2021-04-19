@@ -90,7 +90,6 @@ class StickDial(
             else -> foregroundColor
         }
 
-        paint.color = if (firstTouch ?: simulatedFirstTouch != null) pressedColor else foregroundColor
         canvas.drawCircle(
             drawingBox.left + radius + cos(angle) * strength * smallRadius,
             drawingBox.top + radius + sin(angle) * strength * smallRadius,

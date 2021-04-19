@@ -81,20 +81,14 @@ class CrossDial(
 
     private var buttonCenterDistance: Float = 0.45f
 
-    private var normalDrawable: Drawable = context.getDrawable(normalDrawableId)!!.apply {
-        setTint(theme.normalColor)
-    }
+    private var normalDrawable: Drawable = getDrawableWithColor(context, normalDrawableId, theme.normalColor)
 
-    private var pressedDrawable: Drawable = context.getDrawable(pressedDrawableId)!!.apply {
-        setTint(theme.pressedColor)
-    }
+    private var pressedDrawable: Drawable = getDrawableWithColor(context, pressedDrawableId, theme.pressedColor)
 
-    private var simulatedDrawable: Drawable = context.getDrawable(pressedDrawableId)!!.apply {
-        setTint(theme.simulatedColor)
-    }
+    private var simulatedDrawable: Drawable = getDrawableWithColor(context, pressedDrawableId, theme.simulatedColor)
 
     private var foregroundDrawable: Drawable? = foregroundDrawableId?.let {
-        context.getDrawable(it)!!.apply { setTint(theme.textColor) }
+        getDrawableWithColor(context, it, theme.textColor)
     }
 
     private val paint = BasePaint().apply {
@@ -114,6 +108,12 @@ class CrossDial(
 
     private fun composeDescriptionString(direction: String): String {
         return "${contentDescription.baseName} $direction"
+    }
+
+    private fun getDrawableWithColor(context: Context, drawableId: Int, color: Int): Drawable {
+        return context.getDrawable(drawableId)!!.apply {
+            setTint(color)
+        }
     }
 
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
@@ -180,6 +180,8 @@ class CrossDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+        if (simulatedState != null) return false
+
         if (fingers.isEmpty()) return reset()
 
         if (trackedPointerId == null) {
