@@ -34,6 +34,7 @@ import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.touch.FingerPosition
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
@@ -211,7 +212,7 @@ class PrimaryButtonsDial(
         return minOf(radialMaxSize, linearMaxSize)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<FingerPosition>): Boolean {
         val newPressed = fingers.asSequence()
             .flatMap { getAssociatedId(it.x, it.y) }
             .toSet()

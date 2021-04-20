@@ -31,6 +31,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
+import com.swordfish.radialgamepad.library.touch.FingerPosition
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.MathUtils.fmod
 import com.swordfish.radialgamepad.library.utils.MathUtils.isOdd
@@ -191,7 +192,7 @@ class CrossDial(
         }
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<FingerPosition>): Boolean {
         if (isTouchDisabled()) return false
 
         if (fingers.isEmpty()) return reset()

@@ -30,8 +30,8 @@ import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
+import com.swordfish.radialgamepad.library.touch.FingerPosition
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
-import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.sin
@@ -98,7 +98,7 @@ class StickDial(
         )
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<FingerPosition>): Boolean {
         // We ignore touch input when simulating motion externally
         if (simulatedFirstTouch != null) return false
 
@@ -125,7 +125,7 @@ class StickDial(
         }
     }
 
-    private fun isCloseToCenter(finger: TouchUtils.FingerPosition): Boolean {
+    private fun isCloseToCenter(finger: FingerPosition): Boolean {
         return MathUtils.distance(finger.x, 0.5f, finger.y, 0.5f) < 0.6f
     }
 

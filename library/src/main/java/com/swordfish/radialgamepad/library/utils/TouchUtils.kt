@@ -22,10 +22,9 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.view.MotionEvent
 import androidx.annotation.RequiresApi
+import com.swordfish.radialgamepad.library.touch.FingerPosition
 
 object TouchUtils {
-
-    data class FingerPosition(val pointerId: Int, val x: Float, val y: Float)
 
     @RequiresApi(29)
     fun extractRawFingersPositions(event: MotionEvent, offsetX: Int = 0, offsetY: Int = 0): Sequence<FingerPosition> {

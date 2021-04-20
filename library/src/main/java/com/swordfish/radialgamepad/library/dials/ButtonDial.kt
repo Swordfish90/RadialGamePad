@@ -33,7 +33,7 @@ import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
-import com.swordfish.radialgamepad.library.utils.TouchUtils
+import com.swordfish.radialgamepad.library.touch.FingerPosition
 import io.reactivex.Observable
 import kotlin.math.asin
 import kotlin.math.cos
@@ -168,7 +168,7 @@ class ButtonDial(
         iconDrawable?.draw(canvas)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<FingerPosition>): Boolean {
         return updatePressed(fingers.isNotEmpty(), simulatedPressed)
     }
 
