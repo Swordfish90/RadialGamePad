@@ -261,6 +261,7 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.rightDrawableForegroundId,
                 configuration.supportsGestures,
                 configuration.contentDescription,
+                configuration.diagonalRatio,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
@@ -307,6 +308,7 @@ class RadialGamePad @JvmOverloads constructor(
                     config.rightDrawableForegroundId,
                     config.supportsGestures,
                     config.contentDescription,
+                    config.diagonalRatio,
                     config.theme ?: gamePadConfig.theme
                 )
             }
