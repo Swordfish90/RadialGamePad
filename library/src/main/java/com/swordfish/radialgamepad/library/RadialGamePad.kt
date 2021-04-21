@@ -23,6 +23,7 @@ import android.graphics.*
 import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
+import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
@@ -202,7 +203,7 @@ class RadialGamePad @JvmOverloads constructor(
         }
     }
 
-    private val touchTracker: TouchTracker = FixSamsungTouchTracker()
+    private val touchTracker: TouchTracker = buildTouchTracker()
 
     init {
         primaryInteractor = buildPrimaryInteractor(gamePadConfig.primaryDial)
@@ -211,12 +212,14 @@ class RadialGamePad @JvmOverloads constructor(
         ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
     }
 
-    private fun retrieveTouchTracker() {
-        when (gamePadConfig.touchDetection) {
+    private fun buildTouchTracker(): TouchTracker {
+        val result = when (gamePadConfig.touchDetection) {
             TouchDetection.DEFAULT -> DefaultTouchTracker()
             TouchDetection.FIX_SAMSUNG -> FixSamsungTouchTracker()
             TouchDetection.LEGACY -> LegacyTouchTracker()
         }
+        Log.i("FILIPPO", "Using touch tracker: $result")
+        return result
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
