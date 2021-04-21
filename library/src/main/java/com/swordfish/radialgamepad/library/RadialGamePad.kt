@@ -33,6 +33,7 @@ import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
 import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
+import com.swordfish.radialgamepad.library.config.TouchDetection
 import com.swordfish.radialgamepad.library.dials.*
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
@@ -44,9 +45,7 @@ import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
-import com.swordfish.radialgamepad.library.touch.FingerPosition
-import com.swordfish.radialgamepad.library.touch.FixSamsungTouchTracker
-import com.swordfish.radialgamepad.library.touch.TouchTracker
+import com.swordfish.radialgamepad.library.touch.*
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
 import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
@@ -210,6 +209,14 @@ class RadialGamePad @JvmOverloads constructor(
         secondaryInteractors = buildSecondaryInteractors(gamePadConfig.secondaryDials)
         allInteractors = listOf(primaryInteractor) + secondaryInteractors
         ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
+    }
+
+    private fun retrieveTouchTracker() {
+        when (gamePadConfig.touchDetection) {
+            TouchDetection.DEFAULT -> DefaultTouchTracker()
+            TouchDetection.FIX_SAMSUNG -> FixSamsungTouchTracker()
+            TouchDetection.LEGACY -> LegacyTouchTracker()
+        }
     }
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */

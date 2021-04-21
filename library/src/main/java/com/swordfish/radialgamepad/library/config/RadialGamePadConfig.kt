@@ -31,5 +31,6 @@ data class RadialGamePadConfig(
     val primaryDial: PrimaryDialConfig,
     val secondaryDials: List<SecondaryDialConfig>,
     val haptic: Boolean = true,
-    val theme: RadialGamePadTheme = RadialGamePadTheme()
+    val theme: RadialGamePadTheme = RadialGamePadTheme(),
+    val touchDetection: TouchDetection = TouchDetection.DEFAULT
 )
