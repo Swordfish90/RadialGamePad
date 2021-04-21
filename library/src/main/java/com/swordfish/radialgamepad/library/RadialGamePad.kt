@@ -111,7 +111,6 @@ class RadialGamePad @JvmOverloads constructor(
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
-    private var positionOnScreen = intArrayOf(0, 0)
 
     /** Change the horizontal gravity of the gamepad. Use in range [-1, +1] you can move the pad
      *  left or right. This value is not considered when sizing, so the actual shift depends on the

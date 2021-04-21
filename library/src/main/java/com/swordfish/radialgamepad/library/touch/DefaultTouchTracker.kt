@@ -25,6 +25,7 @@ import androidx.annotation.RequiresApi
 @RequiresApi(29)
 class DefaultTouchTracker : TouchTracker {
 
+    private var positionOnScreen = intArrayOf(0, 0)
     private val currentPositions: MutableList<FingerPosition> = mutableListOf()
 
     override fun getCurrentPositions(): Sequence<FingerPosition> {
@@ -32,8 +33,9 @@ class DefaultTouchTracker : TouchTracker {
     }
 
     override fun onTouch(view: View, event: MotionEvent) {
+        view.getLocationOnScreen(positionOnScreen)
         currentPositions.clear()
-        currentPositions.addAll(extractRawFingersPositions(event))
+        currentPositions.addAll(extractRawFingersPositions(event, positionOnScreen[0], positionOnScreen[1]))
     }
 
     @RequiresApi(29)
