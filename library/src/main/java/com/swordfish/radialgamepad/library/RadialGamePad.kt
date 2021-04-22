@@ -216,6 +216,9 @@ class RadialGamePad @JvmOverloads constructor(
             TouchDetection.DEFAULT -> DefaultTouchTracker()
             TouchDetection.FIX_SAMSUNG -> FixSamsungTouchTracker()
             TouchDetection.LEGACY -> LegacyTouchTracker()
+            TouchDetection.FIX_SAMSUNG2 -> FixSamsung2TouchTracker()
+            TouchDetection.FIX_SAMSUNG3 -> FixSamsung3TouchTracker()
+            TouchDetection.DEBUG -> DebugTouchTracker()
         }
         Log.i("FILIPPO", "Using touch tracker: $result")
         return result
