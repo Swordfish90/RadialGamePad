@@ -28,12 +28,13 @@ import com.swordfish.radialgamepad.library.config.CrossContentDescription
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.MathUtils
+import com.swordfish.radialgamepad.library.math.MathUtils.fmod
+import com.swordfish.radialgamepad.library.math.MathUtils.isOdd
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.utils.Constants
-import com.swordfish.radialgamepad.library.utils.MathUtils.fmod
-import com.swordfish.radialgamepad.library.utils.MathUtils.isOdd
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
@@ -50,6 +51,7 @@ class CrossDial(
     private val supportsGestures: Set<GestureType>,
     private val contentDescription: CrossContentDescription,
     private val diagonalRatio: Int,
+    distanceFromCenter: Float = 0.5f,
     theme: RadialGamePadTheme
 ) : SimulateMotionDial {
 
@@ -82,7 +84,7 @@ class CrossDial(
 
     private val eventsRelay = PublishRelay.create<Event>()
 
-    private var buttonCenterDistance: Float = 0.45f
+    private var buttonCenterDistance: Float = MathUtils.lint(distanceFromCenter, 0.4f, 0.6f)
 
     private var normalDrawable: Drawable = getDrawableWithColor(context, normalDrawableId, theme.normalColor)
 
