@@ -35,6 +35,10 @@ class MultiTapDetector(context: Context, private val callback: (Float, Float, In
         when(event.action) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 downEvent.copyFrom(event)
+
+                if (event.eventTime - lastTapUpEvent.time > doubleTapTimeout) {
+                    callback(downEvent.x, downEvent.y, 0, true)
+                }
             }
             MotionEvent.ACTION_MOVE -> {
                 // If a move greater than the allowed slop happens before timeout, then this is a scroll and not a tap

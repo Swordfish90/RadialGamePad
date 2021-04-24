@@ -23,6 +23,7 @@ import com.swordfish.radialgamepad.library.utils.Constants
  * The Cross dial represents a simple DPAD with diagonals.
  * @property normalColor A color which is displayed when controls are in default state
  * @property pressedColor A color which is displayed when controls are pressed
+ * @property simulatedColor A color which is displayed when control movement is simulated programmatically
  * @property textColor A color which is used to draw labels or icons on top of controls
  * @property primaryDialBackground A color which is used to draw the circular background behind the primary dial
  * @property secondaryDialBackground A color which is used to draw the circular background behind the secondary dials
@@ -30,6 +31,7 @@ import com.swordfish.radialgamepad.library.utils.Constants
 data class RadialGamePadTheme(
     val normalColor: Int = Constants.DEFAULT_COLOR_NORMAL,
     val pressedColor: Int = Constants.DEFAULT_COLOR_PRESSED,
+    val simulatedColor: Int = Constants.DEFAULT_COLOR_NORMAL,
     val textColor: Int = Constants.DEFAULT_COLOR_TEXT,
     val primaryDialBackground: Int = Constants.DEFAULT_COLOR_BACKGROUND,
     val secondaryDialBackground: Int = Constants.DEFAULT_COLOR_SECONDARY_BACKGROUND

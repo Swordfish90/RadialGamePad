@@ -62,6 +62,11 @@ class PrimaryButtonsDial(
 
     private var pressed: Set<Int> = setOf()
 
+    private val idToConfigMap: Map<Int, ButtonConfig> = (circleActions + listOf(centerAction))
+        .filterNotNull()
+        .map { it.id to it }
+        .toMap()
+
     private val drawables = loadRequiredDrawables(context)
 
     private var drawingBox = RectF()
@@ -237,9 +242,12 @@ class PrimaryButtonsDial(
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        getAssociatedId(relativeX, relativeY).forEach {
-            eventsRelay.accept(Event.Gesture(it, gestureType))
-        }
+        getAssociatedId(relativeX, relativeY)
+            .mapNotNull { idToConfigMap[it] }
+            .filter { gestureType in it.supportsGestures }
+            .forEach {
+                eventsRelay.accept(Event.Gesture(it.id, gestureType))
+            }
         return false
     }
 
@@ -257,8 +265,10 @@ class PrimaryButtonsDial(
 
         result += circleActions
             .filter { it.visible && it.contentDescription != null }
-            .mapIndexed { index, button ->
-                AccessibilityBox(labelsDrawingBoxes[index]!!.roundToInt(), button.contentDescription!!)
+            .mapIndexedNotNull { index, button ->
+                labelsDrawingBoxes[index]?.let {
+                    AccessibilityBox(it.roundToInt(), button.contentDescription ?: "")
+                }
             }
 
         if (centerAction?.contentDescription != null) {
@@ -270,17 +280,17 @@ class PrimaryButtonsDial(
 
     private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>) {
         newPressed.asSequence()
-            .filter { it !in oldPressed }
+            .filter { it !in oldPressed && idToConfigMap[it]?.supportsButtons == true }
             .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_DOWN, true)) }
     }
 
     private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>) {
         oldPressed.asSequence()
-            .filter { it !in newPressed }
+            .filter { it !in newPressed && idToConfigMap[it]?.supportsButtons == true }
             .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_UP, false)) }
     }
 
-    override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()
+    override fun events(): Observable<Event> = eventsRelay
 
     companion object {
         private const val BUTTON_SCALING = 0.8f

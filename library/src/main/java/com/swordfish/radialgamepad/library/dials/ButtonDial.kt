@@ -32,6 +32,7 @@ import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
 import kotlin.math.asin
@@ -43,7 +44,7 @@ class ButtonDial(
     private val spread: Int,
     private val config: ButtonConfig,
     private val theme: RadialGamePadTheme
-) : Dial {
+) : SimulateKeyDial {
 
     private val events = PublishRelay.create<Event>()
 
@@ -60,6 +61,7 @@ class ButtonDial(
     private val textPainter = TextPaint()
 
     private var pressed = false
+    private var simulatedPressed: Boolean? = null
 
     private var radius = 10f
     private var drawingBox = RectF()
@@ -141,7 +143,11 @@ class ButtonDial(
     override fun draw(canvas: Canvas) {
         val buttonTheme = getTheme()
 
-        paint.color = if (pressed) buttonTheme.pressedColor else buttonTheme.normalColor
+        paint.color = when {
+            simulatedPressed == true || pressed -> buttonTheme.pressedColor
+            simulatedPressed == false -> buttonTheme.simulatedColor
+            else -> buttonTheme.normalColor
+        }
 
         // Drawing a simple circle is faster with hw canvases so we only use it when spread is greater than one
         if (requiresDrawingBeanPath()) {
@@ -163,24 +169,45 @@ class ButtonDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        val newPressed = fingers.isNotEmpty()
-        if (newPressed != pressed) {
-            pressed = newPressed
+        return updatePressed(fingers.isNotEmpty(), simulatedPressed)
+    }
 
-            val action = if (pressed) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
-            events.accept(Event.Button(config.id, action, pressed))
+    private fun updatePressed(newPressed: Boolean, newSimulatedPressed: Boolean?): Boolean {
+        if (pressed == newPressed && newSimulatedPressed == simulatedPressed)
+            return false
 
-            return true
+        val newPressedState = newSimulatedPressed ?: newPressed
+        val oldPressedState = simulatedPressed ?: pressed
+
+        if (newPressedState != oldPressedState && config.supportsButtons) {
+            val action = if (newPressedState) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
+            events.accept(Event.Button(config.id, action, newPressedState))
+        }
+
+        pressed = newPressed
+        simulatedPressed = newSimulatedPressed
+
+        return true
+    }
+
+    override fun simulateKeyPress(id: Int, simulatePress: Boolean): Boolean {
+        if (id != config.id) return false
+        return updatePressed(pressed, simulatePress)
+    }
+
+    override fun clearSimulateKeyPress(id: Int): Boolean {
+        if (id != config.id) return false
+        return updatePressed(pressed, null)
+    }
+
+    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+        if (gestureType in config.supportsGestures) {
+            events.accept(Event.Gesture(config.id, gestureType))
         }
         return false
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        events.accept(Event.Gesture(config.id, gestureType))
-        return false
-    }
-
-    override fun events(): Observable<Event> = events.distinctUntilChanged()
+    override fun events(): Observable<Event> = events
 
     override fun accessibilityBoxes(): List<AccessibilityBox> {
         return config.contentDescription?.let {

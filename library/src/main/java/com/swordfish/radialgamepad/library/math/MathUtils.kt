@@ -50,6 +50,8 @@ object MathUtils {
         return sequenceOf(x in min..max, x - pi2 in min..max, x + pi2 in min..max).any { it }
     }
 
+    fun lint(x: Float, a: Float, b: Float) = a * (1 - x) + b * x
+
     fun convertPolarCoordinatesToSquares(angle: Float, strength: Float): PointF {
         val u = strength * cos(angle)
         val v = strength * sin(angle)
@@ -75,4 +77,12 @@ object MathUtils {
 
         return PointF(x, y)
     }
+
+    infix fun Int.fmod(other: Int) = ((this % other) + other) % other
+
+    infix fun Float.fmod(other: Float) = ((this % other) + other) % other
+
+    fun Int.isEven(): Boolean = this % 2 == 0
+
+    fun Int.isOdd(): Boolean = this % 2 == 1
 }

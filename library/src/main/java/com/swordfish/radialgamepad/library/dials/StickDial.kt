@@ -29,6 +29,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
@@ -38,14 +39,16 @@ import kotlin.math.sin
 class StickDial(
     private val id: Int,
     private val keyPressId: Int?,
+    private val supportsGestures: Set<GestureType>,
     private val contentDescription: String? = null,
     private val theme: RadialGamePadTheme
-) : MotionDial {
+) : SimulateMotionDial {
 
     private val paint = BasePaint()
 
     private val foregroundColor: Int = theme.normalColor
     private val pressedColor: Int = theme.pressedColor
+    private val simulatedColor: Int = theme.simulatedColor
     private val buttonPressedColor = ColorUtils.blendARGB(foregroundColor, pressedColor, 0.5f)
 
     private val eventsRelay = PublishRelay.create<Event>()
@@ -81,7 +84,12 @@ class StickDial(
 
         val smallRadius = 0.5f * radius
 
-        paint.color = if (firstTouch ?: simulatedFirstTouch != null) pressedColor else foregroundColor
+        paint.color = when {
+            firstTouch != null -> pressedColor
+            simulatedFirstTouch != null -> simulatedColor
+            else -> foregroundColor
+        }
+
         canvas.drawCircle(
             drawingBox.left + radius + cos(angle) * strength * smallRadius,
             drawingBox.top + radius + sin(angle) * strength * smallRadius,
@@ -126,8 +134,10 @@ class StickDial(
             isButtonPressed = true
             eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_DOWN, true))
             true
-        } else {
+        } else if (gestureType in supportsGestures) {
             eventsRelay.accept(Event.Gesture(id, gestureType))
+            false
+        } else {
             false
         }
     }
@@ -143,7 +153,7 @@ class StickDial(
         return true
     }
 
-    override fun simulateClearMotion(id: Int): Boolean {
+    override fun clearSimulatedMotion(id: Int): Boolean {
         if (id != this.id) return false
         reset()
         return true

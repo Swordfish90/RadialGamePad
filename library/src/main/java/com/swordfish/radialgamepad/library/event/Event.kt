@@ -28,7 +28,7 @@ abstract class Event(open val haptic: Boolean = false) {
     data class Gesture(
         val id: Int,
         val type: GestureType
-    ) : Event()
+    ) : Event(false)
 
     /**
      * Represents a low level button event.

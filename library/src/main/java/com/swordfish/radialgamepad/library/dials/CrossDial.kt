@@ -28,8 +28,12 @@ import com.swordfish.radialgamepad.library.config.CrossContentDescription
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.math.MathUtils
+import com.swordfish.radialgamepad.library.math.MathUtils.fmod
+import com.swordfish.radialgamepad.library.math.MathUtils.isOdd
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
@@ -44,59 +48,66 @@ class CrossDial(
     normalDrawableId: Int,
     pressedDrawableId: Int,
     foregroundDrawableId: Int?,
+    private val supportsGestures: Set<GestureType>,
     private val contentDescription: CrossContentDescription,
+    private val diagonalRatio: Int,
+    distanceFromCenter: Float = 0.5f,
     theme: RadialGamePadTheme
-) : Dial {
+) : SimulateMotionDial {
 
     companion object {
         private const val ACCESSIBILITY_BOX_SCALE = 0.33f
         private const val DRAWABLE_SIZE_SCALING = 0.75
         private const val BUTTON_COUNT = 8
+        private const val DRAWABLE_COUNT = 4
         private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
-        private const val ROTATE_BUTTONS = Constants.PI2 / 16f
+        private const val SINGLE_DRAWABLE_ANGLE = Constants.PI2 / DRAWABLE_COUNT
+        private const val ROTATE_BUTTONS = Constants.PI2 / 8f
 
         private const val DEAD_ZONE = 0.1f
 
-        const val BUTTON_RIGHT = 0
-        const val BUTTON_DOWN_RIGHT = 1
-        const val BUTTON_DOWN = 2
-        const val BUTTON_DOWN_LEFT = 3
-        const val BUTTON_LEFT = 4
-        const val BUTTON_UP_LEFT = 5
-        const val BUTTON_UP = 6
-        const val BUTTON_UP_RIGHT = 7
+        const val CROSS_STATE_CENTER = -2
+        const val CROSS_STATE_RIGHT = 0
+        const val CROSS_STATE_DOWN_RIGHT = 1
+        const val CROSS_STATE_DOWN = 2
+        const val CROSS_STATE_DOWN_LEFT = 3
+        const val CROSS_STATE_LEFT = 4
+        const val CROSS_STATE_UP_LEFT = 5
+        const val CROSS_STATE_UP = 6
+        const val CROSS_STATE_UP_RIGHT = 7
 
-        private val DRAWABLE_BUTTONS = setOf(
-            BUTTON_RIGHT,
-            BUTTON_DOWN,
-            BUTTON_LEFT,
-            BUTTON_UP
-        )
+        const val DRAWABLE_RIGHT = 0
+        const val DRAWABLE_DOWN = 1
+        const val DRAWABLE_LEFT = 2
+        const val DRAWABLE_UP = 3
     }
 
     private val eventsRelay = PublishRelay.create<Event>()
 
-    private var buttonCenterDistance: Float = 0.45f
+    private var buttonCenterDistance: Float = MathUtils.lint(distanceFromCenter, 0.4f, 0.6f)
 
-    private var normalDrawable: Drawable = context.getDrawable(normalDrawableId)!!.apply {
-        setTint(theme.normalColor)
-    }
+    private var normalDrawable: Drawable = getDrawableWithColor(context, normalDrawableId, theme.normalColor)
 
-    private var pressedDrawable: Drawable = context.getDrawable(pressedDrawableId)!!.apply {
-        setTint(theme.pressedColor)
-    }
+    private var pressedDrawable: Drawable = getDrawableWithColor(context, pressedDrawableId, theme.pressedColor)
+
+    private var simulatedDrawable: Drawable = getDrawableWithColor(context, pressedDrawableId, theme.simulatedColor)
 
     private var foregroundDrawable: Drawable? = foregroundDrawableId?.let {
-        context.getDrawable(it)!!.apply { setTint(theme.textColor) }
+        getDrawableWithColor(context, it, theme.textColor)
     }
 
     private val paint = BasePaint().apply {
         color = theme.primaryDialBackground
     }
 
+    private val sectorToStateMap: Map<Int, Int> = buildSectorToStateMap()
+    private val sectorAngleSize = Constants.PI2 / sectorToStateMap.size
+    private val sectorAngleOffset = if (diagonalRatio.isOdd()) sectorAngleSize / 2 else 0f
+
     private var trackedPointerId: Int? = null
 
-    private var currentIndex: Int? = null
+    private var touchState: Int? = null
+    private var simulatedState: Int? = null
 
     private var drawingBox = RectF()
 
@@ -108,14 +119,25 @@ class CrossDial(
         return "${contentDescription.baseName} $direction"
     }
 
+    private fun getDrawableWithColor(context: Context, drawableId: Int, color: Int): Drawable {
+        return context.getDrawable(drawableId)!!.apply {
+            setTint(color)
+        }
+    }
+
+    // We disable touch events when simulating external events.
+    private fun isTouchDisabled() = simulatedState != null
+
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
     }
 
     override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
-        // Gestures are fired only when happening in the dead zone.
-        // There is a huge risk of false events in CrossDials.
-        if (isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)) {
+        // Firing gestures outside the deadzone is very dangerous, as the user tends to click a
+        // lot on the DPAD. That's why we disable them when touch is active.
+        val shouldFireGesture = isTouchDisabled() || isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)
+
+        if (shouldFireGesture && gestureType in supportsGestures) {
             eventsRelay.accept(Event.Gesture(id, gestureType))
             return false
         }
@@ -129,30 +151,40 @@ class CrossDial(
 
         canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paint)
 
-        val pressedButtons = convertDiagonals(currentIndex)
+        val pressedButtons = stateToDrawables(currentState())
 
-        for (i in 0..BUTTON_COUNT) {
-            val cAngle = SINGLE_BUTTON_ANGLE * i
+        for (i in 0..DRAWABLE_COUNT) {
+            val cAngle = SINGLE_DRAWABLE_ANGLE * i
 
             val isPressed = i in pressedButtons
 
             getStateDrawable(i, isPressed)?.let {
-                val angle = (cAngle - ROTATE_BUTTONS + SINGLE_BUTTON_ANGLE / 2f).toDouble()
+                val angle = (cAngle - ROTATE_BUTTONS + SINGLE_DRAWABLE_ANGLE / 2f).toDouble()
                 val left = drawingBox.left + (radius * buttonCenterDistance * cos(angle) + radius).toInt() - drawableSize / 2
                 val top = drawingBox.top + (radius * buttonCenterDistance * sin(angle) + radius).toInt() - drawableSize / 2
                 val xPivot = left + drawableSize / 2f
                 val yPivot = top + drawableSize / 2f
 
-                val rotationInDegrees = i * toDegrees(SINGLE_BUTTON_ANGLE.toDouble()).toFloat()
+                val rotationInDegrees = i * toDegrees(SINGLE_DRAWABLE_ANGLE.toDouble()).toFloat()
 
                 canvas.save()
 
                 canvas.rotate(rotationInDegrees, xPivot, yPivot)
-                it.setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
+                it.setBounds(
+                    left.roundToInt(),
+                    top.roundToInt(),
+                    (left + drawableSize).roundToInt(),
+                    (top + drawableSize).roundToInt()
+                )
                 it.draw(canvas)
 
                 foregroundDrawable?.apply {
-                    setBounds(left.roundToInt(), top.roundToInt(), (left + drawableSize).roundToInt(), (top + drawableSize).roundToInt())
+                    setBounds(
+                        left.roundToInt(),
+                        top.roundToInt(),
+                        (left + drawableSize).roundToInt(),
+                        (top + drawableSize).roundToInt()
+                    )
                     draw(canvas)
                 }
 
@@ -162,80 +194,120 @@ class CrossDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+        if (isTouchDisabled()) return false
+
         if (fingers.isEmpty()) return reset()
 
         if (trackedPointerId == null) {
             val finger = fingers.first()
             trackedPointerId = finger.pointerId
-            return handleTouchEvent(finger.x - 0.5f, finger.y - 0.5f)
+            return updateState(
+                computeStateForPosition(finger.x - 0.5f, finger.y - 0.5f),
+                simulatedState
+            )
         } else {
             val trackedFinger = fingers
                 .firstOrNull { it.pointerId == trackedPointerId } ?: return reset()
 
-            return handleTouchEvent(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f)
+            return updateState(
+                computeStateForPosition(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f),
+                simulatedState
+            )
         }
     }
 
     private fun reset(): Boolean {
-        val emitUpdate = currentIndex != null
+        val emitUpdate = currentState() != null
 
-        currentIndex = null
+        touchState = null
         trackedPointerId = null
+        simulatedState = null
 
         if (emitUpdate) {
             eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
         }
+
         return emitUpdate
     }
 
-    private fun handleTouchEvent(x: Float, y: Float): Boolean {
-        val index = computeIndexForPosition(x, y)
+    private fun updateState(touchState: Int?, simulatedState: Int?): Boolean {
+        val endState = simulatedState ?: touchState
+        val startState = currentState()
 
-        if (index != currentIndex) {
-            if (index == null) {
-                eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
-            } else {
-                val haptic = currentIndex?.let { prevIndex -> (prevIndex % 2) == 0 } ?: true
-                eventsRelay.accept(
-                    Event.Direction(
-                        id,
-                        cos(index * SINGLE_BUTTON_ANGLE),
-                        sin(index * SINGLE_BUTTON_ANGLE),
-                        haptic
-                    )
-                )
-            }
-
-            currentIndex = index
-            return true
+        if (endState != startState) {
+            sendStateUpdateEvent(endState, startState)
         }
 
-        return false
+        this.touchState = touchState
+        this.simulatedState = simulatedState
+
+        return endState != startState
     }
 
-    private fun computeIndexForPosition(x: Float, y: Float): Int? {
+    private fun sendStateUpdateEvent(endState: Int?, startState: Int?) {
+        if (endState == null || !isActiveState(endState)) {
+            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+        } else {
+            val haptic = startState?.let { (it % 2) == 0 } ?: true
+            eventsRelay.accept(
+                Event.Direction(
+                    id,
+                    cos(endState * SINGLE_BUTTON_ANGLE),
+                    sin(endState * SINGLE_BUTTON_ANGLE),
+                    haptic
+                )
+            )
+        }
+    }
+
+    private fun currentState(): Int? = simulatedState ?: touchState
+
+    override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
+        if (id != this.id) return false
+        updateState(touchState, computeStateForPosition(relativeX - 0.5f, relativeY - 0.5f))
+        return true
+    }
+
+    override fun clearSimulatedMotion(id: Int): Boolean {
+        if (id != this.id) return false
+        return reset()
+    }
+
+    private fun computeStateForPosition(x: Float, y: Float): Int? {
         if (isInsideDeadZone(x, y)) {
-            return null
+            return CROSS_STATE_CENTER
         }
 
-        val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
-        return angleToIndex(angle)
+        val angle = atan2(y, x).fmod(Constants.PI2)
+        return computeStateForAngle(angle)
     }
 
     private fun isInsideDeadZone(x: Float, y: Float) = abs(x) < DEAD_ZONE && abs(y) < DEAD_ZONE
 
-    private fun angleToIndex(angle: Float): Int {
-        val sector = Constants.PI2 / 12f
-        return when (floor(angle / sector).toInt()) {
-            1 -> BUTTON_DOWN_RIGHT
-            2, 3 -> BUTTON_DOWN
-            4 -> BUTTON_DOWN_LEFT
-            5, 6 -> BUTTON_LEFT
-            7 -> BUTTON_UP_LEFT
-            8, 9 -> BUTTON_UP
-            10 -> BUTTON_UP_RIGHT
-            else -> BUTTON_RIGHT
-        }
+    private fun computeStateForAngle(angle: Float): Int {
+        val sectorIndex = floor((angle + sectorAngleOffset) / sectorAngleSize)
+            .toInt()
+            .fmod(sectorToStateMap.size)
+
+        return sectorToStateMap[sectorIndex] ?: CROSS_STATE_CENTER
+    }
+
+    private fun buildSectorToStateMap(): Map<Int, Int> {
+        val result = mutableMapOf<Int, Int>()
+
+        // Diagonals should be smaller and harder to choose compared to primary directions. We divide
+        // the 360 radius into sectors and assign them to states in a non uniform way. Primary directions
+        // get proportionally "diagonalRatio" more sectors. Looks a bit magic but works and it's fast.
+        val totalSectors = 4 + 4 * diagonalRatio
+        (0 until totalSectors)
+            .toList()
+            .chunked(diagonalRatio + 1)
+            .flatMap { listOf(it.subList(0, diagonalRatio), it.subList(diagonalRatio, it.size)) }
+            .mapIndexed { index, sectors ->
+                sectors.forEach { result[(it - diagonalRatio / 2).fmod(totalSectors)] = index }
+            }
+
+        return result
     }
 
     override fun accessibilityBoxes(): List<AccessibilityBox> {
@@ -266,36 +338,44 @@ class CrossDial(
         )
     }
 
-    override fun events(): Observable<Event> = eventsRelay.distinctUntilChanged()
+    override fun events(): Observable<Event> = eventsRelay
 
     private fun getStateDrawable(index: Int, isPressed: Boolean): Drawable? {
-        return if (index in DRAWABLE_BUTTONS) {
-            if (isPressed) { pressedDrawable } else { normalDrawable }
-        } else {
-            null
+        if (index !in 0 until DRAWABLE_COUNT)
+            return null
+
+        return when {
+            isPressed -> pressedDrawable
+            simulatedState != null -> simulatedDrawable
+            else -> normalDrawable
         }
     }
 
-    private fun convertDiagonals(currentIndex: Int?): Set<Int> {
-        return when (currentIndex) {
-            BUTTON_DOWN_RIGHT -> setOf(
-                BUTTON_DOWN,
-                BUTTON_RIGHT
+    private fun isActiveState(state: Int?) = state != null && state != CROSS_STATE_CENTER
+
+    private fun stateToDrawables(state: Int?): Set<Int> {
+        return when (state) {
+            CROSS_STATE_DOWN_RIGHT -> setOf(
+                DRAWABLE_DOWN,
+                DRAWABLE_RIGHT
             )
-            BUTTON_DOWN_LEFT -> setOf(
-                BUTTON_DOWN,
-                BUTTON_LEFT
+            CROSS_STATE_DOWN_LEFT -> setOf(
+                DRAWABLE_DOWN,
+                DRAWABLE_LEFT
             )
-            BUTTON_UP_LEFT -> setOf(
-                BUTTON_UP,
-                BUTTON_LEFT
+            CROSS_STATE_UP_LEFT -> setOf(
+                DRAWABLE_UP,
+                DRAWABLE_LEFT
             )
-            BUTTON_UP_RIGHT -> setOf(
-                BUTTON_UP,
-                BUTTON_RIGHT
+            CROSS_STATE_UP_RIGHT -> setOf(
+                DRAWABLE_UP,
+                DRAWABLE_RIGHT
             )
-            null -> setOf()
-            else -> setOf(currentIndex)
+            CROSS_STATE_DOWN -> setOf(DRAWABLE_DOWN)
+            CROSS_STATE_UP -> setOf(DRAWABLE_UP)
+            CROSS_STATE_LEFT -> setOf(DRAWABLE_LEFT)
+            CROSS_STATE_RIGHT -> setOf(DRAWABLE_RIGHT)
+            else -> setOf()
         }
     }
 }

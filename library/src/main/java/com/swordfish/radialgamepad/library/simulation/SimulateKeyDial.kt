@@ -1,6 +1,6 @@
 /*
  * Created by Filippo Scognamiglio.
- * Copyright (c) 2020. This file is part of RadialGamePad.
+ * Copyright (c) 2021. This file is part of RadialGamePad.
  *
  * RadialGamePad is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -13,14 +13,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
+ * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.event
+package com.swordfish.radialgamepad.library.simulation
 
-enum class GestureType {
-    FIRST_TOUCH,
-    SINGLE_TAP,
-    DOUBLE_TAP,
-    TRIPLE_TAP
+import com.swordfish.radialgamepad.library.dials.Dial
+
+interface SimulateKeyDial : Dial {
+
+    fun simulateKeyPress(id: Int, simulatePress: Boolean): Boolean
+
+    fun clearSimulateKeyPress(id: Int): Boolean
 }
