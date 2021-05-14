@@ -24,6 +24,7 @@ package com.swordfish.radialgamepad.library.config
  * @property primaryDial Configuration for the central dial
  * @property secondaryDials List of configurations for the surrounding secondary dials
  * @property haptic Enable haptic feedback when an event is detected
+ * @property forceLegacyCoordinates Force the use of getX/getY when getting touch coordinates. Might fix some scaling issues on Samsung Phones.
  * @property theme RadialGamePadTheme for the whole view
  */
 data class RadialGamePadConfig(
@@ -31,5 +32,6 @@ data class RadialGamePadConfig(
     val primaryDial: PrimaryDialConfig,
     val secondaryDials: List<SecondaryDialConfig>,
     val haptic: Boolean = true,
+    val forceLegacyCoordinates: Boolean = false,
     val theme: RadialGamePadTheme = RadialGamePadTheme()
 )

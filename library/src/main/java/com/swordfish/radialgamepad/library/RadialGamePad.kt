@@ -176,8 +176,8 @@ class RadialGamePad @JvmOverloads constructor(
         requestLayoutAndInvalidate()
     }
 
-    private lateinit var primaryInteractor: DialInteractor
-    private lateinit var secondaryInteractors: List<DialInteractor>
+    private var primaryInteractor: DialInteractor
+    private var secondaryInteractors: List<DialInteractor>
     private lateinit var allInteractors: List<DialInteractor>
 
     private val gestureDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
@@ -521,7 +521,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun extractFingersPositions(event: MotionEvent): Sequence<TouchUtils.FingerPosition> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !gamePadConfig.forceLegacyCoordinates) {
             getLocationOnScreen(positionOnScreen)
             TouchUtils.extractRawFingersPositions(event, positionOnScreen[0], positionOnScreen[1])
         } else {
