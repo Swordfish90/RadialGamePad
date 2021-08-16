@@ -23,6 +23,7 @@ import android.graphics.*
 import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
+import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
@@ -180,7 +181,22 @@ class RadialGamePad @JvmOverloads constructor(
     private lateinit var secondaryInteractors: List<DialInteractor>
     private lateinit var allInteractors: List<DialInteractor>
 
-    private val gestureDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
+    private val longPressDetector = GestureDetector(
+        context,
+        object : GestureDetector.SimpleOnGestureListener() {
+            override fun onLongPress(e: MotionEvent) {
+                val updated = allInteractors.map {
+                    it.gesture(e.x, e.y, GestureType.LONG_PRESS)
+                }
+
+                if (updated.any { it }) {
+                    postInvalidate()
+                }
+            }
+        }
+    )
+
+    private val tapsDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
         if (!isConfirmed) return@MultiTapDetector
 
         val gestureType = when (taps) {
@@ -503,7 +519,8 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        gestureDetector.handleEvent(event)
+        tapsDetector.handleEvent(event)
+        longPressDetector.onTouchEvent(event)
 
         val fingers = extractFingersPositions(event).toList()
 
