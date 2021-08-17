@@ -24,12 +24,12 @@ import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.GestureDetector
-import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.*
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.customview.widget.ExploreByTouchHelper
+import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
@@ -38,14 +38,15 @@ import com.swordfish.radialgamepad.library.dials.*
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.haptics.*
 import com.swordfish.radialgamepad.library.math.MathUtils.clamp
-import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
-import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
+import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
+import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
@@ -64,6 +65,8 @@ class RadialGamePad @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), EventsSource {
+
+    private val eventsSubject = PublishRelay.create<Event>()
 
     private val exploreByTouchHelper = object : ExploreByTouchHelper(this) {
 
@@ -177,6 +180,8 @@ class RadialGamePad @JvmOverloads constructor(
         requestLayoutAndInvalidate()
     }
 
+    private val hapticEngine = createHapticEngine()
+
     private lateinit var primaryInteractor: DialInteractor
     private lateinit var secondaryInteractors: List<DialInteractor>
     private lateinit var allInteractors: List<DialInteractor>
@@ -185,13 +190,16 @@ class RadialGamePad @JvmOverloads constructor(
         context,
         object : GestureDetector.SimpleOnGestureListener() {
             override fun onLongPress(e: MotionEvent) {
+                val events = mutableListOf<Event>()
                 val updated = allInteractors.map {
-                    it.gesture(e.x, e.y, GestureType.LONG_PRESS)
+                    it.gesture(e.x, e.y, GestureType.LONG_PRESS, events)
                 }
 
                 if (updated.any { it }) {
                     postInvalidate()
                 }
+
+                handleEvents(events)
             }
         }
     )
@@ -207,12 +215,24 @@ class RadialGamePad @JvmOverloads constructor(
             else -> null
         } ?: return@MultiTapDetector
 
+        val events = mutableListOf<Event>()
+
         val updated = allInteractors.map {
-            it.gesture(x, y, gestureType)
+            it.gesture(x, y, gestureType, events)
         }
 
         if (updated.any { it }) {
             postInvalidate()
+        }
+
+        handleEvents(events)
+    }
+
+    private fun createHapticEngine(): HapticEngine {
+        return when (gamePadConfig.haptic) {
+            HapticConfig.OFF -> NoHapticEngine()
+            HapticConfig.SIMPLE -> SimpleHapticEngine()
+            HapticConfig.ADVANCED -> AdvancedHapticEngine()
         }
     }
 
@@ -225,8 +245,10 @@ class RadialGamePad @JvmOverloads constructor(
 
     /** Simulate a motion event. It's used in Lemuroid to map events from sensors. */
     fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
+        val events = mutableListOf<Event>()
+
         val updated = allDials().filterIsInstance(SimulateMotionDial::class.java)
-            .map { it.simulateMotion(id, relativeX, relativeY) }
+            .map { it.simulateMotion(id, relativeX, relativeY, events) }
             .any { it }
 
         if (updated) {
@@ -236,8 +258,10 @@ class RadialGamePad @JvmOverloads constructor(
 
     /** Programmatically clear motion events associated with the id. */
     fun simulateClearMotionEvent(id: Int) {
+        val events = mutableListOf<Event>()
+
         val updated = allDials().filterIsInstance(SimulateMotionDial::class.java)
-            .map { it.clearSimulatedMotion(id) }
+            .map { it.clearSimulatedMotion(id, events) }
             .any { it }
 
         if (updated) {
@@ -247,8 +271,10 @@ class RadialGamePad @JvmOverloads constructor(
 
     /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
     fun simulateKeyEvent(id: Int, pressed: Boolean) {
+        val events = mutableListOf<Event>()
+
         val updated = allDials().filterIsInstance(SimulateKeyDial::class.java)
-            .map { it.simulateKeyPress(id, pressed) }
+            .map { it.simulateKeyPress(id, pressed, events) }
             .any { it }
 
         if (updated) {
@@ -258,13 +284,20 @@ class RadialGamePad @JvmOverloads constructor(
 
     /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
     fun simulateClearKeyEvent(id: Int) {
+        val events = mutableListOf<Event>()
+
         val updated = allDials().filterIsInstance(SimulateKeyDial::class.java)
-            .map { it.clearSimulateKeyPress(id) }
+            .map { it.clearSimulateKeyPress(id, events) }
             .any { it }
 
         if (updated) {
             postInvalidate()
         }
+    }
+
+    private fun handleEvents(events: List<Event>) {
+        hapticEngine.performHapticForEvents(events, this)
+        events.forEach { eventsSubject.accept(it) }
     }
 
     private fun buildPrimaryInteractor(configuration: PrimaryDialConfig): DialInteractor {
@@ -473,9 +506,8 @@ class RadialGamePad @JvmOverloads constructor(
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * scale
         val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * spread / 2f), 1.0f + dialSize / 2f)
 
-        val index = index + (spread - 1) * 0.5f
-
-        val finalAngle = index * dialAngle + secondaryDialRotation
+        val finalIndex = index + (spread - 1) * 0.5f
+        val finalAngle = finalIndex * dialAngle + secondaryDialRotation
 
         return RectF(
             (cos(finalAngle) * distanceToCenter - dialSize / 2f),
@@ -501,21 +533,11 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     override fun events(): Observable<Event> {
-        val allEvents = allDials().map { it.events() }
-        return Observable.merge(allEvents)
-            .doOnNext {
-                if (it.haptic) {
-                    performHapticFeedback()
-                }
-            }
+        return eventsSubject
     }
 
     fun performHapticFeedback() {
-        if (gamePadConfig.haptic) {
-            val flags =
-                HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
-            performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, flags)
-        }
+        hapticEngine.performHaptic(HapticEngine.EFFECT_PRESS, this)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -526,9 +548,13 @@ class RadialGamePad @JvmOverloads constructor(
 
         val trackedFingers = allDials().mapNotNull { it.trackedPointerId() }
 
+        val events = mutableListOf<Event>()
+
         val updated = allInteractors.map { dial ->
-            forwardTouchToDial(dial, fingers, trackedFingers)
+            forwardTouchToDial(dial, fingers, trackedFingers, events)
         }
+
+        handleEvents(events)
 
         if (updated.any { it }) {
             postInvalidate()
@@ -549,12 +575,13 @@ class RadialGamePad @JvmOverloads constructor(
     private fun forwardTouchToDial(
         dial: DialInteractor,
         fingers: List<TouchUtils.FingerPosition>,
-        trackedFingers: List<Int>
+        trackedFingers: List<Int>,
+        outEvents: MutableList<Event>
     ): Boolean {
         return if (dial.trackedPointerId() != null) {
-            dial.touch(fingers.filter { it.pointerId == dial.dial.trackedPointerId() })
+            dial.touch(fingers.filter { it.pointerId == dial.dial.trackedPointerId() }, outEvents)
         } else {
-            dial.touch(fingers.filter { it.pointerId !in trackedFingers })
+            dial.touch(fingers.filter { it.pointerId !in trackedFingers }, outEvents)
         }
     }
 

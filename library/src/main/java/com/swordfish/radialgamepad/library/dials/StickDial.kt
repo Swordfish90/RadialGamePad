@@ -18,21 +18,22 @@
 
 package com.swordfish.radialgamepad.library.dials
 
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.PointF
+import android.graphics.RectF
 import android.view.KeyEvent
 import androidx.core.graphics.ColorUtils
-import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
-import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
+import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import io.reactivex.Observable
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -50,8 +51,6 @@ class StickDial(
     private val pressedColor: Int = theme.pressedColor
     private val simulatedColor: Int = theme.simulatedColor
     private val buttonPressedColor = ColorUtils.blendARGB(foregroundColor, pressedColor, 0.5f)
-
-    private val eventsRelay = PublishRelay.create<Event>()
 
     private var isButtonPressed: Boolean = false
     private var firstTouch: PointF? = null
@@ -98,11 +97,11 @@ class StickDial(
         )
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         // We ignore touch input when simulating motion externally
         if (simulatedFirstTouch != null) return false
 
-        if (fingers.isEmpty()) return reset()
+        if (fingers.isEmpty()) return reset(outEvents)
 
         if (trackedPointerId == null) {
             val finger = fingers.first()
@@ -112,15 +111,15 @@ class StickDial(
 
             trackedPointerId = finger.pointerId
             firstTouch = PointF(finger.x, finger.y)
-            eventsRelay.accept(Event.Direction(id, 0f, 0f, true))
-            handleTouchEvent(finger.x, finger.y)
+            outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_PRESS))
+            handleTouchEvent(finger.x, finger.y, outEvents)
             return true
         } else {
             val finger = fingers
                 .firstOrNull { it.pointerId == trackedPointerId }
-                ?: return reset()
+                ?: return reset(outEvents)
 
-            handleTouchEvent(finger.x, finger.y)
+            handleTouchEvent(finger.x, finger.y, outEvents)
             return true
         }
     }
@@ -129,47 +128,55 @@ class StickDial(
         return MathUtils.distance(finger.x, 0.5f, finger.y, 0.5f) < 0.6f
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+    override fun gesture(
+        relativeX: Float,
+        relativeY: Float,
+        gestureType: GestureType,
+        outEvents: MutableList<Event>
+    ): Boolean {
         return if (gestureType == GestureType.SINGLE_TAP && keyPressId != null && firstTouch != null) {
             isButtonPressed = true
-            eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_DOWN, true))
+            outEvents.add(Event.Button(keyPressId, KeyEvent.ACTION_DOWN, HapticEngine.EFFECT_PRESS))
             true
         } else if (gestureType in supportsGestures) {
-            eventsRelay.accept(Event.Gesture(id, gestureType))
+            outEvents.add(Event.Gesture(id, gestureType))
             false
         } else {
             false
         }
     }
 
-    override fun events(): Observable<Event> = eventsRelay
-
-    override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
+    override fun simulateMotion(
+        id: Int,
+        relativeX: Float,
+        relativeY: Float,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (id != this.id) return false
 
         simulatedFirstTouch = PointF(0.5f, 0.5f)
 
-        handleTouchEvent(relativeX, relativeY)
+        handleTouchEvent(relativeX, relativeY, outEvents)
         return true
     }
 
-    override fun clearSimulatedMotion(id: Int): Boolean {
+    override fun clearSimulatedMotion(id: Int, outEvents: MutableList<Event>): Boolean {
         if (id != this.id) return false
-        reset()
+        reset(outEvents)
         return true
     }
 
-    private fun handleTouchEvent(touchX: Float, touchY: Float) {
+    private fun handleTouchEvent(touchX: Float, touchY: Float, outEvents: MutableList<Event>) {
         (firstTouch ?: simulatedFirstTouch)?.let { firstTouch ->
             angle = -MathUtils.angle(firstTouch.x, touchX, firstTouch.y, touchY)
             strength = MathUtils.clamp(MathUtils.distance(firstTouch.x, touchX, firstTouch.y, touchY) * 2, 0f, 1f)
 
             val point = MathUtils.convertPolarCoordinatesToSquares(angle, strength)
-            eventsRelay.accept(Event.Direction(id, point.x, point.y, false))
+            outEvents.add(Event.Direction(id, point.x, point.y, HapticEngine.EFFECT_NONE))
         }
     }
 
-    private fun reset(): Boolean {
+    private fun reset(outEvents: MutableList<Event>): Boolean {
         val isStickActive = firstTouch != null || simulatedFirstTouch != null
         val isStickPressed = isButtonPressed
 
@@ -181,11 +188,11 @@ class StickDial(
         isButtonPressed = false
 
         if (isStickActive) {
-            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+            outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_RELEASE))
         }
 
         if (keyPressId != null && isStickPressed) {
-            eventsRelay.accept(Event.Button(keyPressId, KeyEvent.ACTION_UP, false))
+            outEvents.add(Event.Button(keyPressId, KeyEvent.ACTION_UP, HapticEngine.EFFECT_RELEASE))
         }
 
         return isStickActive || isStickPressed

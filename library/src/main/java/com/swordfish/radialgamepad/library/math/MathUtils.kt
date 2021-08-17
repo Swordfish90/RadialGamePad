@@ -16,6 +16,8 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("unused")
+
 package com.swordfish.radialgamepad.library.math
 
 import android.graphics.PointF
