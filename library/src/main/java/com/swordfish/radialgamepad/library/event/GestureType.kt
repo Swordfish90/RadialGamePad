@@ -22,5 +22,6 @@ enum class GestureType {
     FIRST_TOUCH,
     SINGLE_TAP,
     DOUBLE_TAP,
-    TRIPLE_TAP
+    TRIPLE_TAP,
+    LONG_PRESS
 }
