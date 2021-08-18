@@ -254,6 +254,8 @@ class RadialGamePad @JvmOverloads constructor(
         if (updated) {
             postInvalidate()
         }
+
+        handleEvents(events)
     }
 
     /** Programmatically clear motion events associated with the id. */
@@ -267,6 +269,8 @@ class RadialGamePad @JvmOverloads constructor(
         if (updated) {
             postInvalidate()
         }
+
+        handleEvents(events)
     }
 
     /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
@@ -280,6 +284,8 @@ class RadialGamePad @JvmOverloads constructor(
         if (updated) {
             postInvalidate()
         }
+
+        handleEvents(events)
     }
 
     /** Simulate a key event. It's used in Lemuroid to map events from sensors. */
@@ -293,6 +299,8 @@ class RadialGamePad @JvmOverloads constructor(
         if (updated) {
             postInvalidate()
         }
+
+        handleEvents(events)
     }
 
     private fun handleEvents(events: List<Event>) {
@@ -554,11 +562,11 @@ class RadialGamePad @JvmOverloads constructor(
             forwardTouchToDial(dial, fingers, trackedFingers, events)
         }
 
-        handleEvents(events)
-
         if (updated.any { it }) {
             postInvalidate()
         }
+
+        handleEvents(events)
 
         return true
     }
