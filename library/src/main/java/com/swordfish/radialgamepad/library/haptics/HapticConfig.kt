@@ -25,8 +25,8 @@ enum class HapticConfig {
     OFF,
 
     /** Only perform haptic feedbacks when pressing a new key.*/
-    SIMPLE,
+    PRESS,
 
-    /** Perform haptic feedback both when pressing and releasing.*/
-    ADVANCED
+    /** Perform haptic feedback both when pressing and releasing a key.*/
+    PRESS_AND_RELEASE
 }

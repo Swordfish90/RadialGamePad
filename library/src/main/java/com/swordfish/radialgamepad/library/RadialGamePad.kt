@@ -231,8 +231,8 @@ class RadialGamePad @JvmOverloads constructor(
     private fun createHapticEngine(): HapticEngine {
         return when (gamePadConfig.haptic) {
             HapticConfig.OFF -> NoHapticEngine()
-            HapticConfig.SIMPLE -> SimpleHapticEngine()
-            HapticConfig.ADVANCED -> AdvancedHapticEngine()
+            HapticConfig.PRESS -> SimpleHapticEngine()
+            HapticConfig.PRESS_AND_RELEASE -> AdvancedHapticEngine()
         }
     }
 

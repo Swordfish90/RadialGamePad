@@ -32,6 +32,6 @@ data class RadialGamePadConfig(
     val sockets: Int,
     val primaryDial: PrimaryDialConfig,
     val secondaryDials: List<SecondaryDialConfig>,
-    val haptic: HapticConfig = HapticConfig.SIMPLE,
+    val haptic: HapticConfig = HapticConfig.PRESS,
     val theme: RadialGamePadTheme = RadialGamePadTheme()
 )
