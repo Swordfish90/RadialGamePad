@@ -26,7 +26,6 @@ import com.swordfish.radialgamepad.library.haptics.HapticConfig
  * @property primaryDial Configuration for the central dial
  * @property secondaryDials List of configurations for the surrounding secondary dials
  * @property haptic Choose which effects will be performed
- * @property useGlobalCoordinates Use global touch coordinates instead of local ones. Might fix touch issues on some Samsung devices.
  * @property theme RadialGamePadTheme for the whole view
  */
 data class RadialGamePadConfig(
@@ -34,6 +33,5 @@ data class RadialGamePadConfig(
     val primaryDial: PrimaryDialConfig,
     val secondaryDials: List<SecondaryDialConfig>,
     val haptic: HapticConfig = HapticConfig.SIMPLE,
-    val useGlobalCoordinates: Boolean = false,
     val theme: RadialGamePadTheme = RadialGamePadTheme()
 )
