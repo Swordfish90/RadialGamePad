@@ -572,7 +572,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun extractFingersPositions(event: MotionEvent): Sequence<TouchUtils.FingerPosition> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        return if (gamePadConfig.useGlobalCoordinates && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             getLocationOnScreen(positionOnScreen)
             TouchUtils.extractRawFingersPositions(event, positionOnScreen[0], positionOnScreen[1])
         } else {
