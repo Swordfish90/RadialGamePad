@@ -18,7 +18,9 @@
 
 package com.swordfish.radialgamepad.library.event
 
-abstract class Event(open val haptic: Boolean = false) {
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
+
+abstract class Event(open val haptic: Int = HapticEngine.EFFECT_NONE) {
 
     /**
      * Represents an composite gesture such as tap, or double tap.
@@ -28,7 +30,7 @@ abstract class Event(open val haptic: Boolean = false) {
     data class Gesture(
         val id: Int,
         val type: GestureType
-    ) : Event(false)
+    ) : Event()
 
     /**
      * Represents a low level button event.
@@ -38,7 +40,7 @@ abstract class Event(open val haptic: Boolean = false) {
     data class Button(
         val id: Int,
         val action: Int,
-        override val haptic: Boolean
+        override val haptic: Int
     ) : Event()
 
     /**
@@ -51,6 +53,6 @@ abstract class Event(open val haptic: Boolean = false) {
         val id: Int,
         val xAxis: Float,
         val yAxis: Float,
-        override val haptic: Boolean
+        override val haptic: Int
     ) : Event()
 }

@@ -25,7 +25,6 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import io.reactivex.Observable
 
 class EmptyDial : Dial {
 
@@ -37,11 +36,14 @@ class EmptyDial : Dial {
 
     override fun draw(canvas: Canvas) {}
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean = false
+    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean = false
 
-    override fun events(): Observable<Event> = Observable.empty()
-
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean = false
+    override fun gesture(
+        relativeX: Float,
+        relativeY: Float,
+        gestureType: GestureType,
+        outEvents: MutableList<Event>
+    ): Boolean = false
 
     override fun accessibilityBoxes(): List<AccessibilityBox> = listOf()
 }

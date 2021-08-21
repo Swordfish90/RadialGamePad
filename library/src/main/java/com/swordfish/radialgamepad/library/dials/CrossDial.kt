@@ -22,12 +22,12 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
-import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.CrossContentDescription
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.MathUtils.fmod
 import com.swordfish.radialgamepad.library.math.MathUtils.isOdd
@@ -38,7 +38,6 @@ import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import io.reactivex.Observable
 import java.lang.Math.toDegrees
 import kotlin.math.*
 
@@ -81,8 +80,6 @@ class CrossDial(
         const val DRAWABLE_LEFT = 2
         const val DRAWABLE_UP = 3
     }
-
-    private val eventsRelay = PublishRelay.create<Event>()
 
     private var buttonCenterDistance: Float = MathUtils.lint(distanceFromCenter, 0.4f, 0.6f)
 
@@ -132,13 +129,18 @@ class CrossDial(
         this.drawingBox = drawingBox
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+    override fun gesture(
+        relativeX: Float,
+        relativeY: Float,
+        gestureType: GestureType,
+        outEvents: MutableList<Event>
+    ): Boolean {
         // Firing gestures outside the deadzone is very dangerous, as the user tends to click a
         // lot on the DPAD. That's why we disable them when touch is active.
         val shouldFireGesture = isTouchDisabled() || isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)
 
         if (shouldFireGesture && gestureType in supportsGestures) {
-            eventsRelay.accept(Event.Gesture(id, gestureType))
+            outEvents.add(Event.Gesture(id, gestureType))
             return false
         }
 
@@ -193,30 +195,32 @@ class CrossDial(
         }
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         if (isTouchDisabled()) return false
 
-        if (fingers.isEmpty()) return reset()
+        if (fingers.isEmpty()) return reset(outEvents)
 
         if (trackedPointerId == null) {
             val finger = fingers.first()
             trackedPointerId = finger.pointerId
             return updateState(
                 computeStateForPosition(finger.x - 0.5f, finger.y - 0.5f),
-                simulatedState
+                simulatedState,
+                outEvents
             )
         } else {
             val trackedFinger = fingers
-                .firstOrNull { it.pointerId == trackedPointerId } ?: return reset()
+                .firstOrNull { it.pointerId == trackedPointerId } ?: return reset(outEvents)
 
             return updateState(
                 computeStateForPosition(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f),
-                simulatedState
+                simulatedState,
+                outEvents
             )
         }
     }
 
-    private fun reset(): Boolean {
+    private fun reset(outEvents: MutableList<Event>): Boolean {
         val emitUpdate = currentState() != null
 
         touchState = null
@@ -224,18 +228,18 @@ class CrossDial(
         simulatedState = null
 
         if (emitUpdate) {
-            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+            outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_RELEASE))
         }
 
         return emitUpdate
     }
 
-    private fun updateState(touchState: Int?, simulatedState: Int?): Boolean {
+    private fun updateState(touchState: Int?, simulatedState: Int?, outEvents: MutableList<Event>): Boolean {
         val endState = simulatedState ?: touchState
         val startState = currentState()
 
         if (endState != startState) {
-            sendStateUpdateEvent(endState, startState)
+            sendStateUpdateEvent(endState, startState, outEvents)
         }
 
         this.touchState = touchState
@@ -244,17 +248,18 @@ class CrossDial(
         return endState != startState
     }
 
-    private fun sendStateUpdateEvent(endState: Int?, startState: Int?) {
+    private fun sendStateUpdateEvent(endState: Int?, startState: Int?, outEvents: MutableList<Event>) {
         if (endState == null || !isActiveState(endState)) {
-            eventsRelay.accept(Event.Direction(id, 0f, 0f, false))
+            outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_NONE))
         } else {
             val haptic = startState?.let { (it % 2) == 0 } ?: true
-            eventsRelay.accept(
+            val hapticEffect = if (haptic) HapticEngine.EFFECT_PRESS else HapticEngine.EFFECT_RELEASE
+            outEvents.add(
                 Event.Direction(
                     id,
                     cos(endState * SINGLE_BUTTON_ANGLE),
                     sin(endState * SINGLE_BUTTON_ANGLE),
-                    haptic
+                    hapticEffect
                 )
             )
         }
@@ -262,18 +267,24 @@ class CrossDial(
 
     private fun currentState(): Int? = simulatedState ?: touchState
 
-    override fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean {
+    override fun simulateMotion(
+        id: Int,
+        relativeX: Float,
+        relativeY: Float,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (id != this.id) return false
-        updateState(touchState, computeStateForPosition(relativeX - 0.5f, relativeY - 0.5f))
+        val simulatedState = computeStateForPosition(relativeX - 0.5f, relativeY - 0.5f)
+        updateState(touchState, simulatedState, outEvents)
         return true
     }
 
-    override fun clearSimulatedMotion(id: Int): Boolean {
+    override fun clearSimulatedMotion(id: Int, outEvents: MutableList<Event>): Boolean {
         if (id != this.id) return false
-        return reset()
+        return reset(outEvents)
     }
 
-    private fun computeStateForPosition(x: Float, y: Float): Int? {
+    private fun computeStateForPosition(x: Float, y: Float): Int {
         if (isInsideDeadZone(x, y)) {
             return CROSS_STATE_CENTER
         }
@@ -337,8 +348,6 @@ class CrossDial(
             AccessibilityBox(downRect.roundToInt(), composeDescriptionString(contentDescription.down))
         )
     }
-
-    override fun events(): Observable<Event> = eventsRelay
 
     private fun getStateDrawable(index: Int, isPressed: Boolean): Drawable? {
         if (index !in 0 until DRAWABLE_COUNT)

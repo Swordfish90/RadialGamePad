@@ -19,10 +19,11 @@
 package com.swordfish.radialgamepad.library.simulation
 
 import com.swordfish.radialgamepad.library.dials.Dial
+import com.swordfish.radialgamepad.library.event.Event
 
 interface SimulateMotionDial : Dial {
 
-    fun simulateMotion(id: Int, relativeX: Float, relativeY: Float): Boolean
+    fun simulateMotion(id: Int, relativeX: Float, relativeY: Float, outEvents: MutableList<Event>): Boolean
 
-    fun clearSimulatedMotion(id: Int): Boolean
+    fun clearSimulatedMotion(id: Int, outEvents: MutableList<Event>): Boolean
 }

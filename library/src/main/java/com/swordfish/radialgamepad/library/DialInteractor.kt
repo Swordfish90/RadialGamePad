@@ -21,6 +21,7 @@ package com.swordfish.radialgamepad.library
 import android.graphics.Canvas
 import android.graphics.RectF
 import com.swordfish.radialgamepad.library.dials.Dial
+import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.touchbound.EmptyTouchBound
@@ -39,17 +40,20 @@ internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = Empty
         dial.draw(canvas)
     }
 
-    fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         val goodFingers = fingers
             .filter { touchBound.contains(it.x, it.y) || it.pointerId == trackedPointerId() }
 
-        return dial.touch(TouchUtils.computeRelativeFingerPosition(goodFingers, dial.drawingBox()))
+        return dial.touch(
+            TouchUtils.computeRelativeFingerPosition(goodFingers, dial.drawingBox()),
+            outEvents
+        )
     }
 
-    fun gesture(x: Float, y: Float, gestureType: GestureType): Boolean {
+    fun gesture(x: Float, y: Float, gestureType: GestureType, outEvents: MutableList<Event>): Boolean {
         if (touchBound.contains(x, y)) {
             val relativePosition = TouchUtils.computeRelativePosition(x, y, dial.drawingBox())
-            return dial.gesture(relativePosition.x, relativePosition.y, gestureType)
+            return dial.gesture(relativePosition.x, relativePosition.y, gestureType, outEvents)
         }
 
         return false

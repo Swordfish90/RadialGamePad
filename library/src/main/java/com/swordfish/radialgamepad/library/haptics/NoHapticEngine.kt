@@ -1,6 +1,6 @@
 /*
  * Created by Filippo Scognamiglio.
- * Copyright (c) 2021. This file is part of RadialGamePad.
+ * Copyright (c) 2020. This file is part of RadialGamePad.
  *
  * RadialGamePad is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,11 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.simulation
+package com.swordfish.radialgamepad.library.haptics
 
-import com.swordfish.radialgamepad.library.dials.Dial
+import android.view.View
 import com.swordfish.radialgamepad.library.event.Event
 
-interface SimulateKeyDial : Dial {
-
-    fun simulateKeyPress(id: Int, simulatePress: Boolean, outEvents: MutableList<Event>): Boolean
-
-    fun clearSimulateKeyPress(id: Int, outEvents: MutableList<Event>): Boolean
+class NoHapticEngine : HapticEngine() {
+    override fun performHapticForEvents(events: List<Event>, view: View) { }
 }

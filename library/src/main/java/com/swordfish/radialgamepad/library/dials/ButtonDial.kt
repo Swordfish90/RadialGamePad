@@ -21,12 +21,12 @@ package com.swordfish.radialgamepad.library.dials
 import android.content.Context
 import android.graphics.*
 import android.view.KeyEvent
-import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
@@ -34,7 +34,6 @@ import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import io.reactivex.Observable
 import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.sin
@@ -45,8 +44,6 @@ class ButtonDial(
     private val config: ButtonConfig,
     private val theme: RadialGamePadTheme
 ) : SimulateKeyDial {
-
-    private val events = PublishRelay.create<Event>()
 
     private val iconDrawable = config.iconId?.let {
         context.getDrawable(it)?.apply {
@@ -168,11 +165,15 @@ class ButtonDial(
         iconDrawable?.draw(canvas)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
-        return updatePressed(fingers.isNotEmpty(), simulatedPressed)
+    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+        return updatePressed(fingers.isNotEmpty(), simulatedPressed, outEvents)
     }
 
-    private fun updatePressed(newPressed: Boolean, newSimulatedPressed: Boolean?): Boolean {
+    private fun updatePressed(
+        newPressed: Boolean,
+        newSimulatedPressed: Boolean?,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (pressed == newPressed && newSimulatedPressed == simulatedPressed)
             return false
 
@@ -181,7 +182,8 @@ class ButtonDial(
 
         if (newPressedState != oldPressedState && config.supportsButtons) {
             val action = if (newPressedState) KeyEvent.ACTION_DOWN else KeyEvent.ACTION_UP
-            events.accept(Event.Button(config.id, action, newPressedState))
+            val haptic = if (newPressedState) HapticEngine.EFFECT_PRESS else HapticEngine.EFFECT_RELEASE
+            outEvents.add(Event.Button(config.id, action, haptic))
         }
 
         pressed = newPressed
@@ -190,24 +192,27 @@ class ButtonDial(
         return true
     }
 
-    override fun simulateKeyPress(id: Int, simulatePress: Boolean): Boolean {
+    override fun simulateKeyPress(id: Int, simulatePress: Boolean, outEvents: MutableList<Event>): Boolean {
         if (id != config.id) return false
-        return updatePressed(pressed, simulatePress)
+        return updatePressed(pressed, simulatePress, outEvents)
     }
 
-    override fun clearSimulateKeyPress(id: Int): Boolean {
+    override fun clearSimulateKeyPress(id: Int, outEvents: MutableList<Event>): Boolean {
         if (id != config.id) return false
-        return updatePressed(pressed, null)
+        return updatePressed(pressed, null, outEvents)
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+    override fun gesture(
+        relativeX: Float,
+        relativeY: Float,
+        gestureType: GestureType,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (gestureType in config.supportsGestures) {
-            events.accept(Event.Gesture(config.id, gestureType))
+            outEvents.add(Event.Gesture(config.id, gestureType))
         }
         return false
     }
-
-    override fun events(): Observable<Event> = events
 
     override fun accessibilityBoxes(): List<AccessibilityBox> {
         return config.contentDescription?.let {

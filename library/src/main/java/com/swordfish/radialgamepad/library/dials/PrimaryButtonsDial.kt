@@ -24,12 +24,12 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.view.KeyEvent
-import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
@@ -38,8 +38,7 @@ import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import io.reactivex.Observable
-import java.util.SortedMap
+import java.util.*
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -54,8 +53,6 @@ class PrimaryButtonsDial(
 ) : Dial {
 
     private val actionAngle = Constants.PI2 / circleActions.size
-
-    private val eventsRelay = PublishRelay.create<Event>()
 
     private val paint = BasePaint()
     private val textPaint = TextPaint()
@@ -211,14 +208,14 @@ class PrimaryButtonsDial(
         return minOf(radialMaxSize, linearMaxSize)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>): Boolean {
+    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         val newPressed = fingers.asSequence()
             .flatMap { getAssociatedId(it.x, it.y) }
             .toSet()
 
         if (newPressed != pressed) {
-            sendNewActionDowns(newPressed, pressed)
-            sendNewActionUps(newPressed, pressed)
+            sendNewActionDowns(newPressed, pressed, outEvents)
+            sendNewActionUps(newPressed, pressed, outEvents)
             pressed = newPressed
             return true
         }
@@ -241,12 +238,17 @@ class PrimaryButtonsDial(
             .map { (_, it) -> it.value }
     }
 
-    override fun gesture(relativeX: Float, relativeY: Float, gestureType: GestureType): Boolean {
+    override fun gesture(
+        relativeX: Float,
+        relativeY: Float,
+        gestureType: GestureType,
+        outEvents: MutableList<Event>
+    ): Boolean {
         getAssociatedId(relativeX, relativeY)
             .mapNotNull { idToConfigMap[it] }
             .filter { gestureType in it.supportsGestures }
             .forEach {
-                eventsRelay.accept(Event.Gesture(it.id, gestureType))
+                outEvents.add(Event.Gesture(it.id, gestureType))
             }
         return false
     }
@@ -278,19 +280,17 @@ class PrimaryButtonsDial(
         return result
     }
 
-    private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>) {
+    private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
         newPressed.asSequence()
             .filter { it !in oldPressed && idToConfigMap[it]?.supportsButtons == true }
-            .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_DOWN, true)) }
+            .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_DOWN, HapticEngine.EFFECT_PRESS)) }
     }
 
-    private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>) {
+    private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
         oldPressed.asSequence()
             .filter { it !in newPressed && idToConfigMap[it]?.supportsButtons == true }
-            .forEach { eventsRelay.accept(Event.Button(it, KeyEvent.ACTION_UP, false)) }
+            .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_UP, HapticEngine.EFFECT_RELEASE)) }
     }
-
-    override fun events(): Observable<Event> = eventsRelay
 
     companion object {
         private const val BUTTON_SCALING = 0.8f
