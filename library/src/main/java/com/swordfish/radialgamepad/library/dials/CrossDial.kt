@@ -29,8 +29,6 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.MathUtils
-import com.swordfish.radialgamepad.library.math.MathUtils.fmod
-import com.swordfish.radialgamepad.library.math.MathUtils.isOdd
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
@@ -247,8 +245,11 @@ class CrossDial(
         if (endState == null || !isActiveState(endState)) {
             outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_NONE))
         } else {
-            val haptic = startState?.let { (it % 2) == 0 } ?: true
-            val hapticEffect = if (haptic) HapticEngine.EFFECT_PRESS else HapticEngine.EFFECT_RELEASE
+            val hapticEffect = if (countPressedKeysForState(endState) > countPressedKeysForState(startState)) {
+                HapticEngine.EFFECT_PRESS
+            } else {
+                HapticEngine.EFFECT_RELEASE
+            }
             outEvents.add(
                 Event.Direction(
                     id,
@@ -285,12 +286,26 @@ class CrossDial(
         }
 
         val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
-        return computeStateForAngle(angle)
+        return if (MathUtils.distance(0f, x, 0f, y) > 0.30f) {
+            computeStateForOuterAngle(angle)
+        } else {
+            computeStateForInnerAngle(angle)
+        }
     }
 
     private fun isInsideDeadZone(x: Float, y: Float) = abs(x) < DEAD_ZONE && abs(y) < DEAD_ZONE
 
-    private fun computeStateForAngle(angle: Float): Int {
+    private fun computeStateForInnerAngle(angle: Float): Int {
+        val sector = Constants.PI2 / 8f
+        return when (floor(angle / sector).toInt()) {
+            1, 2 -> CROSS_STATE_DOWN
+            3, 4 -> CROSS_STATE_LEFT
+            5, 6 -> CROSS_STATE_UP
+            else -> CROSS_STATE_RIGHT
+        }
+    }
+
+    private fun computeStateForOuterAngle(angle: Float): Int {
         val sector = Constants.PI2 / 12f
         return when (floor(angle / sector).toInt()) {
             1 -> CROSS_STATE_DOWN_RIGHT
@@ -301,6 +316,18 @@ class CrossDial(
             8, 9 -> CROSS_STATE_UP
             10 -> CROSS_STATE_UP_RIGHT
             else -> CROSS_STATE_RIGHT
+        }
+    }
+
+    private fun countPressedKeysForState(state: Int?): Int {
+        return when (state) {
+            null -> 0
+            CROSS_STATE_CENTER -> 1
+            CROSS_STATE_RIGHT -> 1
+            CROSS_STATE_DOWN -> 1
+            CROSS_STATE_LEFT -> 1
+            CROSS_STATE_UP -> 1
+            else -> 2
         }
     }
 
