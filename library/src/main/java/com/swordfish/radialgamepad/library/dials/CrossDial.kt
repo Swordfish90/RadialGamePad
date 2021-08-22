@@ -49,7 +49,6 @@ class CrossDial(
     foregroundDrawableId: Int?,
     private val supportsGestures: Set<GestureType>,
     private val contentDescription: CrossContentDescription,
-    private val diagonalRatio: Int,
     distanceFromCenter: Float = 0.5f,
     theme: RadialGamePadTheme
 ) : SimulateMotionDial {
@@ -96,10 +95,6 @@ class CrossDial(
     private val paint = BasePaint().apply {
         color = theme.primaryDialBackground
     }
-
-    private val sectorToStateMap: Map<Int, Int> = buildSectorToStateMap()
-    private val sectorAngleSize = Constants.PI2 / sectorToStateMap.size
-    private val sectorAngleOffset = if (diagonalRatio.isOdd()) sectorAngleSize / 2 else 0f
 
     private var trackedPointerId: Int? = null
 
@@ -289,36 +284,24 @@ class CrossDial(
             return CROSS_STATE_CENTER
         }
 
-        val angle = atan2(y, x).fmod(Constants.PI2)
+        val angle = (atan2(y, x) + Constants.PI2) % Constants.PI2
         return computeStateForAngle(angle)
     }
 
     private fun isInsideDeadZone(x: Float, y: Float) = abs(x) < DEAD_ZONE && abs(y) < DEAD_ZONE
 
     private fun computeStateForAngle(angle: Float): Int {
-        val sectorIndex = floor((angle + sectorAngleOffset) / sectorAngleSize)
-            .toInt()
-            .fmod(sectorToStateMap.size)
-
-        return sectorToStateMap[sectorIndex] ?: CROSS_STATE_CENTER
-    }
-
-    private fun buildSectorToStateMap(): Map<Int, Int> {
-        val result = mutableMapOf<Int, Int>()
-
-        // Diagonals should be smaller and harder to choose compared to primary directions. We divide
-        // the 360 radius into sectors and assign them to states in a non uniform way. Primary directions
-        // get proportionally "diagonalRatio" more sectors. Looks a bit magic but works and it's fast.
-        val totalSectors = 4 + 4 * diagonalRatio
-        (0 until totalSectors)
-            .toList()
-            .chunked(diagonalRatio + 1)
-            .flatMap { listOf(it.subList(0, diagonalRatio), it.subList(diagonalRatio, it.size)) }
-            .mapIndexed { index, sectors ->
-                sectors.forEach { result[(it - diagonalRatio / 2).fmod(totalSectors)] = index }
-            }
-
-        return result
+        val sector = Constants.PI2 / 12f
+        return when (floor(angle / sector).toInt()) {
+            1 -> CROSS_STATE_DOWN_RIGHT
+            2, 3 -> CROSS_STATE_DOWN
+            4 -> CROSS_STATE_DOWN_LEFT
+            5, 6 -> CROSS_STATE_LEFT
+            7 -> CROSS_STATE_UP_LEFT
+            8, 9 -> CROSS_STATE_UP
+            10 -> CROSS_STATE_UP_RIGHT
+            else -> CROSS_STATE_RIGHT
+        }
     }
 
     override fun accessibilityBoxes(): List<AccessibilityBox> {

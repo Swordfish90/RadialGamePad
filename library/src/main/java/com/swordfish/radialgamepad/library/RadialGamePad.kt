@@ -318,7 +318,6 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.rightDrawableForegroundId,
                 configuration.supportsGestures,
                 configuration.contentDescription,
-                configuration.diagonalRatio,
                 configuration.distanceFromCenter,
                 configuration.theme ?: gamePadConfig.theme
             )
@@ -366,7 +365,6 @@ class RadialGamePad @JvmOverloads constructor(
                     config.rightDrawableForegroundId,
                     config.supportsGestures,
                     config.contentDescription,
-                    config.diagonalRatio,
                     config.distanceFromCenter,
                     config.theme ?: gamePadConfig.theme
                 )
