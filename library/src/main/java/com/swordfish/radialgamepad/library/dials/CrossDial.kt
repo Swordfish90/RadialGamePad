@@ -56,7 +56,7 @@ class CrossDial(
 
     companion object {
         private const val ACCESSIBILITY_BOX_SCALE = 0.33f
-        private const val DRAWABLE_SIZE_SCALING = 0.75
+        private const val DRAWABLE_SIZE_SCALING = 0.8f
         private const val BUTTON_COUNT = 8
         private const val DRAWABLE_COUNT = 4
         private const val SINGLE_BUTTON_ANGLE = Constants.PI2 / BUTTON_COUNT
