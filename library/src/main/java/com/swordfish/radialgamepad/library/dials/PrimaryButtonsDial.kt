@@ -103,11 +103,7 @@ class PrimaryButtonsDial(
             drawingBox.top + drawingBox.height() / 2
         )
 
-        if (centerAction != null && circleActions.isNotEmpty()) {
-            distanceToCenter += buttonRadius * 0.5f
-        } else {
-            buttonRadius *= BUTTON_SCALING
-        }
+        buttonRadius *= BUTTON_SCALING
 
         centerLabelDrawingBox = RectF(
             center.x - buttonRadius,
@@ -205,8 +201,8 @@ class PrimaryButtonsDial(
         val numButtons = maxOf(circleActions.size, 2)
         val sectorRadiansSin = sin(Math.PI / numButtons).toFloat()
         val radialMaxSize = outerRadius * sectorRadiansSin / (1f + sectorRadiansSin)
-        val linearMaxSize = BUTTON_SCALING * if (centerAction != null && circleActions.isNotEmpty()) {
-            outerRadius / 6
+        val linearMaxSize = if (centerAction != null && circleActions.isNotEmpty()) {
+            outerRadius / 3
         } else {
             Float.MAX_VALUE
         }
