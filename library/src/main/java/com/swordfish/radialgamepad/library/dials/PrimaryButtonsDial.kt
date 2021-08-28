@@ -94,20 +94,16 @@ class PrimaryButtonsDial(
 
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
-        val dialDiameter = minOf(drawingBox.width(), drawingBox.height())
-        distanceToCenter = dialDiameter / 4f
-        buttonRadius = computeButtonRadius(dialDiameter)
+        val dialDiameter = minOf(drawingBox.width(), drawingBox.height()) * OUTER_CIRCLE_SCALING
+        buttonRadius = computeButtonRadius(dialDiameter / 2)
+        distanceToCenter = dialDiameter / 2 - buttonRadius
 
         center = PointF(
             drawingBox.left + drawingBox.width() / 2,
             drawingBox.top + drawingBox.height() / 2
         )
 
-        if (centerAction != null && circleActions.isNotEmpty()) {
-            distanceToCenter += buttonRadius * 0.5f
-        } else {
-            buttonRadius *= BUTTON_SCALING
-        }
+        buttonRadius *= BUTTON_SCALING
 
         centerLabelDrawingBox = RectF(
             center.x - buttonRadius,
@@ -201,10 +197,15 @@ class PrimaryButtonsDial(
             }
     }
 
-    private fun computeButtonRadius(dialDiameter: Float): Float {
+    private fun computeButtonRadius(outerRadius: Float): Float {
         val numButtons = maxOf(circleActions.size, 2)
-        val radialMaxSize = dialDiameter * sin(Math.PI / numButtons).toFloat() / 4
-        val linearMaxSize = BUTTON_SCALING * if (centerAction != null && circleActions.isNotEmpty()) dialDiameter / 6 else Float.MAX_VALUE
+        val sectorRadiansSin = sin(Math.PI / numButtons).toFloat()
+        val radialMaxSize = outerRadius * sectorRadiansSin / (1f + sectorRadiansSin)
+        val linearMaxSize = if (centerAction != null && circleActions.isNotEmpty()) {
+            outerRadius / 3
+        } else {
+            Float.MAX_VALUE
+        }
         return minOf(radialMaxSize, linearMaxSize)
     }
 
@@ -293,6 +294,7 @@ class PrimaryButtonsDial(
     }
 
     companion object {
+        private const val OUTER_CIRCLE_SCALING = 0.95f
         private const val BUTTON_SCALING = 0.8f
     }
 }
