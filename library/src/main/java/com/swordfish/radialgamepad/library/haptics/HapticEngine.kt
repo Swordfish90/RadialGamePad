@@ -34,8 +34,8 @@ abstract class HapticEngine {
 
     companion object {
         const val EFFECT_NONE = 0
-        const val EFFECT_PRESS = 1
-        const val EFFECT_RELEASE = 2
+        const val EFFECT_RELEASE = 1
+        const val EFFECT_PRESS = 2
 
         private const val VIEW_FLAGS = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or
                 HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
