@@ -20,6 +20,7 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
@@ -67,33 +68,42 @@ class CrossDial(
         const val DRAWABLE_INDEX_UP = 3
     }
 
-    private enum class State(val anchor: TouchAnchor) {
+    private enum class State(val anchor: TouchAnchor, val outEvent: PointF) {
         CROSS_STATE_CENTER(
-            TouchAnchor.fromPolar(0.0f, 0.0f, 0.5f, setOf())
+            TouchAnchor.fromPolar(0.0f, 0.0f, 0.5f, setOf()),
+            PointF(0f, 0f)
         ),
         CROSS_STATE_RIGHT(
-            TouchAnchor.fromPolar(0.0f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_RIGHT))
+            TouchAnchor.fromPolar(0.0f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_RIGHT)),
+            PointF(1f, 0f)
         ),
         CROSS_STATE_DOWN_RIGHT(
-            TouchAnchor.fromPolar(0.25f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_RIGHT))
+            TouchAnchor.fromPolar(0.25f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_RIGHT)),
+            PointF(1f, 1f)
         ),
         CROSS_STATE_DOWN(
-            TouchAnchor.fromPolar(0.5f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_DOWN))
+            TouchAnchor.fromPolar(0.5f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_DOWN)),
+            PointF(0f, 1f)
         ),
         CROSS_STATE_DOWN_LEFT(
-            TouchAnchor.fromPolar(0.75f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_LEFT))
+            TouchAnchor.fromPolar(0.75f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_LEFT)),
+            PointF(-1f, 1f)
         ),
         CROSS_STATE_LEFT(
-            TouchAnchor.fromPolar(1.00f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_LEFT))
+            TouchAnchor.fromPolar(1.00f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_LEFT)),
+            PointF(-1f, 0f)
         ),
         CROSS_STATE_UP_LEFT(
-            TouchAnchor.fromPolar(1.25f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_LEFT))
+            TouchAnchor.fromPolar(1.25f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_LEFT)),
+            PointF(-1f, -1f)
         ),
         CROSS_STATE_UP(
-            TouchAnchor.fromPolar(1.50f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_UP))
+            TouchAnchor.fromPolar(1.50f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_UP)),
+            PointF(0f, -1f)
         ),
         CROSS_STATE_UP_RIGHT(
-            TouchAnchor.fromPolar(1.75f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_RIGHT))
+            TouchAnchor.fromPolar(1.75f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_RIGHT)),
+            PointF(1f, -1f)
         );
 
         fun isDiagonal() = anchor.ids.size > 1
@@ -298,7 +308,7 @@ class CrossDial(
         } else {
             val haptic = endState.anchor.ids.size >= startState?.anchor?.ids?.size ?: 0
             val hapticEffect = if (haptic) HapticEngine.EFFECT_PRESS else HapticEngine.EFFECT_RELEASE
-            outEvents.add(Event.Direction(id, endState.anchor.getX(), endState.anchor.getY(), hapticEffect))
+            outEvents.add(Event.Direction(id, endState.outEvent.x, endState.outEvent.y, hapticEffect))
         }
     }
 
