@@ -43,7 +43,11 @@ object MathUtils {
     }
 
     fun distance(x1: Float, x2: Float, y1: Float, y2: Float): Float {
-        return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+        return sqrt(distanceSquared(x1, x2, y1, y2))
+    }
+
+    fun distanceSquared(x1: Float, x2: Float, y1: Float, y2: Float): Float {
+        return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)
     }
 
     /** Check if angle is in range. Handles negative values and overflow. */
@@ -54,13 +58,14 @@ object MathUtils {
 
     fun lint(x: Float, a: Float, b: Float) = a * (1 - x) + b * x
 
+    fun polarCoordinatesToPoint(angle: Float, magnitude: Float = 1.0f): PointF {
+        return PointF(magnitude * cos(angle), magnitude * sin(angle))
+    }
+
     fun convertPolarCoordinatesToSquares(angle: Float, strength: Float): PointF {
         val u = strength * cos(angle)
         val v = strength * sin(angle)
-        return mapEllipticalDiskCoordinatesToSquare(
-            u,
-            v
-        )
+        return mapEllipticalDiskCoordinatesToSquare(u, v)
     }
 
     private fun mapEllipticalDiskCoordinatesToSquare(u: Float, v: Float): PointF {

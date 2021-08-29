@@ -25,7 +25,8 @@ object Constants {
     val DEFAULT_COLOR_PRESSED = Color.argb(255, 125, 125, 125)
     val DEFAULT_COLOR_TEXT = Color.argb(125, 255, 255, 255)
     val DEFAULT_COLOR_BACKGROUND = Color.argb(50, 125, 125, 125)
-    const val DEFAULT_COLOR_SECONDARY_BACKGROUND = Color.TRANSPARENT
+    val DEFAULT_COLOR_LIGHT = Color.argb(30, 125, 125, 125)
 
-    const val PI2 = 2 * Math.PI.toFloat()
+    const val PI = Math.PI.toFloat()
+    const val PI2 = 2f * PI
 }

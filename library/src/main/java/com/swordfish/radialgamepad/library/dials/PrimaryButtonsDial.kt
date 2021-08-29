@@ -23,6 +23,7 @@ import android.graphics.Canvas
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.KeyEvent
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
@@ -33,14 +34,14 @@ import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
 import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.touch.TouchAnchor
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import java.util.*
-import kotlin.math.abs
-import kotlin.math.cos
+import com.swordfish.radialgamepad.library.utils.neighborsPairs
 import kotlin.math.sin
 
 class PrimaryButtonsDial(
@@ -52,29 +53,22 @@ class PrimaryButtonsDial(
     private val theme: RadialGamePadTheme
 ) : Dial {
 
-    private val actionAngle = Constants.PI2 / circleActions.size
-
     private val paint = BasePaint()
     private val textPaint = TextPaint()
+    private val compositeButtonPaint = CompositeButtonPaint(theme)
+    private val drawables = loadRequiredDrawables(context)
 
     private var pressed: Set<Int> = setOf()
 
-    private val idToConfigMap: Map<Int, ButtonConfig> = (circleActions + listOf(centerAction))
-        .filterNotNull()
-        .map { it.id to it }
-        .toMap()
-
-    private val drawables = loadRequiredDrawables(context)
+    private val idButtonConfigsMapping: Map<Int, ButtonConfig> = buildIdButtonsAssociations()
 
     private var drawingBox = RectF()
+    private val actionAngle = Constants.PI2 / circleActions.size
     private var buttonRadius = 0f
     private var distanceToCenter = 0f
     private var center: PointF = PointF(0f, 0f)
-    private var secondaryActivationButtonRadius = 0.5f
-    private var centerLabelDrawingBox: RectF = RectF()
     private var labelsDrawingBoxes: MutableMap<Int, RectF> = mutableMapOf()
-    private var normalizedActionCenters: MutableMap<Int, PointF> = mutableMapOf()
-    private val actionCentersDistances: SortedMap<Float, Int> = sortedMapOf()
+    private val touchAnchors: List<TouchAnchor> = buildTouchAnchors()
 
     private fun loadRequiredDrawables(context: Context): Map<Int, Drawable?> {
         val iconDrawablePairs = (circleActions + centerAction).mapNotNull { buttonConfig ->
@@ -88,9 +82,71 @@ class PrimaryButtonsDial(
         return iconDrawablePairs.toMap()
     }
 
+    private fun getButtonForId(id: Int): ButtonConfig? {
+        return idButtonConfigsMapping[id]
+    }
+
+    private fun buildIdButtonsAssociations(): Map<Int, ButtonConfig> {
+        return (circleActions + listOf(centerAction))
+            .filterNotNull()
+            .map { it.id to it }
+            .toMap()
+    }
+
     override fun drawingBox(): RectF = drawingBox
 
     override fun trackedPointerId(): Int? = null
+
+    private fun buildTouchAnchors(): List<TouchAnchor> {
+        return mutableListOf<TouchAnchor>().apply {
+            addAll(buildCenterButtonAnchors())
+            addAll(buildCircleButtonAnchors())
+
+            if (allowsMultiplePressed()) {
+                addAll(buildCompositeButtonAnchors())
+            }
+        }
+    }
+
+    private fun buildCenterButtonAnchors(): List<TouchAnchor> {
+        return centerAction?.let {
+            listOf(TouchAnchor.fromCoordinates(0f, 0f, 2f, setOf(it.id)))
+        } ?: listOf()
+    }
+
+    private fun buildCircleButtonAnchors(): List<TouchAnchor> {
+        return circleActions
+            .filter { it.visible }
+            .mapIndexed { index, buttonConfig ->
+                val angle = Constants.PI2 + actionAngle * index + rotationRadians
+                Log.d("FILIPPO", "Angle ${MathUtils.toDegrees(angle) % 360} ${buttonConfig.label}")
+                TouchAnchor.fromPolar(angle, 0.25f, 2f, setOf(buttonConfig.id))
+            }
+    }
+
+    private fun buildCompositeButtonAnchors(): List<TouchAnchor> {
+        if (!allowsMultiplePressed()) {
+            return listOf()
+        }
+
+        return (circleActions + listOf(circleActions[0]))
+            .filter { it.visible }
+            .mapIndexed { index, buttonConfig ->
+                val angle = Constants.PI2 + actionAngle * index + rotationRadians
+                val buttonId = buttonConfig.id
+                angle to buttonId
+            }
+            .neighborsPairs()
+            .map { (first, second) ->
+                val averageAngle = arrayOf(first.first, second.first).average().toFloat()
+                TouchAnchor.fromPolar(
+                    averageAngle,
+                    0.75f / 2f,
+                    1f,
+                    setOf(first.second, second.second)
+                )
+            }
+    }
 
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
@@ -98,44 +154,25 @@ class PrimaryButtonsDial(
         buttonRadius = computeButtonRadius(dialDiameter / 2)
         distanceToCenter = dialDiameter / 2 - buttonRadius
 
-        center = PointF(
-            drawingBox.left + drawingBox.width() / 2,
-            drawingBox.top + drawingBox.height() / 2
-        )
+        center = PointF(drawingBox.centerX(), drawingBox().centerY())
 
         buttonRadius *= BUTTON_SCALING
 
-        centerLabelDrawingBox = RectF(
-            center.x - buttonRadius,
-            center.y - buttonRadius,
-            center.x + buttonRadius,
-            center.y + buttonRadius
-        )
+        compositeButtonPaint.updateDrawingBox(drawingBox)
 
-        if (centerAction != null && centerAction.visible) {
-            normalizedActionCenters[centerAction.id] = PointF(0.5f, 0.5f)
-        }
+        getSingleButtonAnchors()
+            .forEach {
+                val button = getButtonForId(it.ids.first()) ?: return@forEach
 
-        secondaryActivationButtonRadius = (buttonRadius / drawingBox.width()) * 1.5f
+                val subDialX = center.x + it.getX() * distanceToCenter * 4f
+                val subDialY = center.y - it.getY() * distanceToCenter * 4f
 
-        circleActions
-            .filter { it.visible }
-            .forEachIndexed { index, button ->
-                val buttonAngle = actionAngle * index + rotationRadians
-                updatePainterForButton(button)
-
-                val subDialX = center.x + cos(buttonAngle) * distanceToCenter
-                val subDialY = center.y - sin(buttonAngle) * distanceToCenter
-
-                labelsDrawingBoxes[index] = RectF(
+                labelsDrawingBoxes[button.id] = RectF(
                     subDialX - buttonRadius,
                     subDialY - buttonRadius,
                     subDialX + buttonRadius,
                     subDialY + buttonRadius
                 )
-
-                normalizedActionCenters[button.id] =
-                    TouchUtils.computeRelativePosition(subDialX, subDialY, drawingBox())
 
                 drawables[button.iconId]?.let {
                     it.bounds = RectF(
@@ -150,51 +187,59 @@ class PrimaryButtonsDial(
 
     override fun draw(canvas: Canvas) {
         val radius = minOf(drawingBox.width(), drawingBox.height()) / 2
+        drawBackground(canvas, radius)
+        drawSingleActions(canvas)
+        drawCompositeActions(canvas, radius)
+    }
 
+    private fun drawBackground(canvas: Canvas, radius: Float) {
         paint.color = theme.primaryDialBackground
-        canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paint)
+        canvas.drawCircle(center.x, center.y, radius, paint)
+    }
 
-        if (centerAction != null && centerAction.visible) {
-            updatePainterForButton(centerAction)
-            canvas.drawCircle(center.x, center.y, buttonRadius, paint)
-
-            if (centerAction.label != null) {
-                textPaint.paintText(
-                    centerLabelDrawingBox,
-                    centerAction.label,
+    private fun drawCompositeActions(canvas: Canvas, outerRadius: Float) {
+        getCompositeTouchAnchors()
+            .forEach {
+                compositeButtonPaint.drawCompositeButton(
                     canvas,
-                    centerAction.theme ?: theme
+                    center.x + it.getX() * outerRadius * 2,
+                    center.y - it.getY() * outerRadius * 2,
+                    pressed.containsAll(it.ids)
                 )
             }
+    }
 
-            drawables[centerAction.iconId]?.let {
-                it.bounds = RectF(
-                    center.x - buttonRadius,
-                    center.y - buttonRadius,
-                    center.x + buttonRadius,
-                    center.y + buttonRadius
-                ).scaleCentered(0.5f).roundToInt()
-                it.draw(canvas)
-            }
-        }
+    private fun drawSingleActions(canvas: Canvas) {
+        getSingleButtonAnchors()
+            .forEach {
+                val button = getButtonForId(it.ids.first()) ?: return@forEach
 
-        circleActions
-            .filter { it.visible }
-            .forEachIndexed { index, button ->
-                val buttonAngle = actionAngle * index + rotationRadians
-                updatePainterForButton(button)
+                updatePainterForButtonIds(setOf(button.id), button.theme ?: theme)
 
-                val subDialX = center.x + cos(buttonAngle) * distanceToCenter
-                val subDialY = center.y - sin(buttonAngle) * distanceToCenter
+                val subDialX = center.x + it.getX() * distanceToCenter * 4f
+                val subDialY = center.y - it.getY() * distanceToCenter * 4f
 
                 canvas.drawCircle(subDialX, subDialY, buttonRadius, paint)
 
                 if (button.label != null) {
-                    textPaint.paintText(labelsDrawingBoxes[index]!!, button.label, canvas, button.theme ?: theme)
+                    textPaint.paintText(
+                        labelsDrawingBoxes[button.id]!!,
+                        button.label,
+                        canvas,
+                        button.theme ?: theme
+                    )
                 }
 
                 drawables[button.iconId]?.draw(canvas)
             }
+    }
+
+    private fun getSingleButtonAnchors(): List<TouchAnchor> {
+        return touchAnchors.filter { it.ids.size == 1 }
+    }
+
+    private fun getCompositeTouchAnchors(): List<TouchAnchor> {
+        return touchAnchors.filter { it.ids.size > 1 }
     }
 
     private fun computeButtonRadius(outerRadius: Float): Float {
@@ -211,7 +256,7 @@ class PrimaryButtonsDial(
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         val newPressed = fingers.asSequence()
-            .flatMap { getAssociatedId(it.x, it.y) }
+            .flatMap { getAssociatedIds(it.x, it.y) }
             .toSet()
 
         if (newPressed != pressed) {
@@ -224,20 +269,14 @@ class PrimaryButtonsDial(
         return false
     }
 
-    private fun getAssociatedId(x: Float, y: Float): Sequence<Int> {
-        actionCentersDistances.clear()
-        normalizedActionCenters.asSequence()
-            .forEach { actionCentersDistances[MathUtils.distance(x, it.value.x, y, it.value.y)] = it.key }
-
-        val minDistance = actionCentersDistances.firstKey()
-        val distanceThreshold = 0.5 * minDistance
-
-        return actionCentersDistances.asSequence().withIndex()
-            .takeWhile { (index, it) ->
-                index == 0 || (allowMultiplePressesSingleFinger && abs(it.key - minDistance) < distanceThreshold)
-            }
-            .map { (_, it) -> it.value }
+    private fun getAssociatedIds(x: Float, y: Float): Sequence<Int> {
+        return touchAnchors
+            .minBy { it.getNormalizedDistance(x - 0.5f, -y + 0.5f) }
+            ?.ids
+            ?.asSequence() ?: sequenceOf()
     }
+
+    private fun allowsMultiplePressed() = allowMultiplePressesSingleFinger && centerAction == null
 
     override fun gesture(
         relativeX: Float,
@@ -245,8 +284,8 @@ class PrimaryButtonsDial(
         gestureType: GestureType,
         outEvents: MutableList<Event>
     ): Boolean {
-        getAssociatedId(relativeX, relativeY)
-            .mapNotNull { idToConfigMap[it] }
+        getAssociatedIds(relativeX, relativeY)
+            .mapNotNull { getButtonForId(it) }
             .filter { gestureType in it.supportsGestures }
             .forEach {
                 outEvents.add(Event.Gesture(it.id, gestureType))
@@ -254,42 +293,33 @@ class PrimaryButtonsDial(
         return false
     }
 
-    private fun updatePainterForButton(buttonConfig: ButtonConfig) {
-        val buttonTheme = buttonConfig.theme ?: theme
-        if (buttonConfig.id in pressed) {
-            paint.color = buttonTheme.pressedColor
-        } else {
-            paint.color = buttonTheme.normalColor
+    private fun updatePainterForButtonIds(buttonIds: Set<Int>, theme: RadialGamePadTheme) {
+        when {
+            pressed.containsAll(buttonIds) -> paint.color = theme.pressedColor
+            buttonIds.size == 1 -> paint.color = theme.normalColor
+            else -> paint.color = theme.primaryDialBackground
         }
     }
 
     override fun accessibilityBoxes(): List<AccessibilityBox> {
-        val result = mutableListOf<AccessibilityBox>()
-
-        result += circleActions
+        return circleActions
             .filter { it.visible && it.contentDescription != null }
-            .mapIndexedNotNull { index, button ->
-                labelsDrawingBoxes[index]?.let {
+            .mapNotNull { button ->
+                labelsDrawingBoxes[button.id]?.let {
                     AccessibilityBox(it.roundToInt(), button.contentDescription ?: "")
                 }
             }
-
-        if (centerAction?.contentDescription != null) {
-            result += AccessibilityBox(centerLabelDrawingBox.roundToInt(), centerAction.contentDescription)
-        }
-
-        return result
     }
 
     private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
         newPressed.asSequence()
-            .filter { it !in oldPressed && idToConfigMap[it]?.supportsButtons == true }
+            .filter { it !in oldPressed && getButtonForId(it)?.supportsButtons == true }
             .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_DOWN, HapticEngine.EFFECT_PRESS)) }
     }
 
     private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
         oldPressed.asSequence()
-            .filter { it !in newPressed && idToConfigMap[it]?.supportsButtons == true }
+            .filter { it !in newPressed && getButtonForId(it)?.supportsButtons == true }
             .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_UP, HapticEngine.EFFECT_RELEASE)) }
     }
 
