@@ -62,10 +62,16 @@ class CrossDial(
 
         private const val DEAD_ZONE = 0.1f
 
-        const val DRAWABLE_INDEX_RIGHT = 0
-        const val DRAWABLE_INDEX_DOWN = 1
-        const val DRAWABLE_INDEX_LEFT = 2
-        const val DRAWABLE_INDEX_UP = 3
+        private const val DRAWABLE_INDEX_RIGHT = 0
+        private const val DRAWABLE_INDEX_DOWN = 1
+        private const val DRAWABLE_INDEX_LEFT = 2
+        private const val DRAWABLE_INDEX_UP = 3
+
+        private const val DIAGONAL_DISTANCE = 0.5f
+        private const val DIAGONAL_STRENGTH = 1.33f
+
+        private const val MAIN_DISTANCE = 0.5f
+        private const val MAIN_STRENGTH = 2f
     }
 
     private enum class State(val anchor: TouchAnchor, val outEvent: PointF) {
@@ -81,8 +87,8 @@ class CrossDial(
         CROSS_STATE_RIGHT(
             TouchAnchor.fromPolar(
                 0.0f * Constants.PI,
-                0.25f,
-                3f,
+                MAIN_DISTANCE,
+                MAIN_STRENGTH,
                 setOf(DRAWABLE_INDEX_RIGHT)
             ),
             PointF(1f, 0f)
@@ -90,8 +96,8 @@ class CrossDial(
         CROSS_STATE_DOWN_RIGHT(
             TouchAnchor.fromPolar(
                 0.25f * Constants.PI,
-                0.75f / 2f,
-                1f,
+                DIAGONAL_DISTANCE,
+                DIAGONAL_STRENGTH,
                 setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_RIGHT)
             ),
             PointF(1f, 1f)
@@ -99,8 +105,8 @@ class CrossDial(
         CROSS_STATE_DOWN(
             TouchAnchor.fromPolar(
                 0.5f * Constants.PI,
-                0.25f,
-                3f,
+                MAIN_DISTANCE,
+                MAIN_STRENGTH,
                 setOf(DRAWABLE_INDEX_DOWN)
             ),
             PointF(0f, 1f)
@@ -108,8 +114,8 @@ class CrossDial(
         CROSS_STATE_DOWN_LEFT(
             TouchAnchor.fromPolar(
                 0.75f * Constants.PI,
-                0.75f / 2f,
-                1f,
+                DIAGONAL_DISTANCE,
+                DIAGONAL_STRENGTH,
                 setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_LEFT)
             ),
             PointF(-1f, 1f)
@@ -117,8 +123,8 @@ class CrossDial(
         CROSS_STATE_LEFT(
             TouchAnchor.fromPolar(
                 1.00f * Constants.PI,
-                0.25f,
-                3f,
+                MAIN_DISTANCE,
+                MAIN_STRENGTH,
                 setOf(DRAWABLE_INDEX_LEFT)
             ),
             PointF(-1f, 0f)
@@ -126,8 +132,8 @@ class CrossDial(
         CROSS_STATE_UP_LEFT(
             TouchAnchor.fromPolar(
                 1.25f * Constants.PI,
-                0.75f / 2f,
-                1f,
+                DIAGONAL_DISTANCE,
+                DIAGONAL_STRENGTH,
                 setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_LEFT)
             ),
             PointF(-1f, -1f)
@@ -135,8 +141,8 @@ class CrossDial(
         CROSS_STATE_UP(
             TouchAnchor.fromPolar(
                 1.50f * Constants.PI,
-                0.25f,
-                3f,
+                MAIN_DISTANCE,
+                MAIN_STRENGTH,
                 setOf(DRAWABLE_INDEX_UP)
             ),
             PointF(0f, -1f)
@@ -144,8 +150,8 @@ class CrossDial(
         CROSS_STATE_UP_RIGHT(
             TouchAnchor.fromPolar(
                 1.75f * Constants.PI,
-                0.75f / 2f,
-                1f,
+                DIAGONAL_DISTANCE,
+                DIAGONAL_STRENGTH,
                 setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_RIGHT)
             ),
             PointF(1f, -1f)
@@ -303,7 +309,10 @@ class CrossDial(
             val finger = fingers.first()
             trackedPointerId = finger.pointerId
             return updateState(
-                computeStateForPosition(finger.x - 0.5f, finger.y - 0.5f),
+                computeStateForPosition(
+                    (finger.x - 0.5f).coerceIn(-0.5f, 0.5f),
+                    (finger.y - 0.5f).coerceIn(-0.5f, 0.5f)
+                ),
                 simulatedState,
                 outEvents
             )
