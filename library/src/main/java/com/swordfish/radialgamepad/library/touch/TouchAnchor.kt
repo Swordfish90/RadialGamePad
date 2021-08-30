@@ -22,25 +22,31 @@ import android.graphics.PointF
 import com.swordfish.radialgamepad.library.math.MathUtils
 
 class TouchAnchor(
+    private val point: PointF,
     private val normalizedPoint: PointF,
     private val strength: Float,
     val ids: Set<Int>
 ) {
-    fun getX() = normalizedPoint.x
+    fun getX() = point.x
 
-    fun getY() = normalizedPoint.y
+    fun getY() = point.y
+
+    fun getNormalizedX() = normalizedPoint.x
+
+    fun getNormalizedY() = normalizedPoint.y
 
     fun getNormalizedDistance(x: Float, y: Float): Float {
-        return MathUtils.distance(x, normalizedPoint.x, y, normalizedPoint.y) / strength
+        return MathUtils.distance(x, point.x, y, point.y) / strength
     }
 
     companion object {
         fun fromPolar(angle: Float, length: Float, strength: Float, ids: Set<Int>): TouchAnchor {
-            return TouchAnchor(MathUtils.polarCoordinatesToPoint(angle, length), strength, ids)
-        }
-
-        fun fromCoordinates(x: Float, y: Float, strength: Float, ids: Set<Int>): TouchAnchor {
-            return TouchAnchor(PointF(x, y), strength, ids)
+            return TouchAnchor(
+                MathUtils.polarCoordinatesToPoint(angle, length),
+                MathUtils.polarCoordinatesToPoint(angle, 1f),
+                strength,
+                ids
+            )
         }
     }
 }

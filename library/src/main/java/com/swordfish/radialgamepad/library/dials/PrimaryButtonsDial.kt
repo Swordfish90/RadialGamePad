@@ -110,7 +110,7 @@ class PrimaryButtonsDial(
 
     private fun buildCenterButtonAnchors(): List<TouchAnchor> {
         return centerAction?.let {
-            listOf(TouchAnchor.fromCoordinates(0f, 0f, 2f, setOf(it.id)))
+            listOf(TouchAnchor.fromPolar(0f, 0f, 2f, setOf(it.id)))
         } ?: listOf()
     }
 
@@ -202,8 +202,8 @@ class PrimaryButtonsDial(
             .forEach {
                 compositeButtonPaint.drawCompositeButton(
                     canvas,
-                    center.x + it.getX() * outerRadius * 2,
-                    center.y - it.getY() * outerRadius * 2,
+                    center.x + it.getNormalizedX() * outerRadius * 0.75f,
+                    center.y - it.getNormalizedY() * outerRadius * 0.75f,
                     pressed.containsAll(it.ids)
                 )
             }

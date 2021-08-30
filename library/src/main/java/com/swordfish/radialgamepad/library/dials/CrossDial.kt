@@ -70,39 +70,84 @@ class CrossDial(
 
     private enum class State(val anchor: TouchAnchor, val outEvent: PointF) {
         CROSS_STATE_CENTER(
-            TouchAnchor.fromPolar(0.0f, 0.0f, 0.5f, setOf()),
+            TouchAnchor.fromPolar(
+                0.0f,
+                0.0f,
+                0.75f,
+                setOf()
+            ),
             PointF(0f, 0f)
         ),
         CROSS_STATE_RIGHT(
-            TouchAnchor.fromPolar(0.0f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_RIGHT)),
+            TouchAnchor.fromPolar(
+                0.0f * Constants.PI,
+                0.25f,
+                3f,
+                setOf(DRAWABLE_INDEX_RIGHT)
+            ),
             PointF(1f, 0f)
         ),
         CROSS_STATE_DOWN_RIGHT(
-            TouchAnchor.fromPolar(0.25f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_RIGHT)),
+            TouchAnchor.fromPolar(
+                0.25f * Constants.PI,
+                0.75f / 2f,
+                1f,
+                setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_RIGHT)
+            ),
             PointF(1f, 1f)
         ),
         CROSS_STATE_DOWN(
-            TouchAnchor.fromPolar(0.5f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_DOWN)),
+            TouchAnchor.fromPolar(
+                0.5f * Constants.PI,
+                0.25f,
+                3f,
+                setOf(DRAWABLE_INDEX_DOWN)
+            ),
             PointF(0f, 1f)
         ),
         CROSS_STATE_DOWN_LEFT(
-            TouchAnchor.fromPolar(0.75f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_LEFT)),
+            TouchAnchor.fromPolar(
+                0.75f * Constants.PI,
+                0.75f / 2f,
+                1f,
+                setOf(DRAWABLE_INDEX_DOWN, DRAWABLE_INDEX_LEFT)
+            ),
             PointF(-1f, 1f)
         ),
         CROSS_STATE_LEFT(
-            TouchAnchor.fromPolar(1.00f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_LEFT)),
+            TouchAnchor.fromPolar(
+                1.00f * Constants.PI,
+                0.25f,
+                3f,
+                setOf(DRAWABLE_INDEX_LEFT)
+            ),
             PointF(-1f, 0f)
         ),
         CROSS_STATE_UP_LEFT(
-            TouchAnchor.fromPolar(1.25f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_LEFT)),
+            TouchAnchor.fromPolar(
+                1.25f * Constants.PI,
+                0.75f / 2f,
+                1f,
+                setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_LEFT)
+            ),
             PointF(-1f, -1f)
         ),
         CROSS_STATE_UP(
-            TouchAnchor.fromPolar(1.50f * Constants.PI, 0.25f, 2f, setOf(DRAWABLE_INDEX_UP)),
+            TouchAnchor.fromPolar(
+                1.50f * Constants.PI,
+                0.25f,
+                3f,
+                setOf(DRAWABLE_INDEX_UP)
+            ),
             PointF(0f, -1f)
         ),
         CROSS_STATE_UP_RIGHT(
-            TouchAnchor.fromPolar(1.75f * Constants.PI, 0.5f, 1f, setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_RIGHT)),
+            TouchAnchor.fromPolar(
+                1.75f * Constants.PI,
+                0.75f / 2f,
+                1f,
+                setOf(DRAWABLE_INDEX_UP, DRAWABLE_INDEX_RIGHT)
+            ),
             PointF(1f, -1f)
         );
 
@@ -239,8 +284,8 @@ class CrossDial(
             .forEach {
                 compositeButtonPaint.drawCompositeButton(
                     canvas,
-                    drawingBox.centerX() + it.anchor.getX() * radius * 1.5f,
-                    drawingBox.centerY() + it.anchor.getY() * radius * 1.5f,
+                    drawingBox.centerX() + it.anchor.getNormalizedX() * radius * 0.75f,
+                    drawingBox.centerY() + it.anchor.getNormalizedY() * radius * 0.75f,
                     it == currentState()
                 )
             }
