@@ -119,7 +119,6 @@ class PrimaryButtonsDial(
             .filter { it.visible }
             .mapIndexed { index, buttonConfig ->
                 val angle = Constants.PI2 + actionAngle * index + rotationRadians
-                Log.d("FILIPPO", "Angle ${MathUtils.toDegrees(angle) % 360} ${buttonConfig.label}")
                 TouchAnchor.fromPolar(angle, 0.25f, 2f, setOf(buttonConfig.id))
             }
     }
