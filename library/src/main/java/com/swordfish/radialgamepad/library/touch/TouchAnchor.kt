@@ -36,7 +36,7 @@ class TouchAnchor(
     fun getNormalizedY() = normalizedPoint.y
 
     fun getNormalizedDistance(x: Float, y: Float): Float {
-        return MathUtils.distance(x, point.x, y, point.y) / strength
+        return MathUtils.distanceSquared(x, point.x, y, point.y) / (strength * strength)
     }
 
     companion object {

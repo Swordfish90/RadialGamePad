@@ -23,7 +23,6 @@ import android.graphics.Canvas
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
-import android.util.Log
 import android.view.KeyEvent
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
@@ -31,7 +30,6 @@ import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
-import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
@@ -160,11 +158,11 @@ class PrimaryButtonsDial(
         compositeButtonPaint.updateDrawingBox(drawingBox)
 
         getSingleButtonAnchors()
-            .forEach {
-                val button = getButtonForId(it.ids.first()) ?: return@forEach
+            .forEach { anchor ->
+                val button = getButtonForId(anchor.ids.first()) ?: return@forEach
 
-                val subDialX = center.x + it.getX() * distanceToCenter * 4f
-                val subDialY = center.y - it.getY() * distanceToCenter * 4f
+                val subDialX = center.x + anchor.getX() * distanceToCenter * 4f
+                val subDialY = center.y - anchor.getY() * distanceToCenter * 4f
 
                 labelsDrawingBoxes[button.id] = RectF(
                     subDialX - buttonRadius,
