@@ -26,7 +26,7 @@ import com.swordfish.radialgamepad.library.utils.Constants
  * @property simulatedColor A color which is displayed when control movement is simulated programmatically
  * @property textColor A color which is used to draw labels or icons on top of controls
  * @property primaryDialBackground A color which is used to draw the circular background behind the primary dial
- * @property secondaryDialBackground A color which is used to draw the circular background behind the secondary dials
+ * @property lightColor A color which is used for some light details
  */
 data class RadialGamePadTheme(
     val normalColor: Int = Constants.DEFAULT_COLOR_NORMAL,
@@ -34,5 +34,5 @@ data class RadialGamePadTheme(
     val simulatedColor: Int = Constants.DEFAULT_COLOR_NORMAL,
     val textColor: Int = Constants.DEFAULT_COLOR_TEXT,
     val primaryDialBackground: Int = Constants.DEFAULT_COLOR_BACKGROUND,
-    val secondaryDialBackground: Int = Constants.DEFAULT_COLOR_SECONDARY_BACKGROUND
+    val lightColor: Int = Constants.DEFAULT_COLOR_LIGHT
 )

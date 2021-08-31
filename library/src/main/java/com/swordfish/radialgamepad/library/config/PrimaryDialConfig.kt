@@ -30,8 +30,7 @@ sealed class PrimaryDialConfig {
      * @property id The control id. It is passed back to discriminate events.
      * @property rightDrawableId A resource drawable id for the left arrow (other arrows are obtained by rotating it)
      * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
-     * @property diagonalRatio Sets how smaller diagonal should be compared to primary direction. Defaults to 3, which corresponds to half.
-     * @property distanceFromCenter How much the drawable should be distanced from the center. Available in range [0.0, 1.0], defaults to 0.4.
+     * @property useDiagonals The controls will allow diagonal directions.
      * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
      */
     data class Cross(
@@ -40,8 +39,7 @@ sealed class PrimaryDialConfig {
         val rightDrawableForegroundId: Int? = null,
         val contentDescription: CrossContentDescription = CrossContentDescription(),
         val supportsGestures: Set<GestureType> = emptySet(),
-        val diagonalRatio: Int = 2,
-        val distanceFromCenter: Float = 0.4f,
+        val useDiagonals: Boolean = true,
         val theme: RadialGamePadTheme? = null
     ) : PrimaryDialConfig()
 

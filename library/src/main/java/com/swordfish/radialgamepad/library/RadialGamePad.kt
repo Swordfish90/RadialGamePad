@@ -16,6 +16,8 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("unused")
+
 package com.swordfish.radialgamepad.library
 
 import android.content.Context
@@ -318,8 +320,7 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.rightDrawableForegroundId,
                 configuration.supportsGestures,
                 configuration.contentDescription,
-                configuration.diagonalRatio,
-                configuration.distanceFromCenter,
+                configuration.useDiagonals,
                 configuration.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
@@ -366,8 +367,7 @@ class RadialGamePad @JvmOverloads constructor(
                     config.rightDrawableForegroundId,
                     config.supportsGestures,
                     config.contentDescription,
-                    config.diagonalRatio,
-                    config.distanceFromCenter,
+                    config.useDiagonals,
                     config.theme ?: gamePadConfig.theme
                 )
             }

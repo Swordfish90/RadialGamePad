@@ -24,13 +24,9 @@ import com.swordfish.radialgamepad.library.event.Event
 class AdvancedHapticEngine : HapticEngine() {
 
     override fun performHapticForEvents(events: List<Event>, view: View) {
-
-        val eventsHapticTypes = events.asSequence()
-            .map { it.haptic }
-            .toSet()
-
-        val strongestEffect = sequenceOf(EFFECT_PRESS, EFFECT_RELEASE)
-            .firstOrNull { eventsHapticTypes.contains(it) } ?: EFFECT_NONE
+        val strongestEffect = events
+            .maxBy { it.haptic }
+            ?.haptic ?: EFFECT_NONE
 
         performHaptic(strongestEffect, view)
     }

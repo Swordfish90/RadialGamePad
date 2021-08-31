@@ -74,8 +74,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property rightDrawableId The optional drawable that define the shape of the right button.
      * @property rightDrawableForegroundId The optional drawable that is drawn on top with text color.
      * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
-     * @property diagonalRatio Sets how smaller diagonal should be compared to primary direction. Defaults to 2, which corresponds to a half.
-     * @property distanceFromCenter How much the drawable should be distanced from the center. Available in range [0.0, 1.0], defaults to 0.4.
+     * @property useDiagonals The controls will allow diagonal directions.
      * @property contentDescription Content description read by the screen reader. Defaults to "D-Pad".
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
      */
@@ -87,8 +86,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         val rightDrawableForegroundId: Int? = null,
         val supportsGestures: Set<GestureType> = emptySet(),
         val contentDescription: CrossContentDescription = CrossContentDescription(),
-        val diagonalRatio: Int = 2,
-        val distanceFromCenter: Float = 0.4f,
+        val useDiagonals: Boolean = true,
         val theme: RadialGamePadTheme? = null
     ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
 

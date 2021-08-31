@@ -159,7 +159,7 @@ object SamplePadConfigs {
     val REMOTE =
         RadialGamePadConfig(
             sockets = 6,
-            primaryDial = PrimaryDialConfig.Cross(0),
+            primaryDial = PrimaryDialConfig.Cross(0, useDiagonals = false),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     1, 1, ButtonConfig(
