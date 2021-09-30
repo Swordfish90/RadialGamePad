@@ -27,8 +27,15 @@ import kotlin.math.roundToInt
  * @property spread Defines how many secondary dials is occupies
  * @property scale Defines a scaling factor. Used to make some controls more prominent.
  * @property avoidClipping When measuring, the library is not allowed to clip the area not occupied by the drawing box.
+ * @property followDialRotation This dial will follow the secondaryDialRotation setting.
  */
-sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Float, val avoidClipping: Boolean = false) {
+sealed class SecondaryDialConfig(
+    val index: Int,
+    val spread: Int,
+    val scale: Float,
+    val avoidClipping: Boolean = false,
+    val followDialRotation: Boolean = true
+) {
     /**
      * A simple, single button secondary dial.
      * @property index The position of the control in the outer circle. It starts from 3:00 and increases counterclockwise.
@@ -36,13 +43,15 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property scale Defines a scaling factor. Used to make some controls more prominent.
      * @property buttonConfig The button configuration
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
+     * @property followDialRotation This dial will follow the secondaryDialRotation setting.
      */
     class SingleButton(
         index: Int,
         spread: Int,
         val buttonConfig: ButtonConfig,
-        val theme: RadialGamePadTheme? = null
-    ) : SecondaryDialConfig(index, spread, 1f, spread != 1)
+        val theme: RadialGamePadTheme? = null,
+        followDialRotation: Boolean = true
+    ) : SecondaryDialConfig(index, spread, 1f, spread != 1, followDialRotation)
 
     /**
      * A secondary Stick dial.
@@ -54,6 +63,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
      * @property contentDescription Content description read by the screen reader. Defaults to "Stick".
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
+     * @property followDialRotation This dial will follow the secondaryDialRotation setting.
      */
     class Stick(
         index: Int,
@@ -62,8 +72,9 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         val buttonPressId: Int? = null,
         val supportsGestures: Set<GestureType> = emptySet(),
         val contentDescription: String = "Stick",
-        val theme: RadialGamePadTheme? = null
-    ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
+        val theme: RadialGamePadTheme? = null,
+        followDialRotation: Boolean = true
+    ) : SecondaryDialConfig(index, scale.roundToInt(), scale, false, followDialRotation)
 
     /**
      * A DPAD secondary dial.
@@ -77,6 +88,7 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
      * @property useDiagonals The controls will allow diagonal directions.
      * @property contentDescription Content description read by the screen reader. Defaults to "D-Pad".
      * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
+     * @property followDialRotation This dial will follow the secondaryDialRotation setting.
      */
     class Cross(
         index: Int,
@@ -87,18 +99,21 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
         val supportsGestures: Set<GestureType> = emptySet(),
         val contentDescription: CrossContentDescription = CrossContentDescription(),
         val useDiagonals: Boolean = true,
-        val theme: RadialGamePadTheme? = null
-    ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
+        val theme: RadialGamePadTheme? = null,
+        followDialRotation: Boolean = true
+    ) : SecondaryDialConfig(index, scale.roundToInt(), scale, false, followDialRotation)
 
     /**
      * An empty dial, that gets considered when measuring the gamepad. Useful for creating symmetric pads.
      * @property index The position of the control in the outer circle. It starts from 3:00 and increases counterclockwise.
      * @property spread Defines how many secondary dials is occupies.
      * @property scale Defines a scaling factor. Used to make some controls more prominent.
+     * @property followDialRotation This dial will follow the secondaryDialRotation setting.
      */
     class Empty(
         index: Int,
         spread: Int,
-        scale: Float
-    ) : SecondaryDialConfig(index, spread, scale)
+        scale: Float,
+        followDialRotation: Boolean = true
+    ) : SecondaryDialConfig(index, spread, scale, false, followDialRotation)
 }

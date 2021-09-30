@@ -486,13 +486,14 @@ class RadialGamePad @JvmOverloads constructor(
 
         val dialAngle = Constants.PI2 / dials
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * size * config.scale
+        val dialRotation = getSecondaryRotationForDial(config)
 
         val sector = Sector(
             PointF(center.x, center.y),
             size,
             size + dialSize * config.scale,
-            secondaryDialRotation + config.index * dialAngle - dialAngle / 2,
-            secondaryDialRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
+            dialRotation + config.index * dialAngle - dialAngle / 2,
+            dialRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
         )
 
         return rect to sector
@@ -500,22 +501,22 @@ class RadialGamePad @JvmOverloads constructor(
 
     private fun measureSecondaryDialDrawingBoxNoClipping(config: SecondaryDialConfig): RectF {
         val drawingBoxes = (config.index until (config.index + config.spread))
-            .map { measureSecondaryDialDrawingBox(config.scale, it, 1) }
+            .map { measureSecondaryDialDrawingBox(config, it, 1) }
 
         return PaintUtils.mergeRectangles(drawingBoxes)
     }
 
     private fun measureSecondaryDialDrawingBox(config: SecondaryDialConfig): RectF {
-        return measureSecondaryDialDrawingBox(config.scale, config.index, config.spread)
+        return measureSecondaryDialDrawingBox(config, config.index, config.spread)
     }
 
-    private fun measureSecondaryDialDrawingBox(scale: Float, index: Int, spread: Int): RectF {
+    private fun measureSecondaryDialDrawingBox(config: SecondaryDialConfig, index: Int, spread: Int): RectF {
         val dialAngle = Constants.PI2 / dials
-        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * scale
+        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * config.scale
         val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * spread / 2f), 1.0f + dialSize / 2f)
 
         val finalIndex = index + (spread - 1) * 0.5f
-        val finalAngle = finalIndex * dialAngle + secondaryDialRotation
+        val finalAngle = finalIndex * dialAngle + getSecondaryRotationForDial(config)
 
         return RectF(
             (cos(finalAngle) * distanceToCenter - dialSize / 2f),
@@ -523,6 +524,14 @@ class RadialGamePad @JvmOverloads constructor(
             (cos(finalAngle) * distanceToCenter + dialSize / 2f),
             (-sin(finalAngle) * distanceToCenter + dialSize / 2f)
         )
+    }
+
+    private fun getSecondaryRotationForDial(config: SecondaryDialConfig): Float {
+        return if (config.followDialRotation) {
+            secondaryDialRotation
+        } else {
+            0f
+        }
     }
 
     private fun requestLayoutAndInvalidate() {
