@@ -1,6 +1,6 @@
 /*
  * Created by Filippo Scognamiglio.
- * Copyright (c) 2020. This file is part of RadialGamePad.
+ * Copyright (c) 2021. This file is part of RadialGamePad.
  *
  * RadialGamePad is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,27 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.utils
+package com.swordfish.radialgamepad.library.path
 
-import android.graphics.Color
+import android.graphics.Path
+import android.graphics.Rect
 
-object Constants {
-    val DEFAULT_COLOR_NORMAL = Color.argb(125, 125, 125, 125)
-    val DEFAULT_COLOR_PRESSED = Color.argb(255, 125, 125, 125)
-    val DEFAULT_COLOR_TEXT = Color.argb(125, 255, 255, 255)
-    val DEFAULT_COLOR_BACKGROUND = Color.argb(50, 125, 125, 125)
-    val DEFAULT_COLOR_LIGHT = Color.argb(30, 125, 125, 125)
-    val DEFAULT_COLOR_STROKE = Color.argb(20, 255, 255, 255)
-    val DEFAULT_COLOR_STROKE_LIGHT = Color.argb(5, 255, 255, 255)
+object CirclePathBuilder {
 
-    const val PI = Math.PI.toFloat()
-    const val PI2 = 2f * PI
+    private const val SCALE = 0.8f
+    private const val OFFSET = 0.15f
+
+    fun build(rect: Rect): Path {
+        val radius = minOf(rect.width(), rect.height()) / 2f
+        val offsetX = radius * OFFSET
+
+        return Path().apply {
+            addCircle(
+                rect.centerX().toFloat() + offsetX,
+                rect.centerY().toFloat(),
+                radius * SCALE,
+                Path.Direction.CCW
+            )
+        }
+    }
 }

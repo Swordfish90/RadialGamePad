@@ -66,28 +66,15 @@ sealed class SecondaryDialConfig(val index: Int, val spread: Int, val scale: Flo
     ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
 
     /**
-     * A DPAD secondary dial.
+     * Represents a simple DPAD secondary dial.
      * @property index The position of the control in the outer circle. It starts from 3:00 and increases counterclockwise.
      * @property spread Defines how many secondary dials is occupies.
-     * @property scale Defines a scaling factor. Used to make some controls more prominent.
-     * @property id The id returned when its events are fired.
-     * @property rightDrawableId The optional drawable that define the shape of the right button.
-     * @property rightDrawableForegroundId The optional drawable that is drawn on top with text color.
-     * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
-     * @property useDiagonals The controls will allow diagonal directions.
-     * @property contentDescription Content description read by the screen reader. Defaults to "D-Pad".
-     * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
+     * @property crossConfig The cross configuration.
      */
     class Cross(
         index: Int,
         scale: Float,
-        val id: Int,
-        val rightDrawableId: Int? = null,
-        val rightDrawableForegroundId: Int? = null,
-        val supportsGestures: Set<GestureType> = emptySet(),
-        val contentDescription: CrossContentDescription = CrossContentDescription(),
-        val useDiagonals: Boolean = true,
-        val theme: RadialGamePadTheme? = null
+        val crossConfig: CrossConfig
     ) : SecondaryDialConfig(index, scale.roundToInt(), scale)
 
     /**

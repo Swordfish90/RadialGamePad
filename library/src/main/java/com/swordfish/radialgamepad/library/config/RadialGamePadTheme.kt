@@ -27,6 +27,10 @@ import com.swordfish.radialgamepad.library.utils.Constants
  * @property textColor A color which is used to draw labels or icons on top of controls
  * @property primaryDialBackground A color which is used to draw the circular background behind the primary dial
  * @property lightColor A color which is used for some light details
+ * @property enableStroke Draw strokes around each shape
+ * @property strokeColor A color which is used for primary strokes
+ * @property strokeLightColor A color which is used for strokes of secondary elements
+ * @property strokeWidthDp Stroke size in dps
  */
 data class RadialGamePadTheme(
     val normalColor: Int = Constants.DEFAULT_COLOR_NORMAL,
@@ -34,5 +38,9 @@ data class RadialGamePadTheme(
     val simulatedColor: Int = Constants.DEFAULT_COLOR_NORMAL,
     val textColor: Int = Constants.DEFAULT_COLOR_TEXT,
     val primaryDialBackground: Int = Constants.DEFAULT_COLOR_BACKGROUND,
-    val lightColor: Int = Constants.DEFAULT_COLOR_LIGHT
+    val lightColor: Int = Constants.DEFAULT_COLOR_LIGHT,
+    val enableStroke: Boolean = false,
+    val strokeColor: Int = Constants.DEFAULT_COLOR_STROKE,
+    val strokeLightColor: Int = Constants.DEFAULT_COLOR_STROKE_LIGHT,
+    val strokeWidthDp: Float = 2f
 )

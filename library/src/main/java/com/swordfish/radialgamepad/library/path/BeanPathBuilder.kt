@@ -1,0 +1,84 @@
+/*
+ * Created by Filippo Scognamiglio.
+ * Copyright (c) 2021. This file is part of RadialGamePad.
+ *
+ * RadialGamePad is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * RadialGamePad is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package com.swordfish.radialgamepad.library.path
+
+import android.graphics.Path
+import android.graphics.Rect
+import com.swordfish.radialgamepad.library.math.MathUtils.lint
+import com.swordfish.radialgamepad.library.math.Sector
+import kotlin.math.asin
+import kotlin.math.cos
+import kotlin.math.sin
+
+object BeanPathBuilder {
+
+    private const val DEFAULT_MARGIN = 0.1f
+
+    fun build(drawingBox: Rect, sector: Sector): Path {
+        val radius = minOf(drawingBox.width(), drawingBox.height()) / 2
+        val beanRadius = radius * (1.0f - 2 * DEFAULT_MARGIN)
+
+        val maxRadius = lint(1.0f - DEFAULT_MARGIN, sector.minRadius, sector.maxRadius)
+        val middleRadius = lint(0.5f, sector.minRadius, sector.maxRadius)
+        val minRadius = lint(DEFAULT_MARGIN, sector.minRadius, sector.maxRadius)
+
+        val spreadMargin = 2f * asin(radius * DEFAULT_MARGIN / middleRadius)
+        val spreadAngle = 2f * asin(beanRadius / middleRadius)
+
+        val startAngle = sector.minAngle + spreadAngle / 2 + spreadMargin
+        val middleAngle = lint(0.5f, sector.minAngle, sector.maxAngle)
+        val endAngle = sector.maxAngle - spreadAngle / 2 - spreadMargin
+
+        return Path().apply {
+            addCircle(
+                sector.center.x + cos(startAngle) * middleRadius,
+                sector.center.y - sin(startAngle) * middleRadius,
+                beanRadius,
+                Path.Direction.CCW
+            )
+            addCircle(
+                sector.center.x + cos(endAngle) * middleRadius,
+                sector.center.y - sin(endAngle) * middleRadius,
+                beanRadius,
+                Path.Direction.CCW
+            )
+            moveTo(
+                sector.center.x + cos(startAngle) * maxRadius,
+                sector.center.y - sin(startAngle) * maxRadius
+            )
+            quadTo(
+                sector.center.x + cos(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
+                sector.center.y - sin(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
+                sector.center.x + cos(endAngle) * maxRadius,
+                sector.center.y - sin(endAngle) * maxRadius
+            )
+            lineTo(
+                sector.center.x + cos(endAngle) * minRadius,
+                sector.center.y - sin(endAngle) * minRadius
+            )
+            quadTo(
+                sector.center.x + cos(middleAngle) * minRadius / cos((endAngle - startAngle) / 2f),
+                sector.center.y - sin(middleAngle) * minRadius / cos((endAngle - startAngle) / 2f),
+                sector.center.x + cos(startAngle) * minRadius,
+                sector.center.y - sin(startAngle) * minRadius
+            )
+            close()
+        }
+    }
+}

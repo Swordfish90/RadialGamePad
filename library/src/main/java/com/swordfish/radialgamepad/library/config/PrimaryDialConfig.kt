@@ -26,22 +26,10 @@ import com.swordfish.radialgamepad.library.event.GestureType
 sealed class PrimaryDialConfig {
 
     /**
-     * The Cross dial represents a simple DPAD with diagonals.
-     * @property id The control id. It is passed back to discriminate events.
-     * @property rightDrawableId A resource drawable id for the left arrow (other arrows are obtained by rotating it)
-     * @property supportsGestures The set of gestures that the button can emit. Defaults to empty.
-     * @property useDiagonals The controls will allow diagonal directions.
-     * @property theme A RadialGamePadTheme specific for this dial. If omitted the RadialGamePad one is used.
+     * The Cross dial represents a simple DPAD with.
+     * @property crossConfig The cross configuration.
      */
-    data class Cross(
-        val id: Int,
-        val rightDrawableId: Int? = null,
-        val rightDrawableForegroundId: Int? = null,
-        val contentDescription: CrossContentDescription = CrossContentDescription(),
-        val supportsGestures: Set<GestureType> = emptySet(),
-        val useDiagonals: Boolean = true,
-        val theme: RadialGamePadTheme? = null
-    ) : PrimaryDialConfig()
+    data class Cross(val crossConfig: CrossConfig) : PrimaryDialConfig()
 
     /**
      * The Stick dial represents a simple touch stick.
