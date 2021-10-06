@@ -20,7 +20,9 @@ package com.swordfish.radialgamepad.library.path
 
 import android.graphics.Path
 import android.graphics.Rect
+import android.graphics.RectF
 import com.swordfish.radialgamepad.library.math.MathUtils.lint
+import com.swordfish.radialgamepad.library.math.MathUtils.toDegrees
 import com.swordfish.radialgamepad.library.math.Sector
 import kotlin.math.asin
 import kotlin.math.cos
@@ -46,37 +48,41 @@ object BeanPathBuilder {
         val endAngle = sector.maxAngle - spreadAngle / 2 - spreadMargin
 
         return Path().apply {
-            addCircle(
-                sector.center.x + cos(startAngle) * middleRadius,
-                sector.center.y - sin(startAngle) * middleRadius,
-                beanRadius,
-                Path.Direction.CCW
-            )
-            addCircle(
-                sector.center.x + cos(endAngle) * middleRadius,
-                sector.center.y - sin(endAngle) * middleRadius,
-                beanRadius,
-                Path.Direction.CCW
-            )
             moveTo(
                 sector.center.x + cos(startAngle) * maxRadius,
                 sector.center.y - sin(startAngle) * maxRadius
             )
-            quadTo(
-                sector.center.x + cos(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
-                sector.center.y - sin(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
-                sector.center.x + cos(endAngle) * maxRadius,
-                sector.center.y - sin(endAngle) * maxRadius
-            )
-            lineTo(
-                sector.center.x + cos(endAngle) * minRadius,
-                sector.center.y - sin(endAngle) * minRadius
+            arcTo(
+                RectF(
+                    sector.center.x + cos(startAngle) * middleRadius - beanRadius,
+                    sector.center.y - sin(startAngle) * middleRadius - beanRadius,
+                    sector.center.x + cos(startAngle) * middleRadius + beanRadius,
+                    sector.center.y - sin(startAngle) * middleRadius + beanRadius
+                ),
+                -toDegrees(startAngle),
+                180f
             )
             quadTo(
                 sector.center.x + cos(middleAngle) * minRadius / cos((endAngle - startAngle) / 2f),
                 sector.center.y - sin(middleAngle) * minRadius / cos((endAngle - startAngle) / 2f),
-                sector.center.x + cos(startAngle) * minRadius,
-                sector.center.y - sin(startAngle) * minRadius
+                sector.center.x + cos(endAngle) * minRadius,
+                sector.center.y - sin(endAngle) * minRadius
+            )
+            arcTo(
+                RectF(
+                    sector.center.x + cos(endAngle) * middleRadius - beanRadius,
+                    sector.center.y - sin(endAngle) * middleRadius - beanRadius,
+                    sector.center.x + cos(endAngle) * middleRadius + beanRadius,
+                    sector.center.y - sin(endAngle) * middleRadius + beanRadius
+                ),
+                -toDegrees(endAngle) + 180f,
+                180f
+            )
+            quadTo(
+                sector.center.x + cos(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
+                sector.center.y - sin(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
+                sector.center.x + cos(startAngle) * maxRadius,
+                sector.center.y - sin(startAngle) * maxRadius
             )
             close()
         }
