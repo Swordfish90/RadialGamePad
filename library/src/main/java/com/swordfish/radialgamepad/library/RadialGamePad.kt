@@ -152,11 +152,9 @@ class RadialGamePad @JvmOverloads constructor(
         }
 
     /** Rotate the secondary dials by this value in degrees.*/
-    var secondaryDialRotation: Float = 0f
-        set(value) {
-            field = toRadians(value)
-            requestLayoutAndInvalidate()
-        }
+    var secondaryDialRotation: Float by Delegates.observable(0f) { _, _, _ ->
+        requestLayoutAndInvalidate()
+    }
 
     /** Increase the spacing between primary and secondary dials. Use in range [0, 1].*/
     var secondaryDialSpacing: Float = 0f
@@ -485,32 +483,43 @@ class RadialGamePad @JvmOverloads constructor(
         val dialAngle = Constants.PI2 / dials
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * size * config.scale
         val offset = size * secondaryDialSpacing
+        val finalRotation = computeRotationInRadiansForDial(config)
 
         val sector = Sector(
             PointF(center.x, center.y),
             size + offset,
             size + offset + dialSize * config.scale,
-            secondaryDialRotation + config.index * dialAngle - dialAngle / 2,
-            secondaryDialRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
+            finalRotation + config.index * dialAngle - dialAngle / 2,
+            finalRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
         )
 
         return rect to sector
     }
 
+    private fun computeRotationInRadiansForDial(config: SecondaryDialConfig): Float {
+        return toRadians(config.processSecondaryDialRotation(secondaryDialRotation))
+    }
+
     private fun measureSecondaryDialDrawingBoxNoClipping(config: SecondaryDialConfig): RectF {
         val drawingBoxes = (config.index until (config.index + config.spread))
-            .map { measureSecondaryDialDrawingBox(config.scale, it, 1) }
+            .map { measureSecondaryDialDrawingBox(config, it, 1) }
 
         return PaintUtils.mergeRectangles(drawingBoxes)
     }
 
     private fun measureSecondaryDialDrawingBox(config: SecondaryDialConfig): RectF {
-        return measureSecondaryDialDrawingBox(config.scale, config.index, config.spread)
+        return measureSecondaryDialDrawingBox(config, null, null)
     }
 
-    private fun measureSecondaryDialDrawingBox(scale: Float, index: Int, spread: Int): RectF {
+    private fun measureSecondaryDialDrawingBox(
+        config: SecondaryDialConfig,
+        overrideIndex: Int?,
+        overrideSpread: Int?
+    ): RectF {
+        val index = overrideIndex ?: config.index
+        val spread = overrideSpread ?: config.spread
         val dialAngle = Constants.PI2 / dials
-        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * scale
+        val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * config.scale
         val offset = secondaryDialSpacing
         val distanceToCenter = offset + maxOf(
             0.5f * dialSize / tan(dialAngle * spread / 2f),
@@ -518,7 +527,7 @@ class RadialGamePad @JvmOverloads constructor(
         )
 
         val finalIndex = index + (spread - 1) * 0.5f
-        val finalAngle = finalIndex * dialAngle + secondaryDialRotation
+        val finalAngle = finalIndex * dialAngle + computeRotationInRadiansForDial(config)
 
         return RectF(
             (cos(finalAngle) * distanceToCenter - dialSize / 2f),
