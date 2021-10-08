@@ -28,15 +28,13 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
-import com.swordfish.radialgamepad.library.paint.BasePaint
+import com.swordfish.radialgamepad.library.paint.FillStrokePaint
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.path.BeanPathBuilder
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import kotlin.math.asin
-import kotlin.math.cos
-import kotlin.math.sin
 
 class ButtonDial(
     context: Context,
@@ -51,8 +49,8 @@ class ButtonDial(
         }
     }
 
-    private val paint = BasePaint().apply {
-        color = getTheme().normalColor
+    private val paint = FillStrokePaint(context, theme).apply {
+        setFillColor(getTheme().normalColor)
     }
 
     private val textPainter = TextPaint()
@@ -76,59 +74,12 @@ class ButtonDial(
         labelDrawingBox = drawingBox.scaleCentered(0.8f)
 
         if (requiresDrawingBeanPath() && sector != null) {
-            setupBeanPath(sector)
+            beanPath = buildBeanPath(sector)
         }
     }
 
-    private fun setupBeanPath(sector: Sector) {
-        beanPath.reset()
-
-        val beanRadius = radius * (1.0f - 2 * DEFAULT_MARGIN)
-
-        val maxRadius = lint(1.0f - DEFAULT_MARGIN, sector.minRadius, sector.maxRadius)
-        val middleRadius = lint(0.5f, sector.minRadius, sector.maxRadius)
-        val minRadius = lint(DEFAULT_MARGIN, sector.minRadius, sector.maxRadius)
-
-        val spreadMargin = 2f * asin(radius * DEFAULT_MARGIN / middleRadius)
-        val spreadAngle = 2f * asin(beanRadius / middleRadius)
-
-        val startAngle = sector.minAngle + spreadAngle / 2 + spreadMargin
-        val middleAngle = lint(0.5f, sector.minAngle, sector.maxAngle)
-        val endAngle = sector.maxAngle - spreadAngle / 2 - spreadMargin
-
-        beanPath.addCircle(
-            sector.center.x + cos(startAngle) * middleRadius,
-            sector.center.y - sin(startAngle) * middleRadius,
-            beanRadius,
-            Path.Direction.CCW
-        )
-        beanPath.addCircle(
-            sector.center.x + cos(endAngle) * middleRadius,
-            sector.center.y - sin(endAngle) * middleRadius,
-            beanRadius,
-            Path.Direction.CCW
-        )
-        beanPath.moveTo(
-            sector.center.x + cos(startAngle) * maxRadius,
-            sector.center.y - sin(startAngle) * maxRadius
-        )
-        beanPath.quadTo(
-            sector.center.x + cos(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
-            sector.center.y - sin(middleAngle) * maxRadius / cos((endAngle - startAngle) / 2f),
-            sector.center.x + cos(endAngle) * maxRadius,
-            sector.center.y - sin(endAngle) * maxRadius
-        )
-        beanPath.lineTo(
-            sector.center.x + cos(endAngle) * minRadius,
-            sector.center.y - sin(endAngle) * minRadius
-        )
-        beanPath.quadTo(
-            sector.center.x + cos(middleAngle) * minRadius / cos((endAngle - startAngle) / 2f),
-            sector.center.y - sin(middleAngle) * minRadius / cos((endAngle - startAngle) / 2f),
-            sector.center.x + cos(startAngle) * minRadius,
-            sector.center.y - sin(startAngle) * minRadius
-        )
-        beanPath.close()
+    private fun buildBeanPath(sector: Sector): Path {
+        return BeanPathBuilder.build(drawingBox.roundToInt(), sector)
     }
 
     private fun requiresDrawingBeanPath(): Boolean = spread > 1
@@ -140,22 +91,26 @@ class ButtonDial(
     override fun draw(canvas: Canvas) {
         val buttonTheme = getTheme()
 
-        paint.color = when {
+        paint.setFillColor(when {
             simulatedPressed == true || pressed -> buttonTheme.pressedColor
             simulatedPressed == false -> buttonTheme.simulatedColor
             else -> buttonTheme.normalColor
-        }
+        })
 
         // Drawing a simple circle is faster with hw canvases so we only use it when spread is greater than one
         if (requiresDrawingBeanPath()) {
-            canvas.drawPath(beanPath, paint)
+            paint.paint {
+                canvas.drawPath(beanPath, it)
+            }
         } else {
-            canvas.drawCircle(
-                drawingBox.centerX(),
-                drawingBox.centerY(),
-                radius * (1.0f - 2 * DEFAULT_MARGIN),
-                paint
-            )
+            paint.paint {
+                canvas.drawCircle(
+                    drawingBox.centerX(),
+                    drawingBox.centerY(),
+                    radius * (1.0f - 2 * DEFAULT_MARGIN),
+                    it
+                )
+            }
         }
 
         if (config.label != null) {

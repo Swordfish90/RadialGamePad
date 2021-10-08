@@ -20,6 +20,7 @@ package com.swordfish.radialgamepad
 
 import android.view.KeyEvent
 import com.swordfish.radialgamepad.library.config.ButtonConfig
+import com.swordfish.radialgamepad.library.config.CrossConfig
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
 import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
@@ -29,7 +30,7 @@ object SamplePadConfigs {
     val GB_LEFT =
         RadialGamePadConfig(
             sockets = 12,
-            primaryDial = PrimaryDialConfig.Cross(0),
+            primaryDial = PrimaryDialConfig.Cross(CrossConfig(0)),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     10, 1, ButtonConfig(
@@ -68,7 +69,7 @@ object SamplePadConfigs {
     val PSX_LEFT =
         RadialGamePadConfig(
             sockets = 12,
-            primaryDial = PrimaryDialConfig.Cross(0),
+            primaryDial = PrimaryDialConfig.Cross(CrossConfig(0)),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     2, 1, ButtonConfig(
@@ -159,7 +160,7 @@ object SamplePadConfigs {
     val REMOTE =
         RadialGamePadConfig(
             sockets = 6,
-            primaryDial = PrimaryDialConfig.Cross(0, useDiagonals = false),
+            primaryDial = PrimaryDialConfig.Cross(CrossConfig(0, useDiagonals = false)),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
                     1, 1, ButtonConfig(

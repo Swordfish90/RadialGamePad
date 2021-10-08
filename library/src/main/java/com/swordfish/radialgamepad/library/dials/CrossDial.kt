@@ -20,19 +20,22 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
-import com.swordfish.radialgamepad.library.config.CrossContentDescription
+import com.swordfish.radialgamepad.library.config.CrossConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
-import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
+import com.swordfish.radialgamepad.library.paint.FillStrokePaint
+import com.swordfish.radialgamepad.library.path.ArrowPathBuilder
+import com.swordfish.radialgamepad.library.path.CirclePathBuilder
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.touch.TouchAnchor
 import com.swordfish.radialgamepad.library.utils.Constants
@@ -44,14 +47,8 @@ import kotlin.math.*
 
 class CrossDial(
     context: Context,
-    private val id: Int,
-    normalDrawableId: Int,
-    pressedDrawableId: Int,
-    foregroundDrawableId: Int?,
-    private val supportsGestures: Set<GestureType>,
-    private val contentDescription: CrossContentDescription,
-    private val useDiagonals: Boolean,
-    theme: RadialGamePadTheme
+    private val config: CrossConfig,
+    private val theme: RadialGamePadTheme
 ) : SimulateMotionDial {
 
     companion object {
@@ -160,13 +157,21 @@ class CrossDial(
         fun isDiagonal() = anchor.ids.size > 1
     }
 
-    private var normalDrawable: Drawable = getDrawableWithColor(context, normalDrawableId, theme.normalColor)
+    val id = config.id
 
-    private var pressedDrawable: Drawable = getDrawableWithColor(context, pressedDrawableId, theme.pressedColor)
+    private val normalPaint = FillStrokePaint(context, theme).apply {
+        setFillColor(theme.normalColor)
+    }
 
-    private var simulatedDrawable: Drawable = getDrawableWithColor(context, pressedDrawableId, theme.simulatedColor)
+    private val pressedPaint = FillStrokePaint(context, theme).apply {
+        setFillColor(theme.pressedColor)
+    }
 
-    private var foregroundDrawable: Drawable? = foregroundDrawableId?.let {
+    private val simulatedPaint = FillStrokePaint(context, theme).apply {
+        setFillColor(theme.simulatedColor)
+    }
+
+    private var foregroundDrawable: Drawable? = config.rightDrawableForegroundId?.let {
         getDrawableWithColor(context, it, theme.textColor)
     }
 
@@ -178,18 +183,21 @@ class CrossDial(
     private var drawingBox = RectF()
     private var drawableRect = Rect()
 
-    private val backgroundPaint = BasePaint().apply {
-        color = theme.primaryDialBackground
+    private var shapePath: Path = Path()
+
+    private val backgroundPaint = FillStrokePaint(context, theme).apply {
+        setStrokeColor(theme.strokeLightColor)
+        setFillColor(theme.primaryDialBackground)
     }
 
-    private val compositeButtonPaint = CompositeButtonPaint(theme)
+    private val compositeButtonPaint = CompositeButtonPaint(context, theme)
 
     override fun drawingBox(): RectF = drawingBox
 
     override fun trackedPointerId(): Int? = trackedPointerId
 
     private fun composeDescriptionString(direction: String): String {
-        return "${contentDescription.baseName} $direction"
+        return "${config.contentDescription.baseName} $direction"
     }
 
     private fun getDrawableWithColor(context: Context, drawableId: Int, color: Int): Drawable {
@@ -214,6 +222,8 @@ class CrossDial(
             drawableSize / 2
         )
 
+        shapePath = buildPath(config.shape, drawableRect)
+
         compositeButtonPaint.updateDrawingBox(drawingBox)
     }
 
@@ -227,7 +237,7 @@ class CrossDial(
         // lot on the DPAD. That's why we disable them when touch is active.
         val shouldFireGesture = isTouchDisabled() || isInsideDeadZone(relativeX - 0.5f, relativeY - 0.5f)
 
-        if (shouldFireGesture && gestureType in supportsGestures) {
+        if (shouldFireGesture && gestureType in config.supportsGestures) {
             outEvents.add(Event.Gesture(id, gestureType))
             return false
         }
@@ -240,7 +250,7 @@ class CrossDial(
 
         drawBackground(canvas, radius)
 
-        if (useDiagonals) {
+        if (config.useDiagonals) {
             drawDiagonalDirections(canvas, radius)
         }
 
@@ -257,15 +267,16 @@ class CrossDial(
             .forEach { state ->
                 val drawableId = state.anchor.ids.first()
 
-                val drawable = getStateDrawable(drawableId in pressedButtons)
+                val paint = getPaint(drawableId in pressedButtons)
                 val rotationInDegrees =
                     drawableId * toDegrees(SINGLE_DRAWABLE_ANGLE.toDouble()).toFloat()
 
                 canvas.save()
                 canvas.rotate(rotationInDegrees, 0f, 0f)
 
-                drawable.bounds = drawableRect
-                drawable.draw(canvas)
+                paint.paint {
+                    canvas.drawPath(shapePath, it)
+                }
 
                 foregroundDrawable?.apply {
                     bounds = drawableRect
@@ -279,7 +290,9 @@ class CrossDial(
     }
 
     private fun drawBackground(canvas: Canvas, radius: Float) {
-        canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, backgroundPaint)
+        backgroundPaint.paint {
+            canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, it)
+        }
     }
 
     private fun getMainStates() = State.values()
@@ -387,7 +400,7 @@ class CrossDial(
 
     private fun computeStateForPosition(x: Float, y: Float): State {
         return State.values().asSequence()
-            .filter { useDiagonals || !it.isDiagonal()  }
+            .filter { config.useDiagonals || !it.isDiagonal()  }
             .minBy { it.anchor.getNormalizedDistance(x, y) }
             ?: State.CROSS_STATE_CENTER
     }
@@ -415,20 +428,27 @@ class CrossDial(
 
 
         return listOf(
-            AccessibilityBox(upRect.roundToInt(), composeDescriptionString(contentDescription.up)),
-            AccessibilityBox(leftRect.roundToInt(), composeDescriptionString(contentDescription.left)),
-            AccessibilityBox(rightRect.roundToInt(), composeDescriptionString(contentDescription.right)),
-            AccessibilityBox(downRect.roundToInt(), composeDescriptionString(contentDescription.down))
+            AccessibilityBox(upRect.roundToInt(), composeDescriptionString(config.contentDescription.up)),
+            AccessibilityBox(leftRect.roundToInt(), composeDescriptionString(config.contentDescription.left)),
+            AccessibilityBox(rightRect.roundToInt(), composeDescriptionString(config.contentDescription.right)),
+            AccessibilityBox(downRect.roundToInt(), composeDescriptionString(config.contentDescription.down))
         )
     }
 
-    private fun getStateDrawable(isPressed: Boolean): Drawable {
+    private fun getPaint(isPressed: Boolean): FillStrokePaint {
         return when {
-            isPressed -> pressedDrawable
-            simulatedState != null -> simulatedDrawable
-            else -> normalDrawable
+            isPressed -> pressedPaint
+            simulatedState != null -> simulatedPaint
+            else -> normalPaint
         }
     }
 
     private fun isActiveState(state: State?) = state != null && state != State.CROSS_STATE_CENTER
+
+    private fun buildPath(shape: CrossConfig.Shape, rect: Rect): Path {
+        return when (shape) {
+            CrossConfig.Shape.STANDARD -> ArrowPathBuilder.build(rect)
+            CrossConfig.Shape.CIRCLE -> CirclePathBuilder.build(rect)
+        }
+    }
 }

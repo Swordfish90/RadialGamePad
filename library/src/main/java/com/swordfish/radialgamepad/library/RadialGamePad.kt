@@ -239,6 +239,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     init {
+        setBackgroundColor(Color.TRANSPARENT)
         primaryInteractor = buildPrimaryInteractor(gamePadConfig.primaryDial)
         secondaryInteractors = buildSecondaryInteractors(gamePadConfig.secondaryDials)
         allInteractors = listOf(primaryInteractor) + secondaryInteractors
@@ -314,16 +315,11 @@ class RadialGamePad @JvmOverloads constructor(
         val primaryDial = when (configuration) {
             is PrimaryDialConfig.Cross -> CrossDial(
                 context,
-                configuration.id,
-                configuration.rightDrawableId ?: R.drawable.direction_right_normal,
-                configuration.rightDrawableId ?: R.drawable.direction_right_pressed,
-                configuration.rightDrawableForegroundId,
-                configuration.supportsGestures,
-                configuration.contentDescription,
-                configuration.useDiagonals,
-                configuration.theme ?: gamePadConfig.theme
+                configuration.crossConfig,
+                configuration.crossConfig.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
+                context,
                 configuration.id,
                 configuration.buttonPressId,
                 configuration.supportsGestures,
@@ -346,6 +342,7 @@ class RadialGamePad @JvmOverloads constructor(
         return secondaryDials.map { config ->
             val secondaryDial = when (config) {
                 is SecondaryDialConfig.Stick -> StickDial(
+                    context,
                     config.id,
                     config.buttonPressId,
                     config.supportsGestures,
@@ -361,14 +358,8 @@ class RadialGamePad @JvmOverloads constructor(
                 is SecondaryDialConfig.Empty -> EmptyDial()
                 is SecondaryDialConfig.Cross -> CrossDial(
                     context,
-                    config.id,
-                    config.rightDrawableId ?: R.drawable.direction_right_normal,
-                    config.rightDrawableId ?: R.drawable.direction_right_pressed,
-                    config.rightDrawableForegroundId,
-                    config.supportsGestures,
-                    config.contentDescription,
-                    config.useDiagonals,
-                    config.theme ?: gamePadConfig.theme
+                    config.crossConfig,
+                    config.crossConfig.theme ?: gamePadConfig.theme
                 )
             }
             DialInteractor(secondaryDial)
