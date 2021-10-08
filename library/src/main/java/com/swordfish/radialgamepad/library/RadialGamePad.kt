@@ -158,6 +158,13 @@ class RadialGamePad @JvmOverloads constructor(
             requestLayoutAndInvalidate()
         }
 
+    /** Increase the spacing between primary and secondary dials. Use in range [0, 1].*/
+    var secondaryDialSpacing: Float = 0f
+        set(value) {
+            field = value.coerceIn(0f, 1f)
+            requestLayoutAndInvalidate()
+        }
+
     /** Add spacing at the top. This space will not be considered when drawing and
      *  sizing the gamepad. Touch events in the area will still be forwarded to the View.*/
     var spacingTop: Int by Delegates.observable(0) { _, _, _ ->
@@ -477,11 +484,12 @@ class RadialGamePad @JvmOverloads constructor(
 
         val dialAngle = Constants.PI2 / dials
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * size * config.scale
+        val offset = size * secondaryDialSpacing
 
         val sector = Sector(
             PointF(center.x, center.y),
-            size,
-            size + dialSize * config.scale,
+            size + offset,
+            size + offset + dialSize * config.scale,
             secondaryDialRotation + config.index * dialAngle - dialAngle / 2,
             secondaryDialRotation + (config.index + config.spread - 1) * dialAngle + dialAngle / 2
         )
@@ -503,7 +511,11 @@ class RadialGamePad @JvmOverloads constructor(
     private fun measureSecondaryDialDrawingBox(scale: Float, index: Int, spread: Int): RectF {
         val dialAngle = Constants.PI2 / dials
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * scale
-        val distanceToCenter = maxOf(0.5f * dialSize / tan(dialAngle * spread / 2f), 1.0f + dialSize / 2f)
+        val offset = secondaryDialSpacing
+        val distanceToCenter = offset + maxOf(
+            0.5f * dialSize / tan(dialAngle * spread / 2f),
+            1.0f + dialSize / 2f
+        )
 
         val finalIndex = index + (spread - 1) * 0.5f
         val finalAngle = finalIndex * dialAngle + secondaryDialRotation
