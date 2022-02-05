@@ -28,7 +28,7 @@ import com.swordfish.radialgamepad.library.utils.TouchUtils
 
 class EmptyDial : Dial {
 
-    override fun trackedPointerId(): Int? = null
+    override fun trackedPointersIds(): Set<Int> = emptySet()
 
     override fun drawingBox(): RectF = RectF()
 

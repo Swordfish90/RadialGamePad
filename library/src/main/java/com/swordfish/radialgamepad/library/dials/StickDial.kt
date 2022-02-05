@@ -57,7 +57,7 @@ class StickDial(
     private var isButtonPressed: Boolean = false
     private var firstTouch: PointF? = null
     private var simulatedFirstTouch: PointF? = null
-    private var trackedPointerId: Int? = null
+    private var trackedPointersIds: MutableSet<Int> = mutableSetOf()
 
     private var angle: Float = 0f
     private var strength: Float = 0f
@@ -67,7 +67,7 @@ class StickDial(
 
     override fun drawingBox(): RectF = drawingBox
 
-    override fun trackedPointerId(): Int? = trackedPointerId
+    override fun trackedPointersIds(): Set<Int> = trackedPointersIds
 
     override fun measure(drawingBox: RectF, secondarySector: Sector?) {
         this.drawingBox = drawingBox
@@ -112,20 +112,20 @@ class StickDial(
 
         if (fingers.isEmpty()) return reset(outEvents)
 
-        if (trackedPointerId == null) {
+        if (trackedPointersIds.isEmpty()) {
             val finger = fingers.first()
 
             if (!isCloseToCenter(finger))
                 return false
 
-            trackedPointerId = finger.pointerId
+            trackedPointersIds.add(finger.pointerId)
             firstTouch = PointF(finger.x, finger.y)
             outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_PRESS))
             handleTouchEvent(finger.x, finger.y, outEvents)
             return true
         } else {
             val finger = fingers
-                .firstOrNull { it.pointerId == trackedPointerId }
+                .firstOrNull { it.pointerId in trackedPointersIds }
                 ?: return reset(outEvents)
 
             handleTouchEvent(finger.x, finger.y, outEvents)
@@ -193,7 +193,7 @@ class StickDial(
         angle = 0f
         firstTouch = null
         simulatedFirstTouch = null
-        trackedPointerId = null
+        trackedPointersIds.clear()
         isButtonPressed = false
 
         if (isStickActive) {
