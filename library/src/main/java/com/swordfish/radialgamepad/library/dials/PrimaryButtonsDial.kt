@@ -341,6 +341,6 @@ class PrimaryButtonsDial(
         private const val BUTTON_SCALING = 0.8f
 
         private const val ANCHOR_COMPOSITE_DISTANCE = 0.5f
-        private const val ANCHOR_COMPOSITE_STRENGTH = 1f
+        private const val ANCHOR_COMPOSITE_STRENGTH = 1.1f
     }
 }
