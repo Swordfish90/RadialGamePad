@@ -566,12 +566,14 @@ class RadialGamePad @JvmOverloads constructor(
 
         val fingers = extractFingersPositions(event).toList()
 
-        val trackedFingers = allDials().mapNotNull { it.trackedPointerId() }
+        val trackedFingers = allDials()
+            .map { it.trackedPointersIds() }
+            .reduceRight { a, b -> a.union(b) }
 
         val events = mutableListOf<Event>()
 
         val updated = allInteractors.map { dial ->
-            forwardTouchToDial(dial, fingers, trackedFingers, events)
+            dial.forwardTouch(fingers, events, trackedFingers)
         }
 
         if (updated.any { it }) {
@@ -595,14 +597,10 @@ class RadialGamePad @JvmOverloads constructor(
     private fun forwardTouchToDial(
         dial: DialInteractor,
         fingers: List<TouchUtils.FingerPosition>,
-        trackedFingers: List<Int>,
+        trackedFingers: Set<Int>,
         outEvents: MutableList<Event>
     ): Boolean {
-        return if (dial.trackedPointerId() != null) {
-            dial.touch(fingers.filter { it.pointerId == dial.dial.trackedPointerId() }, outEvents)
-        } else {
-            dial.touch(fingers.filter { it.pointerId !in trackedFingers }, outEvents)
-        }
+        return dial.forwardTouch(fingers, outEvents, trackedFingers)
     }
 
     private fun allDials(): List<Dial> = allInteractors.map { it.dial }

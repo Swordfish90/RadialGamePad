@@ -31,7 +31,6 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
-import com.swordfish.radialgamepad.library.paint.BasePaint
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
 import com.swordfish.radialgamepad.library.paint.FillStrokePaint
 import com.swordfish.radialgamepad.library.paint.TextPaint
@@ -62,6 +61,7 @@ class PrimaryButtonsDial(
     private val drawables = loadRequiredDrawables(context)
 
     private var pressed: Set<Int> = setOf()
+    private var trackedPointerIds: MutableSet<Int> = mutableSetOf()
 
     private val idButtonConfigsMapping: Map<Int, ButtonConfig> = buildIdButtonsAssociations()
 
@@ -98,7 +98,7 @@ class PrimaryButtonsDial(
 
     override fun drawingBox(): RectF = drawingBox
 
-    override fun trackedPointerId(): Int? = null
+    override fun trackedPointersIds(): Set<Int> = trackedPointerIds
 
     private fun buildTouchAnchors(): List<TouchAnchor> {
         return mutableListOf<TouchAnchor>().apply {
@@ -143,8 +143,8 @@ class PrimaryButtonsDial(
                 val averageAngle = arrayOf(first.first, second.first).average().toFloat()
                 TouchAnchor.fromPolar(
                     averageAngle,
-                    0.75f / 2f,
-                    1f,
+                    ANCHOR_COMPOSITE_DISTANCE,
+                    ANCHOR_COMPOSITE_STRENGTH,
                     setOf(first.second, second.second)
                 )
             }
@@ -260,6 +260,9 @@ class PrimaryButtonsDial(
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+        trackedPointerIds.clear()
+        trackedPointerIds.addAll(fingers.map { it.pointerId })
+
         val newPressed = fingers.asSequence()
             .flatMap { getAssociatedIds(it.x, it.y) }
             .toSet()
@@ -276,7 +279,12 @@ class PrimaryButtonsDial(
 
     private fun getAssociatedIds(x: Float, y: Float): Sequence<Int> {
         return touchAnchors
-            .minBy { it.getNormalizedDistance(x - 0.5f, -y + 0.5f) }
+            .minBy {
+                it.getNormalizedDistance(
+                    (x - 0.5f).coerceIn(-0.5f, 0.5f),
+                    (-y + 0.5f).coerceIn(-0.5f, 0.5f)
+                )
+            }
             ?.ids
             ?.asSequence() ?: sequenceOf()
     }
@@ -331,5 +339,8 @@ class PrimaryButtonsDial(
     companion object {
         private const val OUTER_CIRCLE_SCALING = 0.95f
         private const val BUTTON_SCALING = 0.8f
+
+        private const val ANCHOR_COMPOSITE_DISTANCE = 0.5f
+        private const val ANCHOR_COMPOSITE_STRENGTH = 1.1f
     }
 }

@@ -30,8 +30,6 @@ import com.swordfish.radialgamepad.library.utils.TouchUtils
 
 internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = EmptyTouchBound) {
 
-    fun trackedPointerId() = dial.trackedPointerId()
-
     fun measure(drawingRect: RectF, secondarySector: Sector? = null) {
         dial.measure(drawingRect, secondarySector)
     }
@@ -40,9 +38,17 @@ internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = Empty
         dial.draw(canvas)
     }
 
-    fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
-        val goodFingers = fingers
-            .filter { touchBound.contains(it.x, it.y) || it.pointerId == trackedPointerId() }
+    fun forwardTouch(
+        fingers: List<TouchUtils.FingerPosition>,
+        outEvents: MutableList<Event>,
+        allTrackedFingers: Set<Int>
+    ): Boolean {
+        val goodFingers = fingers.filter {
+            val isTrackedByThisDial = it.pointerId in dial.trackedPointersIds()
+            val isTrackedByOtherDial = !isTrackedByThisDial && it.pointerId in allTrackedFingers
+            val isContained = touchBound.contains(it.x, it.y)
+            isTrackedByThisDial || (!isTrackedByOtherDial && isContained)
+        }
 
         return dial.touch(
             TouchUtils.computeRelativeFingerPosition(goodFingers, dial.drawingBox()),
@@ -50,7 +56,12 @@ internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = Empty
         )
     }
 
-    fun gesture(x: Float, y: Float, gestureType: GestureType, outEvents: MutableList<Event>): Boolean {
+    fun gesture(
+        x: Float,
+        y: Float,
+        gestureType: GestureType,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (touchBound.contains(x, y)) {
             val relativePosition = TouchUtils.computeRelativePosition(x, y, dial.drawingBox())
             return dial.gesture(relativePosition.x, relativePosition.y, gestureType, outEvents)

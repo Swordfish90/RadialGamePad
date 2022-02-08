@@ -65,7 +65,7 @@ class ButtonDial(
 
     override fun drawingBox(): RectF = drawingBox
 
-    override fun trackedPointerId(): Int? = null
+    override fun trackedPointersIds(): Set<Int> = emptySet()
 
     override fun measure(drawingBox: RectF, sector: Sector?) {
         this.drawingBox = drawingBox

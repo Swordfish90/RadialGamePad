@@ -30,7 +30,7 @@ interface Dial {
 
     fun drawingBox(): RectF
 
-    fun trackedPointerId(): Int?
+    fun trackedPointersIds(): Set<Int>
 
     fun measure(drawingBox: RectF, secondarySector: Sector? = null)
 

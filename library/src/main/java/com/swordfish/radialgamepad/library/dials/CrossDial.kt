@@ -65,7 +65,7 @@ class CrossDial(
         private const val DRAWABLE_INDEX_UP = 3
 
         private const val DIAGONAL_DISTANCE = 0.5f
-        private const val DIAGONAL_STRENGTH = 1.33f
+        private const val DIAGONAL_STRENGTH = 1.25f
 
         private const val MAIN_DISTANCE = 0.5f
         private const val MAIN_STRENGTH = 2f
@@ -175,7 +175,7 @@ class CrossDial(
         getDrawableWithColor(context, it, theme.textColor)
     }
 
-    private var trackedPointerId: Int? = null
+    private var trackedPointersIds: MutableSet<Int> = mutableSetOf()
 
     private var touchState: State? = null
     private var simulatedState: State? = null
@@ -194,7 +194,7 @@ class CrossDial(
 
     override fun drawingBox(): RectF = drawingBox
 
-    override fun trackedPointerId(): Int? = trackedPointerId
+    override fun trackedPointersIds(): Set<Int> = trackedPointersIds
 
     private fun composeDescriptionString(direction: String): String {
         return "${config.contentDescription.baseName} $direction"
@@ -318,9 +318,9 @@ class CrossDial(
 
         if (fingers.isEmpty()) return reset(outEvents)
 
-        if (trackedPointerId == null) {
+        if (trackedPointersIds.isEmpty()) {
             val finger = fingers.first()
-            trackedPointerId = finger.pointerId
+            trackedPointersIds.add(finger.pointerId)
             return updateState(
                 computeStateForPosition(
                     (finger.x - 0.5f).coerceIn(-0.5f, 0.5f),
@@ -331,7 +331,7 @@ class CrossDial(
             )
         } else {
             val trackedFinger = fingers
-                .firstOrNull { it.pointerId == trackedPointerId } ?: return reset(outEvents)
+                .firstOrNull { it.pointerId in trackedPointersIds } ?: return reset(outEvents)
 
             return updateState(
                 computeStateForPosition(trackedFinger.x - 0.5f, trackedFinger.y - 0.5f),
@@ -345,7 +345,7 @@ class CrossDial(
         val emitUpdate = currentState() != null
 
         touchState = null
-        trackedPointerId = null
+        trackedPointersIds.clear()
         simulatedState = null
 
         if (emitUpdate) {
