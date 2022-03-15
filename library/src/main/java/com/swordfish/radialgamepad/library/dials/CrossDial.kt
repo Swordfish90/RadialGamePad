@@ -227,7 +227,7 @@ class CrossDial(
         compositeButtonPaint.updateDrawingBox(drawingBox)
     }
 
-    override fun gesture(
+    override fun onGesture(
         relativeX: Float,
         relativeY: Float,
         gestureType: GestureType,
@@ -313,7 +313,7 @@ class CrossDial(
     private fun getDiagonalStates() = State.values().asSequence()
         .filter { it.anchor.ids.size > 1 }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun onTouch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         if (isTouchDisabled()) return false
 
         if (fingers.isEmpty()) return reset(outEvents)

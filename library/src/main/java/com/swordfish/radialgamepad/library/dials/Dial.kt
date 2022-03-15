@@ -36,11 +36,24 @@ interface Dial {
 
     fun draw(canvas: Canvas)
 
+    fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+        val relativePositions = TouchUtils.computeRelativeFingerPosition(fingers, drawingBox())
+        return onTouch(relativePositions, outEvents)
+    }
+
     /** Pass the touch event to the appropriate dial. Returns true if requires redraw. */
-    fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean
+    fun onTouch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean
+
+    fun gesture(x: Float, y: Float, gestureType: GestureType, outEvents: MutableList<Event>): Boolean {
+        if (drawingBox().contains(x, y)) {
+            val relativePosition = TouchUtils.computeRelativePosition(x, y, drawingBox())
+            return onGesture(relativePosition.x, relativePosition.y, gestureType, outEvents)
+        }
+        return false
+    }
 
     /** Pass the gesture to the appropriate dial. Returns true if requires redraw. */
-    fun gesture(
+    fun onGesture(
         relativeX: Float,
         relativeY: Float,
         gestureType: GestureType,

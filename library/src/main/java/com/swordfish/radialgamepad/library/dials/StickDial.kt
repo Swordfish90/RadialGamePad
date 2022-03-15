@@ -106,7 +106,7 @@ class StickDial(
         }
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun onTouch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         // We ignore touch input when simulating motion externally
         if (simulatedFirstTouch != null) return false
 
@@ -137,7 +137,7 @@ class StickDial(
         return MathUtils.distance(finger.x, 0.5f, finger.y, 0.5f) < 0.6f
     }
 
-    override fun gesture(
+    override fun onGesture(
         relativeX: Float,
         relativeY: Float,
         gestureType: GestureType,

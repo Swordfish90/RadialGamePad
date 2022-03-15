@@ -120,7 +120,7 @@ class ButtonDial(
         iconDrawable?.draw(canvas)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun onTouch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         return updatePressed(fingers.isNotEmpty(), simulatedPressed, outEvents)
     }
 
@@ -157,7 +157,7 @@ class ButtonDial(
         return updatePressed(pressed, null, outEvents)
     }
 
-    override fun gesture(
+    override fun onGesture(
         relativeX: Float,
         relativeY: Float,
         gestureType: GestureType,

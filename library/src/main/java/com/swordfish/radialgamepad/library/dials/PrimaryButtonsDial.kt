@@ -259,7 +259,7 @@ class PrimaryButtonsDial(
         return minOf(radialMaxSize, linearMaxSize)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun onTouch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
         trackedPointerIds.clear()
         trackedPointerIds.addAll(fingers.map { it.pointerId })
 
@@ -291,7 +291,7 @@ class PrimaryButtonsDial(
 
     private fun allowsMultiplePressed() = allowMultiplePressesSingleFinger && centerAction == null
 
-    override fun gesture(
+    override fun onGesture(
         relativeX: Float,
         relativeY: Float,
         gestureType: GestureType,

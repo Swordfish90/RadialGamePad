@@ -33,7 +33,10 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.Cross(CrossConfig(0)),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    10, 1, ButtonConfig(
+                    10,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "SELECT"
                     )
@@ -59,7 +62,10 @@ object SamplePadConfigs {
             ),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    8, 1, ButtonConfig(
+                    8,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
                     )
@@ -72,27 +78,38 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.Cross(CrossConfig(0)),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    2, 1, ButtonConfig(
+                    2,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_SELECT,
                         label = "SELECT"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    3, 1, ButtonConfig(
+                    3,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_L1,
                         label = "L1"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    4, 1, ButtonConfig(
+                    4,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_L2,
                         label = "L2"
                     )
                 ),
                 // When this stick is double tapped, it's going to fire a Button event
                 SecondaryDialConfig.Stick(
-                    9,
+                    8,
+                    3,
                     2.2f,
+                    0.2f,
                     1,
                     KeyEvent.KEYCODE_BUTTON_THUMBL,
                     contentDescription = "Left Stick"
@@ -129,27 +146,47 @@ object SamplePadConfigs {
             ),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    2, 1, ButtonConfig(
+                    2,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_R2,
                         label = "R2"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    3, 1, ButtonConfig(
+                    3,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_R1,
                         label = "R1"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    4, 1, ButtonConfig(
+                    4,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_START,
                         label = "START"
+                    )
+                ),
+                SecondaryDialConfig.SingleButton(
+                    10,
+                    1,
+                    0f,
+                    ButtonConfig(
+                        id = KeyEvent.KEYCODE_BUTTON_MODE,
+                        label = "MENU"
                     )
                 ),
                 // When this stick is double tapped, it's going to fire a Button event
                 SecondaryDialConfig.Stick(
                     8,
+                    3,
                     2.2f,
+                    0.2f,
                     2,
                     KeyEvent.KEYCODE_BUTTON_THUMBL,
                     contentDescription = "Right Stick"
@@ -163,24 +200,36 @@ object SamplePadConfigs {
             primaryDial = PrimaryDialConfig.Cross(CrossConfig(0, useDiagonals = false)),
             secondaryDials = listOf(
                 SecondaryDialConfig.SingleButton(
-                    1, 1, ButtonConfig(
+                    1,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_SELECT,
                         iconId = R.drawable.ic_play
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
-                    2, 1, ButtonConfig(
+                    2,
+                    1,
+                    0f,
+                    ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_L1,
                         iconId = R.drawable.ic_stop
                     )
                 ),
-                SecondaryDialConfig.SingleButton(4, 1,
+                SecondaryDialConfig.SingleButton(
+                    4,
+                    1,
+                    0f,
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_MODE,
                         iconId = R.drawable.ic_volume_down
                     )
                 ),
-                SecondaryDialConfig.SingleButton(5, 1,
+                SecondaryDialConfig.SingleButton(
+                    5,
+                    1,
+                    0f,
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_MODE,
                         iconId = R.drawable.ic_volume_up

@@ -30,6 +30,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
  * @property contentDescription Content description read by the screen reader. Defaults to "D-Pad".
  * @property theme A theme for this specific dial. By default it inherits the gamepad theme.
  */
+// TODO For consistency the theme should be at a config level.
 data class CrossConfig(
     val id: Int,
     val shape: Shape = Shape.STANDARD,
