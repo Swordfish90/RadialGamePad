@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 fun <T, U> ((T) -> U).memoize(): (T) -> U {
     val mem = ConcurrentHashMap<T, U>()
-    return { text -> mem.getOrPut(text, { this(text) }) }
+    return { text -> mem.getOrPut(text) { this(text) } }
 }
 
 fun <T> List<T>.neighborsPairs(): List<Pair<T, T>> {

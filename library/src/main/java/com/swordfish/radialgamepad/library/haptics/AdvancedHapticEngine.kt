@@ -25,7 +25,7 @@ class AdvancedHapticEngine : HapticEngine() {
 
     override fun performHapticForEvents(events: List<Event>, view: View) {
         val strongestEffect = events
-            .maxBy { it.haptic }
+            .maxByOrNull { it.haptic }
             ?.haptic ?: EFFECT_NONE
 
         performHaptic(strongestEffect, view)

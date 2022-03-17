@@ -41,7 +41,7 @@ class StickDial(
     private val keyPressId: Int?,
     private val supportsGestures: Set<GestureType>,
     private val contentDescription: String? = null,
-    private val theme: RadialGamePadTheme
+    theme: RadialGamePadTheme
 ) : SimulateMotionDial {
 
     private val paintPalette = PainterPalette(theme)

@@ -26,6 +26,7 @@ import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import androidx.appcompat.content.res.AppCompatResources
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.CrossConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
@@ -188,7 +189,7 @@ class CrossDial(
     }
 
     private fun getDrawableWithColor(context: Context, drawableId: Int, color: Int): Drawable {
-        return context.getDrawable(drawableId)!!.apply {
+        return AppCompatResources.getDrawable(context, drawableId)!!.apply {
             setTint(color)
         }
     }
@@ -395,7 +396,7 @@ class CrossDial(
     private fun computeStateForPosition(x: Float, y: Float): State {
         return State.values().asSequence()
             .filter { config.useDiagonals || !it.isDiagonal() }
-            .minBy { it.anchor.getNormalizedDistance(x, y) }
+            .minByOrNull { it.anchor.getNormalizedDistance(x, y) }
             ?: State.CROSS_STATE_CENTER
     }
 

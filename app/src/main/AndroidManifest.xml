@@ -29,7 +29,8 @@
         android:theme="@style/Theme.MaterialComponents.DayNight">
 
         <activity android:name="com.swordfish.radialgamepad.MainActivity"
-            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"
+            android:exported="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -23,6 +23,7 @@ import android.graphics.Canvas
 import android.graphics.Path
 import android.graphics.RectF
 import android.view.KeyEvent
+import androidx.appcompat.content.res.AppCompatResources
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
@@ -45,7 +46,7 @@ class DoubleButtonDial(
 ) : SimulateKeyDial {
 
     private val iconDrawable = config.iconId?.let {
-        context.getDrawable(it)?.apply {
+        AppCompatResources.getDrawable(context ,it)?.apply {
             setTint(theme.textColor)
         }
     }

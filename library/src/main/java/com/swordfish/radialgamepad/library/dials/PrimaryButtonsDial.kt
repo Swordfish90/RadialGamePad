@@ -25,6 +25,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.view.KeyEvent
+import androidx.appcompat.content.res.AppCompatResources
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
@@ -73,7 +74,7 @@ class PrimaryButtonsDial(
     private fun loadRequiredDrawables(context: Context): Map<Int, Drawable?> {
         val iconDrawablePairs = (circleActions + centerAction).mapNotNull { buttonConfig ->
             buttonConfig?.iconId?.let { iconId ->
-                val drawable = context.getDrawable(iconId)!!
+                val drawable = AppCompatResources.getDrawable(context, iconId)!!
                 val buttonTheme = buttonConfig.theme ?: theme
                 drawable.setTint(buttonTheme.textColor)
                 iconId to drawable
@@ -88,9 +89,7 @@ class PrimaryButtonsDial(
 
     private fun buildIdButtonsAssociations(): Map<Int, ButtonConfig> {
         return (circleActions + listOf(centerAction))
-            .filterNotNull()
-            .map { it.id to it }
-            .toMap()
+            .filterNotNull().associateBy { it.id }
     }
 
     override fun drawingBox(): RectF = drawingBox
@@ -275,7 +274,7 @@ class PrimaryButtonsDial(
 
     private fun getAssociatedIds(x: Float, y: Float): Sequence<Int> {
         return touchAnchors
-            .minBy {
+            .minByOrNull {
                 it.getNormalizedDistance(
                     (x - 0.5f).coerceIn(-0.5f, 0.5f),
                     (-y + 0.5f).coerceIn(-0.5f, 0.5f)
