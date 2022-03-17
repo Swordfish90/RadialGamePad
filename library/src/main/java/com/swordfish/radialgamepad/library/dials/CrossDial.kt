@@ -44,7 +44,8 @@ import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import java.lang.Math.toDegrees
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class CrossDial(
     context: Context,
@@ -295,7 +296,10 @@ class CrossDial(
     private fun getDiagonalStates() = State.values().asSequence()
         .filter { it.anchor.ids.size > 1 }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun touch(
+        fingers: List<TouchUtils.FingerPosition>,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (isTouchDisabled()) return false
 
         if (fingers.isEmpty()) return reset(outEvents)
@@ -337,7 +341,11 @@ class CrossDial(
         return emitUpdate
     }
 
-    private fun updateState(touchState: State?, simulatedState: State?, outEvents: MutableList<Event>): Boolean {
+    private fun updateState(
+        touchState: State?,
+        simulatedState: State?,
+        outEvents: MutableList<Event>
+    ): Boolean {
         val endState = simulatedState ?: touchState
         val startState = currentState()
 
@@ -351,7 +359,11 @@ class CrossDial(
         return endState != startState
     }
 
-    private fun sendStateUpdateEvent(endState: State?, startState: State?, outEvents: MutableList<Event>) {
+    private fun sendStateUpdateEvent(
+        endState: State?,
+        startState: State?,
+        outEvents: MutableList<Event>
+    ) {
         if (endState == null || !isActiveState(endState)) {
             outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_NONE))
         } else {
@@ -382,7 +394,7 @@ class CrossDial(
 
     private fun computeStateForPosition(x: Float, y: Float): State {
         return State.values().asSequence()
-            .filter { config.useDiagonals || !it.isDiagonal()  }
+            .filter { config.useDiagonals || !it.isDiagonal() }
             .minBy { it.anchor.getNormalizedDistance(x, y) }
             ?: State.CROSS_STATE_CENTER
     }

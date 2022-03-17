@@ -252,7 +252,10 @@ class PrimaryButtonsDial(
         return minOf(radialMaxSize, linearMaxSize)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun touch(
+        fingers: List<TouchUtils.FingerPosition>,
+        outEvents: MutableList<Event>
+    ): Boolean {
         trackedPointerIds.clear()
         trackedPointerIds.addAll(fingers.map { it.pointerId })
 
@@ -317,13 +320,21 @@ class PrimaryButtonsDial(
             }
     }
 
-    private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
+    private fun sendNewActionDowns(
+        newPressed: Set<Int>,
+        oldPressed: Set<Int>,
+        outEvents: MutableList<Event>
+    ) {
         newPressed.asSequence()
             .filter { it !in oldPressed && getButtonForId(it)?.supportsButtons == true }
             .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_DOWN, HapticEngine.EFFECT_PRESS)) }
     }
 
-    private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
+    private fun sendNewActionUps(
+        newPressed: Set<Int>,
+        oldPressed: Set<Int>,
+        outEvents: MutableList<Event>
+    ) {
         oldPressed.asSequence()
             .filter { it !in newPressed && getButtonForId(it)?.supportsButtons == true }
             .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_UP, HapticEngine.EFFECT_RELEASE)) }

@@ -19,6 +19,7 @@
 package com.swordfish.radialgamepad.library.config
 
 import com.swordfish.radialgamepad.library.utils.Constants
+
 /**
  * The Cross dial represents a simple DPAD with diagonals.
  * @property normalColor A color which is displayed when controls are in default state

@@ -26,8 +26,6 @@ object Constants {
     val DEFAULT_COLOR_TEXT = Color.argb(125, 255, 255, 255)
     val DEFAULT_COLOR_BACKGROUND = Color.argb(50, 125, 125, 125)
     val DEFAULT_COLOR_LIGHT = Color.argb(30, 125, 125, 125)
-    val DEFAULT_COLOR_STROKE = Color.argb(20, 255, 255, 255)
-    val DEFAULT_COLOR_STROKE_LIGHT = Color.argb(5, 255, 255, 255)
 
     const val PI = Math.PI.toFloat()
     const val PI2 = 2f * PI

@@ -21,13 +21,16 @@
 package com.swordfish.radialgamepad.library
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.PointF
+import android.graphics.RectF
 import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.view.*
+import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.customview.widget.ExploreByTouchHelper
 import com.jakewharton.rxrelay2.PublishRelay
@@ -35,11 +38,21 @@ import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
 import com.swordfish.radialgamepad.library.config.SecondaryDialConfig
-import com.swordfish.radialgamepad.library.dials.*
+import com.swordfish.radialgamepad.library.dials.ButtonDial
+import com.swordfish.radialgamepad.library.dials.CrossDial
+import com.swordfish.radialgamepad.library.dials.Dial
+import com.swordfish.radialgamepad.library.dials.DoubleButtonDial
+import com.swordfish.radialgamepad.library.dials.EmptyDial
+import com.swordfish.radialgamepad.library.dials.PrimaryButtonsDial
+import com.swordfish.radialgamepad.library.dials.StickDial
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
-import com.swordfish.radialgamepad.library.haptics.*
+import com.swordfish.radialgamepad.library.haptics.AdvancedHapticEngine
+import com.swordfish.radialgamepad.library.haptics.HapticConfig
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
+import com.swordfish.radialgamepad.library.haptics.NoHapticEngine
+import com.swordfish.radialgamepad.library.haptics.SimpleHapticEngine
 import com.swordfish.radialgamepad.library.math.MathUtils.clamp
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.math.Sector
@@ -54,6 +67,33 @@ import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableList
+import kotlin.collections.MutableMap
+import kotlin.collections.any
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.emptyList
+import kotlin.collections.filter
+import kotlin.collections.filterIsInstance
+import kotlin.collections.firstOrNull
+import kotlin.collections.flatMap
+import kotlin.collections.forEach
+import kotlin.collections.forEachIndexed
+import kotlin.collections.getOrElse
+import kotlin.collections.groupBy
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mapIndexed
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableMapOf
+import kotlin.collections.plus
+import kotlin.collections.reduceRight
+import kotlin.collections.set
+import kotlin.collections.sortedBy
+import kotlin.collections.toMap
+import kotlin.collections.union
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -88,7 +128,7 @@ class RadialGamePad @JvmOverloads constructor(
         }
 
         override fun getVisibleVirtualViews(virtualViewIds: MutableList<Int>) {
-            computeVirtualViews().forEach { (id, _) ->  virtualViewIds.add(id) }
+            computeVirtualViews().forEach { (id, _) -> virtualViewIds.add(id) }
         }
 
         override fun onPerformActionForVirtualView(

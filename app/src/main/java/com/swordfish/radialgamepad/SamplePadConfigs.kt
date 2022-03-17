@@ -178,9 +178,9 @@ object SamplePadConfigs {
                     1f,
                     -0.1f,
                     ButtonConfig(
-                    id = KeyEvent.KEYCODE_BUTTON_MODE,
-                    label = "MENU"
-                )
+                        id = KeyEvent.KEYCODE_BUTTON_MODE,
+                        label = "MENU"
+                    )
                 ),
                 // When this stick is double tapped, it's going to fire a Button event
                 SecondaryDialConfig.Cross(

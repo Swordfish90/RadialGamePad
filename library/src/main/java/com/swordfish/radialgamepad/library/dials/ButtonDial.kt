@@ -19,7 +19,8 @@
 package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.RectF
 import android.view.KeyEvent
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
@@ -29,10 +30,10 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.PainterPalette
-import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
-import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
+import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
+import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 
 class ButtonDial(
@@ -107,7 +108,10 @@ class ButtonDial(
         iconDrawable?.draw(canvas)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun touch(
+        fingers: List<TouchUtils.FingerPosition>,
+        outEvents: MutableList<Event>
+    ): Boolean {
         return updatePressed(fingers.isNotEmpty(), simulatedPressed, outEvents)
     }
 
@@ -134,7 +138,11 @@ class ButtonDial(
         return true
     }
 
-    override fun simulateKeyPress(id: Int, simulatePress: Boolean, outEvents: MutableList<Event>): Boolean {
+    override fun simulateKeyPress(
+        id: Int,
+        simulatePress: Boolean,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (id != config.id) return false
         return updatePressed(pressed, simulatePress, outEvents)
     }

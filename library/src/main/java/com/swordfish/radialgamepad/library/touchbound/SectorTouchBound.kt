@@ -18,9 +18,9 @@
 
 package com.swordfish.radialgamepad.library.touchbound
 
+import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.utils.Constants
-import com.swordfish.radialgamepad.library.math.MathUtils
 
 class SectorTouchBound(private val sector: Sector) : TouchBound {
 
