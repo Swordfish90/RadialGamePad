@@ -28,6 +28,7 @@ import com.swordfish.radialgamepad.library.touchbound.EmptyTouchBound
 import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 
+// TODO Get rid of this class
 internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = EmptyTouchBound) {
 
     fun measure(drawingRect: RectF, secondarySector: Sector? = null) {
@@ -38,22 +39,13 @@ internal class DialInteractor(val dial: Dial, var touchBound: TouchBound = Empty
         dial.draw(canvas)
     }
 
-    fun forwardTouch(
-        fingers: List<TouchUtils.FingerPosition>,
-        outEvents: MutableList<Event>,
-        allTrackedFingers: Set<Int>
-    ): Boolean {
-        val goodFingers = fingers.filter {
-            val isTrackedByThisDial = it.pointerId in dial.trackedPointersIds()
-            val isTrackedByOtherDial = !isTrackedByThisDial && it.pointerId in allTrackedFingers
-            val isContained = touchBound.contains(it.x, it.y)
-            isTrackedByThisDial || (!isTrackedByOtherDial && isContained)
-        }
+    fun trackedPointersIds(): Set<Int> {
+        return dial.trackedPointersIds()
+    }
 
-        return dial.touch(
-            TouchUtils.computeRelativeFingerPosition(goodFingers, dial.drawingBox()),
-            outEvents
-        )
+    fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+        val relativePositions = TouchUtils.computeRelativeFingerPosition(fingers, dial.drawingBox())
+        return dial.touch(relativePositions, outEvents)
     }
 
     fun gesture(

@@ -36,7 +36,7 @@ import com.swordfish.radialgamepad.library.path.BeanPathBuilder
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 
-class ButtonDial(
+class DoubleButtonDial(
     context: Context,
     private val config: ButtonConfig,
     private val theme: RadialGamePadTheme
@@ -60,6 +60,7 @@ class ButtonDial(
     private var radius = 10f
     private var drawingBox = RectF()
     private var labelDrawingBox = RectF()
+    private var beanPath: Path = Path()
 
     override fun drawingBox(): RectF = drawingBox
 
@@ -70,6 +71,10 @@ class ButtonDial(
         iconDrawable?.bounds = drawingBox.scaleCentered(0.5f).roundToInt()
         radius = minOf(drawingBox.width(), drawingBox.height()) / 2
         labelDrawingBox = drawingBox.scaleCentered(0.8f)
+
+        if (sector != null) {
+            beanPath = buildBeanPath(sector)
+        }
     }
 
     private fun buildBeanPath(sector: Sector): Path {
@@ -86,12 +91,7 @@ class ButtonDial(
         })
 
         paint.paint {
-            canvas.drawCircle(
-                drawingBox.centerX(),
-                drawingBox.centerY(),
-                radius * (1.0f - 2 * DEFAULT_MARGIN),
-                it
-            )
+            canvas.drawPath(beanPath, it)
         }
 
         if (config.label != null) {
@@ -157,8 +157,4 @@ class ButtonDial(
     }
 
     private fun getTheme() = (config.theme ?: theme)
-
-    companion object {
-        const val DEFAULT_MARGIN = 0.1f
-    }
 }

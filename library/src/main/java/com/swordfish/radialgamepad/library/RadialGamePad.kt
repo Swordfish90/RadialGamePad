@@ -157,7 +157,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     /** Increase the spacing between primary and secondary dials. Use in range [0, 1].*/
-    var secondaryDialSpacing: Float = 0f
+    var secondaryDialSpacing: Float = 0.1f
         set(value) {
             field = value.coerceIn(0f, 1f)
             requestLayoutAndInvalidate()
@@ -356,7 +356,11 @@ class RadialGamePad @JvmOverloads constructor(
                 )
                 is SecondaryDialConfig.SingleButton -> ButtonDial(
                     context,
-                    config.spread,
+                    config.buttonConfig,
+                    config.theme ?: gamePadConfig.theme
+                )
+                is SecondaryDialConfig.DoubleButton -> DoubleButtonDial(
+                    context,
                     config.buttonConfig,
                     config.theme ?: gamePadConfig.theme
                 )
@@ -482,8 +486,8 @@ class RadialGamePad @JvmOverloads constructor(
 
         val dialAngle = Constants.PI2 / dials
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * size * config.scale
-        val offset = size * secondaryDialSpacing
         val finalRotation = computeRotationInRadiansForDial(config)
+        val offset = size * DEFAULT_SECONDARY_DIAL_SCALE * (secondaryDialSpacing + computeFinalSpacing(config))
 
         val sector = Sector(
             PointF(center.x, center.y),
@@ -497,7 +501,11 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun computeRotationInRadiansForDial(config: SecondaryDialConfig): Float {
-        return toRadians(config.processSecondaryDialRotation(secondaryDialRotation))
+        return toRadians(config.rotationProcessor.getRotation(secondaryDialRotation))
+    }
+
+    private fun computeFinalSpacing(config: SecondaryDialConfig): Float {
+        return config.rotationProcessor.getSpacing(config.spacing, secondaryDialRotation)
     }
 
     private fun measureSecondaryDialDrawingBoxNoClipping(config: SecondaryDialConfig): RectF {
@@ -520,8 +528,8 @@ class RadialGamePad @JvmOverloads constructor(
         val spread = overrideSpread ?: config.spread
         val dialAngle = Constants.PI2 / dials
         val dialSize = DEFAULT_SECONDARY_DIAL_SCALE * config.scale
-        val offset = secondaryDialSpacing
-        val distanceToCenter = offset + maxOf(
+        val offset = secondaryDialSpacing + computeFinalSpacing(config)
+        val distanceToCenter = DEFAULT_SECONDARY_DIAL_SCALE * offset + maxOf(
             0.5f * dialSize / tan(dialAngle * spread / 2f),
             1.0f + dialSize / 2f
         )
@@ -572,8 +580,16 @@ class RadialGamePad @JvmOverloads constructor(
 
         val events = mutableListOf<Event>()
 
+        val fingersInDial = fingers.groupBy { findInteractorForFinger(it) }
+
         val updated = allInteractors.map { dial ->
-            dial.forwardTouch(fingers, events, trackedFingers)
+            val dialUntrackedFingers = fingersInDial.getOrElse(dial) { emptyList() }
+                .filter { it.pointerId !in trackedFingers }
+
+            val dialTrackedFingers = fingers
+                .filter { it.pointerId in dial.trackedPointersIds() }
+
+            dial.touch(dialUntrackedFingers + dialTrackedFingers, events)
         }
 
         if (updated.any { it }) {
@@ -585,6 +601,10 @@ class RadialGamePad @JvmOverloads constructor(
         return true
     }
 
+    private fun findInteractorForFinger(finger: TouchUtils.FingerPosition): DialInteractor? {
+        return allInteractors.firstOrNull { it.touchBound.contains(finger.x, finger.y) }
+    }
+
     private fun extractFingersPositions(event: MotionEvent): Sequence<TouchUtils.FingerPosition> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             getLocationOnScreen(positionOnScreen)
@@ -592,15 +612,6 @@ class RadialGamePad @JvmOverloads constructor(
         } else {
             TouchUtils.extractFingersPositions(event)
         }
-    }
-
-    private fun forwardTouchToDial(
-        dial: DialInteractor,
-        fingers: List<TouchUtils.FingerPosition>,
-        trackedFingers: Set<Int>,
-        outEvents: MutableList<Event>
-    ): Boolean {
-        return dial.forwardTouch(fingers, outEvents, trackedFingers)
     }
 
     private fun allDials(): List<Dial> = allInteractors.map { it.dial }
