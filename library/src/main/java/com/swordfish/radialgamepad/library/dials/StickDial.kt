@@ -18,7 +18,6 @@
 
 package com.swordfish.radialgamepad.library.dials
 
-import android.content.Context
 import android.graphics.Canvas
 import android.graphics.PointF
 import android.graphics.RectF
@@ -31,7 +30,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.MathUtils
 import com.swordfish.radialgamepad.library.math.Sector
-import com.swordfish.radialgamepad.library.paint.FillStrokePaint
+import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.TouchUtils
@@ -39,7 +38,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class StickDial(
-    context: Context,
     private val id: Int,
     private val keyPressId: Int?,
     private val supportsGestures: Set<GestureType>,
@@ -47,12 +45,7 @@ class StickDial(
     private val theme: RadialGamePadTheme
 ) : SimulateMotionDial {
 
-    private val paint = FillStrokePaint(context, theme)
-
-    private val foregroundColor: Int = theme.normalColor
-    private val pressedColor: Int = theme.pressedColor
-    private val simulatedColor: Int = theme.simulatedColor
-    private val buttonPressedColor = ColorUtils.blendARGB(foregroundColor, pressedColor, 0.5f)
+    private val paintPalette = PainterPalette(theme)
 
     private var isButtonPressed: Boolean = false
     private var firstTouch: PointF? = null
@@ -75,35 +68,35 @@ class StickDial(
     }
 
     override fun draw(canvas: Canvas) {
-        paint.setStrokeColor(theme.strokeLightColor)
-        paint.setFillColor(if (isButtonPressed) buttonPressedColor else theme.primaryDialBackground)
-        paint.paint {
-            canvas.drawCircle(
-                drawingBox.left + radius,
-                drawingBox.top + radius,
-                radius * STICK_BACKGROUND_SIZE,
-                it
-            )
-        }
+        drawBackground(canvas)
+        drawForeground(canvas)
+    }
 
+    private fun drawForeground(canvas: Canvas) {
         val smallRadius = 0.5f * radius
 
-        val paintColor = when {
-            firstTouch != null -> pressedColor
-            simulatedFirstTouch != null -> simulatedColor
-            else -> foregroundColor
+        val paint = when {
+            firstTouch != null -> paintPalette.pressed
+            simulatedFirstTouch != null -> paintPalette.simulated
+            else -> paintPalette.normal
         }
 
-        paint.setStrokeColor(theme.strokeColor)
-        paint.setFillColor(paintColor)
-        paint.paint {
-            canvas.drawCircle(
-                drawingBox.left + radius + cos(angle) * strength * smallRadius,
-                drawingBox.top + radius + sin(angle) * strength * smallRadius,
-                smallRadius,
-                it
-            )
-        }
+        canvas.drawCircle(
+            drawingBox.left + radius + cos(angle) * strength * smallRadius,
+            drawingBox.top + radius + sin(angle) * strength * smallRadius,
+            smallRadius,
+            paint
+        )
+    }
+
+    private fun drawBackground(canvas: Canvas) {
+        val paint = if (isButtonPressed) paintPalette.pressed else paintPalette.background
+        canvas.drawCircle(
+            drawingBox.left + radius,
+            drawingBox.top + radius,
+            radius * STICK_BACKGROUND_SIZE,
+            paint
+        )
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {

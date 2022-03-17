@@ -104,12 +104,18 @@ object SamplePadConfigs {
                         label = "L2"
                     )
                 ),
+                SecondaryDialConfig.Empty(
+                    8,
+                    1,
+                    1f,
+                    0f
+                ),
                 // When this stick is double tapped, it's going to fire a Button event
                 SecondaryDialConfig.Stick(
                     9,
                     2,
                     2.2f,
-                    0f,
+                    0.1f,
                     1,
                     KeyEvent.KEYCODE_BUTTON_THUMBL,
                     contentDescription = "Left Stick",
@@ -150,22 +156,12 @@ object SamplePadConfigs {
                 )
             ),
             secondaryDials = listOf(
-                SecondaryDialConfig.SingleButton(
+                SecondaryDialConfig.DoubleButton(
                     2,
-                    1f,
-                    0f,
-                    ButtonConfig(
-                        id = KeyEvent.KEYCODE_BUTTON_R2,
-                        label = "R2"
-                    )
-                ),
-                SecondaryDialConfig.SingleButton(
-                    3,
-                    1f,
                     0f,
                     ButtonConfig(
                         id = KeyEvent.KEYCODE_BUTTON_R1,
-                        label = "R1"
+                        label = "R"
                     )
                 ),
                 SecondaryDialConfig.SingleButton(
@@ -179,8 +175,8 @@ object SamplePadConfigs {
                 ),
                 SecondaryDialConfig.SingleButton(
                     10,
-                    0.8f,
-                    0.0f,
+                    1f,
+                    -0.1f,
                     ButtonConfig(
                     id = KeyEvent.KEYCODE_BUTTON_MODE,
                     label = "MENU"
@@ -191,7 +187,7 @@ object SamplePadConfigs {
                     8,
                     2,
                     2.2f,
-                    0f,
+                    0.1f,
                     CrossConfig(0),
                     rotationProcessor = object : SecondaryDialConfig.RotationProcessor() {
                         override fun getRotation(rotation: Float): Float {

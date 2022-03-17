@@ -28,7 +28,7 @@ import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
-import com.swordfish.radialgamepad.library.paint.FillStrokePaint
+import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.paint.TextPaint
@@ -48,9 +48,7 @@ class DoubleButtonDial(
         }
     }
 
-    private val paint = FillStrokePaint(context, theme).apply {
-        setFillColor(getTheme().normalColor)
-    }
+    private val paintPalette = PainterPalette(theme)
 
     private val textPainter = TextPaint()
 
@@ -70,7 +68,8 @@ class DoubleButtonDial(
         this.drawingBox = drawingBox
         iconDrawable?.bounds = drawingBox.scaleCentered(0.5f).roundToInt()
         radius = minOf(drawingBox.width(), drawingBox.height()) / 2
-        labelDrawingBox = drawingBox.scaleCentered(0.8f)
+        labelDrawingBox = drawingBox.scaleCentered(0.6f)
+        paintPalette.background.strokeWidth = 0.15f * drawingBox.width()
 
         if (sector != null) {
             beanPath = buildBeanPath(sector)
@@ -78,27 +77,33 @@ class DoubleButtonDial(
     }
 
     private fun buildBeanPath(sector: Sector): Path {
-        return BeanPathBuilder.build(drawingBox.roundToInt(), sector)
+        return BeanPathBuilder.build(drawingBox.roundToInt(), sector, ButtonDial.DEFAULT_MARGIN)
     }
 
     override fun draw(canvas: Canvas) {
         val buttonTheme = getTheme()
+        drawBackground(canvas)
+        drawForeground(canvas, buttonTheme)
+    }
 
-        paint.setFillColor(when {
-            simulatedPressed == true || pressed -> buttonTheme.pressedColor
-            simulatedPressed == false -> buttonTheme.simulatedColor
-            else -> buttonTheme.normalColor
-        })
-
-        paint.paint {
-            canvas.drawPath(beanPath, it)
+    private fun drawForeground(canvas: Canvas, buttonTheme: RadialGamePadTheme) {
+        val paint = when {
+            simulatedPressed == true || pressed -> paintPalette.pressed
+            simulatedPressed == false -> paintPalette.simulated
+            else -> paintPalette.normal
         }
 
-        if (config.label != null) {
-            textPainter.paintText(labelDrawingBox, config.label, canvas, buttonTheme)
+        canvas.drawPath(beanPath, paint)
+
+        config.label?.let {
+            textPainter.paintText(labelDrawingBox, it, canvas, buttonTheme)
         }
 
         iconDrawable?.draw(canvas)
+    }
+
+    private fun drawBackground(canvas: Canvas) {
+        canvas.drawPath(beanPath, paintPalette.background)
     }
 
     override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {

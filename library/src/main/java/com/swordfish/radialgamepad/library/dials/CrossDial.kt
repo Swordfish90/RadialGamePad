@@ -20,6 +20,7 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
@@ -33,7 +34,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
-import com.swordfish.radialgamepad.library.paint.FillStrokePaint
+import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.path.ArrowPathBuilder
 import com.swordfish.radialgamepad.library.path.CirclePathBuilder
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
@@ -159,18 +160,6 @@ class CrossDial(
 
     val id = config.id
 
-    private val normalPaint = FillStrokePaint(context, theme).apply {
-        setFillColor(theme.normalColor)
-    }
-
-    private val pressedPaint = FillStrokePaint(context, theme).apply {
-        setFillColor(theme.pressedColor)
-    }
-
-    private val simulatedPaint = FillStrokePaint(context, theme).apply {
-        setFillColor(theme.simulatedColor)
-    }
-
     private var foregroundDrawable: Drawable? = config.rightDrawableForegroundId?.let {
         getDrawableWithColor(context, it, theme.textColor)
     }
@@ -185,12 +174,9 @@ class CrossDial(
 
     private var shapePath: Path = Path()
 
-    private val backgroundPaint = FillStrokePaint(context, theme).apply {
-        setStrokeColor(theme.strokeLightColor)
-        setFillColor(theme.primaryDialBackground)
-    }
+    private val paintPalette = PainterPalette(theme)
 
-    private val compositeButtonPaint = CompositeButtonPaint(context, theme)
+    private val compositeButtonPaint = CompositeButtonPaint(theme)
 
     override fun drawingBox(): RectF = drawingBox
 
@@ -274,9 +260,7 @@ class CrossDial(
                 canvas.save()
                 canvas.rotate(rotationInDegrees, 0f, 0f)
 
-                paint.paint {
-                    canvas.drawPath(shapePath, it)
-                }
+                canvas.drawPath(shapePath, paint)
 
                 foregroundDrawable?.apply {
                     bounds = drawableRect
@@ -290,9 +274,7 @@ class CrossDial(
     }
 
     private fun drawBackground(canvas: Canvas, radius: Float) {
-        backgroundPaint.paint {
-            canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, it)
-        }
+        canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paintPalette.background)
     }
 
     private fun getMainStates() = State.values()
@@ -435,11 +417,11 @@ class CrossDial(
         )
     }
 
-    private fun getPaint(isPressed: Boolean): FillStrokePaint {
+    private fun getPaint(isPressed: Boolean): Paint {
         return when {
-            isPressed -> pressedPaint
-            simulatedState != null -> simulatedPaint
-            else -> normalPaint
+            isPressed -> paintPalette.pressed
+            simulatedState != null -> paintPalette.simulated
+            else -> paintPalette.normal
         }
     }
 

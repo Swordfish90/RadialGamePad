@@ -25,7 +25,6 @@ import android.graphics.*
 import android.os.Build
 import android.os.Bundle
 import android.util.AttributeSet
-import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.view.*
@@ -48,6 +47,7 @@ import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
 import com.swordfish.radialgamepad.library.touchbound.CircleTouchBound
 import com.swordfish.radialgamepad.library.touchbound.SectorTouchBound
+import com.swordfish.radialgamepad.library.touchbound.TouchBound
 import com.swordfish.radialgamepad.library.utils.Constants
 import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
@@ -73,8 +73,8 @@ class RadialGamePad @JvmOverloads constructor(
     private val exploreByTouchHelper = object : ExploreByTouchHelper(this) {
 
         private fun computeVirtualViews(): Map<Int, AccessibilityBox> {
-            return allInteractors
-                .flatMap { it.dial.accessibilityBoxes() }
+            return allDials
+                .flatMap { it.accessibilityBoxes() }
                 .sortedBy { it.rect.top }
                 .mapIndexed { index, accessibilityBox -> index to accessibilityBox }
                 .toMap()
@@ -111,6 +111,7 @@ class RadialGamePad @JvmOverloads constructor(
 
     private val marginsInPixel: Int = PaintUtils.convertDpToPixel(defaultMarginsInDp, context).roundToInt()
 
+    private val touchBounds: MutableMap<Dial, TouchBound> = mutableMapOf()
     private var dials: Int = gamePadConfig.sockets
     private var size: Float = 0f
     private var center = PointF(0f, 0f)
@@ -189,27 +190,9 @@ class RadialGamePad @JvmOverloads constructor(
 
     private val hapticEngine = createHapticEngine()
 
-    private lateinit var primaryInteractor: DialInteractor
-    private lateinit var secondaryInteractors: List<DialInteractor>
-    private lateinit var allInteractors: List<DialInteractor>
-
-    private val longPressDetector = GestureDetector(
-        context,
-        object : GestureDetector.SimpleOnGestureListener() {
-            override fun onLongPress(e: MotionEvent) {
-                val events = mutableListOf<Event>()
-                val updated = allInteractors.map {
-                    it.gesture(e.x, e.y, GestureType.LONG_PRESS, events)
-                }
-
-                if (updated.any { it }) {
-                    postInvalidate()
-                }
-
-                handleEvents(events)
-            }
-        }
-    )
+    private var primaryDial: Dial
+    private var secondaryDials: List<Dial>
+    private lateinit var allDials: List<Dial>
 
     private val tapsDetector: MultiTapDetector = MultiTapDetector(context) { x, y, taps, isConfirmed ->
         if (!isConfirmed) return@MultiTapDetector
@@ -224,8 +207,13 @@ class RadialGamePad @JvmOverloads constructor(
 
         val events = mutableListOf<Event>()
 
-        val updated = allInteractors.map {
-            it.gesture(x, y, gestureType, events)
+        val updated = allDials.map {
+            if (touchBounds[it]?.contains(x, y) == true) {
+                val relativePosition = TouchUtils.computeRelativePosition(x, y, it.drawingBox())
+                it.gesture(relativePosition.x, relativePosition.y, gestureType, events)
+            } else {
+                false
+            }
         }
 
         if (updated.any { it }) {
@@ -245,9 +233,9 @@ class RadialGamePad @JvmOverloads constructor(
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
-        primaryInteractor = buildPrimaryInteractor(gamePadConfig.primaryDial)
-        secondaryInteractors = buildSecondaryInteractors(gamePadConfig.secondaryDials)
-        allInteractors = listOf(primaryInteractor) + secondaryInteractors
+        primaryDial = buildPrimaryInteractor(gamePadConfig.primaryDial)
+        secondaryDials = buildSecondaryInteractors(gamePadConfig.secondaryDials)
+        allDials = listOf(primaryDial) + secondaryDials
         ViewCompat.setAccessibilityDelegate(this, exploreByTouchHelper)
     }
 
@@ -255,7 +243,7 @@ class RadialGamePad @JvmOverloads constructor(
     fun simulateMotionEvent(id: Int, relativeX: Float, relativeY: Float) {
         val events = mutableListOf<Event>()
 
-        val updated = allDials().filterIsInstance(SimulateMotionDial::class.java)
+        val updated = allDials.filterIsInstance(SimulateMotionDial::class.java)
             .map { it.simulateMotion(id, relativeX, relativeY, events) }
             .any { it }
 
@@ -270,7 +258,7 @@ class RadialGamePad @JvmOverloads constructor(
     fun simulateClearMotionEvent(id: Int) {
         val events = mutableListOf<Event>()
 
-        val updated = allDials().filterIsInstance(SimulateMotionDial::class.java)
+        val updated = allDials.filterIsInstance(SimulateMotionDial::class.java)
             .map { it.clearSimulatedMotion(id, events) }
             .any { it }
 
@@ -285,7 +273,7 @@ class RadialGamePad @JvmOverloads constructor(
     fun simulateKeyEvent(id: Int, pressed: Boolean) {
         val events = mutableListOf<Event>()
 
-        val updated = allDials().filterIsInstance(SimulateKeyDial::class.java)
+        val updated = allDials.filterIsInstance(SimulateKeyDial::class.java)
             .map { it.simulateKeyPress(id, pressed, events) }
             .any { it }
 
@@ -300,7 +288,7 @@ class RadialGamePad @JvmOverloads constructor(
     fun simulateClearKeyEvent(id: Int) {
         val events = mutableListOf<Event>()
 
-        val updated = allDials().filterIsInstance(SimulateKeyDial::class.java)
+        val updated = allDials.filterIsInstance(SimulateKeyDial::class.java)
             .map { it.clearSimulateKeyPress(id, events) }
             .any { it }
 
@@ -316,15 +304,14 @@ class RadialGamePad @JvmOverloads constructor(
         events.forEach { eventsSubject.accept(it) }
     }
 
-    private fun buildPrimaryInteractor(configuration: PrimaryDialConfig): DialInteractor {
-        val primaryDial = when (configuration) {
+    private fun buildPrimaryInteractor(configuration: PrimaryDialConfig): Dial {
+        return when (configuration) {
             is PrimaryDialConfig.Cross -> CrossDial(
                 context,
                 configuration.crossConfig,
                 configuration.crossConfig.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
-                context,
                 configuration.id,
                 configuration.buttonPressId,
                 configuration.supportsGestures,
@@ -340,14 +327,12 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.theme ?: gamePadConfig.theme
             )
         }
-        return DialInteractor(primaryDial)
     }
 
-    private fun buildSecondaryInteractors(secondaryDials: List<SecondaryDialConfig>): List<DialInteractor> {
+    private fun buildSecondaryInteractors(secondaryDials: List<SecondaryDialConfig>): List<Dial> {
         return secondaryDials.map { config ->
             val secondaryDial = when (config) {
                 is SecondaryDialConfig.Stick -> StickDial(
-                    context,
                     config.id,
                     config.buttonPressId,
                     config.supportsGestures,
@@ -371,7 +356,7 @@ class RadialGamePad @JvmOverloads constructor(
                     config.crossConfig.theme ?: gamePadConfig.theme
                 )
             }
-            DialInteractor(secondaryDial)
+            secondaryDial
         }
     }
 
@@ -404,6 +389,7 @@ class RadialGamePad @JvmOverloads constructor(
         center.x = finalOffsetX + baseCenterX - (extendedSize.left + extendedSize.right) * size * 0.5f
         center.y = finalOffsetY + baseCenterY - (extendedSize.top + extendedSize.bottom) * size * 0.5f
 
+        touchBounds.clear()
         measurePrimaryDial()
         measureSecondaryDials()
     }
@@ -470,14 +456,15 @@ class RadialGamePad @JvmOverloads constructor(
     private fun measureSecondaryDials() {
         gamePadConfig.secondaryDials.forEachIndexed { index, config ->
             val (rect, sector) = measureSecondaryDial(config)
-            secondaryInteractors[index].touchBound = SectorTouchBound(sector)
-            secondaryInteractors[index].measure(rect, sector)
+            val dial = secondaryDials[index]
+            touchBounds[dial] = SectorTouchBound(sector)
+            dial.measure(rect, sector)
         }
     }
 
     private fun measurePrimaryDial() {
-        primaryInteractor.measure(RectF(center.x - size, center.y - size, center.x + size, center.y + size))
-        primaryInteractor.touchBound = CircleTouchBound(center, size)
+        touchBounds[primaryDial] = CircleTouchBound(center, size)
+        primaryDial.measure(RectF(center.x - size, center.y - size, center.x + size, center.y + size))
     }
 
     private fun measureSecondaryDial(config: SecondaryDialConfig): Pair<RectF, Sector> {
@@ -505,7 +492,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun computeFinalSpacing(config: SecondaryDialConfig): Float {
-        return config.rotationProcessor.getSpacing(config.spacing, secondaryDialRotation)
+        return config.rotationProcessor.getSpacing(config.distance, secondaryDialRotation)
     }
 
     private fun measureSecondaryDialDrawingBoxNoClipping(config: SecondaryDialConfig): RectF {
@@ -553,9 +540,9 @@ class RadialGamePad @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        primaryInteractor.draw(canvas)
+        primaryDial.draw(canvas)
 
-        secondaryInteractors.forEach {
+        secondaryDials.forEach {
             it.draw(canvas)
         }
     }
@@ -570,11 +557,10 @@ class RadialGamePad @JvmOverloads constructor(
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         tapsDetector.handleEvent(event)
-        longPressDetector.onTouchEvent(event)
 
         val fingers = extractFingersPositions(event).toList()
 
-        val trackedFingers = allDials()
+        val trackedFingers = allDials
             .map { it.trackedPointersIds() }
             .reduceRight { a, b -> a.union(b) }
 
@@ -582,14 +568,19 @@ class RadialGamePad @JvmOverloads constructor(
 
         val fingersInDial = fingers.groupBy { findInteractorForFinger(it) }
 
-        val updated = allInteractors.map { dial ->
+        val updated = allDials.map { dial ->
             val dialUntrackedFingers = fingersInDial.getOrElse(dial) { emptyList() }
                 .filter { it.pointerId !in trackedFingers }
 
             val dialTrackedFingers = fingers
                 .filter { it.pointerId in dial.trackedPointersIds() }
 
-            dial.touch(dialUntrackedFingers + dialTrackedFingers, events)
+            val allFingers = dialUntrackedFingers + dialTrackedFingers
+
+            dial.touch(
+                TouchUtils.computeRelativeFingerPosition(allFingers, dial.drawingBox()),
+                events
+            )
         }
 
         if (updated.any { it }) {
@@ -601,8 +592,8 @@ class RadialGamePad @JvmOverloads constructor(
         return true
     }
 
-    private fun findInteractorForFinger(finger: TouchUtils.FingerPosition): DialInteractor? {
-        return allInteractors.firstOrNull { it.touchBound.contains(finger.x, finger.y) }
+    private fun findInteractorForFinger(finger: TouchUtils.FingerPosition): Dial? {
+        return allDials.firstOrNull { touchBounds[it]?.contains(finger.x, finger.y) ?: false }
     }
 
     private fun extractFingersPositions(event: MotionEvent): Sequence<TouchUtils.FingerPosition> {
@@ -613,8 +604,6 @@ class RadialGamePad @JvmOverloads constructor(
             TouchUtils.extractFingersPositions(event)
         }
     }
-
-    private fun allDials(): List<Dial> = allInteractors.map { it.dial }
 
     override fun dispatchHoverEvent(event: MotionEvent): Boolean {
         if (exploreByTouchHelper.dispatchHoverEvent(event)) {

@@ -30,17 +30,15 @@ import kotlin.math.sin
 
 object BeanPathBuilder {
 
-    private const val DEFAULT_MARGIN = 0.1f
-
-    fun build(drawingBox: Rect, sector: Sector): Path {
+    fun build(drawingBox: Rect, sector: Sector, margin: Float): Path {
         val radius = minOf(drawingBox.width(), drawingBox.height()) / 2
-        val beanRadius = radius * (1.0f - 2 * DEFAULT_MARGIN)
+        val beanRadius = radius * (1.0f - 2 * margin)
 
-        val maxRadius = lint(1.0f - DEFAULT_MARGIN, sector.minRadius, sector.maxRadius)
+        val maxRadius = lint(1.0f - margin, sector.minRadius, sector.maxRadius)
         val middleRadius = lint(0.5f, sector.minRadius, sector.maxRadius)
-        val minRadius = lint(DEFAULT_MARGIN, sector.minRadius, sector.maxRadius)
+        val minRadius = lint(margin, sector.minRadius, sector.maxRadius)
 
-        val spreadMargin = 2f * asin(radius * DEFAULT_MARGIN / middleRadius)
+        val spreadMargin = 2f * asin(radius * margin / middleRadius)
         val spreadAngle = 2f * asin(beanRadius / middleRadius)
 
         val startAngle = sector.minAngle + spreadAngle / 2 + spreadMargin
