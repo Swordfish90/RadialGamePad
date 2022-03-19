@@ -46,7 +46,7 @@ class FragmentGB : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         leftPad = RadialGamePad(SamplePadConfigs.GB_LEFT, 8f, requireContext())
-        rightPad = RadialGamePad(SamplePadConfigs.GB_RIGHT, 8f,requireContext())
+        rightPad = RadialGamePad(SamplePadConfigs.GB_RIGHT, 8f, requireContext())
 
         // We want the pad anchored to the bottom of the screen
         leftPad.gravityX = -1f

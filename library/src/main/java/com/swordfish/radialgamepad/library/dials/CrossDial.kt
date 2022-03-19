@@ -20,11 +20,13 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import androidx.appcompat.content.res.AppCompatResources
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.CrossConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
@@ -33,7 +35,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
-import com.swordfish.radialgamepad.library.paint.FillStrokePaint
+import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.path.ArrowPathBuilder
 import com.swordfish.radialgamepad.library.path.CirclePathBuilder
 import com.swordfish.radialgamepad.library.simulation.SimulateMotionDial
@@ -43,7 +45,8 @@ import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import java.lang.Math.toDegrees
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class CrossDial(
     context: Context,
@@ -159,18 +162,6 @@ class CrossDial(
 
     val id = config.id
 
-    private val normalPaint = FillStrokePaint(context, theme).apply {
-        setFillColor(theme.normalColor)
-    }
-
-    private val pressedPaint = FillStrokePaint(context, theme).apply {
-        setFillColor(theme.pressedColor)
-    }
-
-    private val simulatedPaint = FillStrokePaint(context, theme).apply {
-        setFillColor(theme.simulatedColor)
-    }
-
     private var foregroundDrawable: Drawable? = config.rightDrawableForegroundId?.let {
         getDrawableWithColor(context, it, theme.textColor)
     }
@@ -185,12 +176,9 @@ class CrossDial(
 
     private var shapePath: Path = Path()
 
-    private val backgroundPaint = FillStrokePaint(context, theme).apply {
-        setStrokeColor(theme.strokeLightColor)
-        setFillColor(theme.primaryDialBackground)
-    }
+    private val paintPalette = PainterPalette(theme)
 
-    private val compositeButtonPaint = CompositeButtonPaint(context, theme)
+    private val compositeButtonPaint = CompositeButtonPaint(theme)
 
     override fun drawingBox(): RectF = drawingBox
 
@@ -201,7 +189,7 @@ class CrossDial(
     }
 
     private fun getDrawableWithColor(context: Context, drawableId: Int, color: Int): Drawable {
-        return context.getDrawable(drawableId)!!.apply {
+        return AppCompatResources.getDrawable(context, drawableId)!!.apply {
             setTint(color)
         }
     }
@@ -274,9 +262,7 @@ class CrossDial(
                 canvas.save()
                 canvas.rotate(rotationInDegrees, 0f, 0f)
 
-                paint.paint {
-                    canvas.drawPath(shapePath, it)
-                }
+                canvas.drawPath(shapePath, paint)
 
                 foregroundDrawable?.apply {
                     bounds = drawableRect
@@ -290,9 +276,7 @@ class CrossDial(
     }
 
     private fun drawBackground(canvas: Canvas, radius: Float) {
-        backgroundPaint.paint {
-            canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, it)
-        }
+        canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paintPalette.background)
     }
 
     private fun getMainStates() = State.values()
@@ -313,7 +297,10 @@ class CrossDial(
     private fun getDiagonalStates() = State.values().asSequence()
         .filter { it.anchor.ids.size > 1 }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun touch(
+        fingers: List<TouchUtils.FingerPosition>,
+        outEvents: MutableList<Event>
+    ): Boolean {
         if (isTouchDisabled()) return false
 
         if (fingers.isEmpty()) return reset(outEvents)
@@ -355,7 +342,11 @@ class CrossDial(
         return emitUpdate
     }
 
-    private fun updateState(touchState: State?, simulatedState: State?, outEvents: MutableList<Event>): Boolean {
+    private fun updateState(
+        touchState: State?,
+        simulatedState: State?,
+        outEvents: MutableList<Event>
+    ): Boolean {
         val endState = simulatedState ?: touchState
         val startState = currentState()
 
@@ -369,7 +360,11 @@ class CrossDial(
         return endState != startState
     }
 
-    private fun sendStateUpdateEvent(endState: State?, startState: State?, outEvents: MutableList<Event>) {
+    private fun sendStateUpdateEvent(
+        endState: State?,
+        startState: State?,
+        outEvents: MutableList<Event>
+    ) {
         if (endState == null || !isActiveState(endState)) {
             outEvents.add(Event.Direction(id, 0f, 0f, HapticEngine.EFFECT_NONE))
         } else {
@@ -400,8 +395,8 @@ class CrossDial(
 
     private fun computeStateForPosition(x: Float, y: Float): State {
         return State.values().asSequence()
-            .filter { config.useDiagonals || !it.isDiagonal()  }
-            .minBy { it.anchor.getNormalizedDistance(x, y) }
+            .filter { config.useDiagonals || !it.isDiagonal() }
+            .minByOrNull { it.anchor.getNormalizedDistance(x, y) }
             ?: State.CROSS_STATE_CENTER
     }
 
@@ -435,11 +430,11 @@ class CrossDial(
         )
     }
 
-    private fun getPaint(isPressed: Boolean): FillStrokePaint {
+    private fun getPaint(isPressed: Boolean): Paint {
         return when {
-            isPressed -> pressedPaint
-            simulatedState != null -> simulatedPaint
-            else -> normalPaint
+            isPressed -> paintPalette.pressed
+            simulatedState != null -> paintPalette.simulated
+            else -> paintPalette.normal
         }
     }
 

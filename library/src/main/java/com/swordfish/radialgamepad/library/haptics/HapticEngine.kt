@@ -38,7 +38,7 @@ abstract class HapticEngine {
         const val EFFECT_PRESS = 2
 
         private const val VIEW_FLAGS = HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING or
-                HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+            HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
 
         private val HAPTIC_CONSTANTS_MAPPINGS = mapOf(
             EFFECT_NONE to null,

@@ -20,7 +20,7 @@ package com.swordfish.radialgamepad.library.paint
 
 import android.graphics.Paint
 
-class BasePaint : Paint() {
+open class BasePaint : Paint() {
     init {
         isAntiAlias = true
     }

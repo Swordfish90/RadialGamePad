@@ -28,7 +28,11 @@ object TouchUtils {
     data class FingerPosition(val pointerId: Int, val x: Float, val y: Float)
 
     @RequiresApi(29)
-    fun extractRawFingersPositions(event: MotionEvent, offsetX: Int = 0, offsetY: Int = 0): Sequence<FingerPosition> {
+    fun extractRawFingersPositions(
+        event: MotionEvent,
+        offsetX: Int = 0,
+        offsetY: Int = 0
+    ): Sequence<FingerPosition> {
         return iteratePointerIndexes(event)
             .map { (id, index) ->
                 FingerPosition(id, event.getRawX(index) - offsetX, event.getRawY(index) - offsetY)
@@ -48,9 +52,12 @@ object TouchUtils {
             .filter { (_, index) -> !isCancelEvent(event, index) }
     }
 
-    fun computeRelativeFingerPosition(fingers: List<FingerPosition>, rect: RectF): List<FingerPosition> {
+    fun computeRelativeFingerPosition(
+        fingers: List<FingerPosition>,
+        rect: RectF
+    ): List<FingerPosition> {
         return fingers.map {
-            FingerPosition(it.pointerId, (it.x - rect.left) / rect.width(), (it.y -rect.top) / rect.height())
+            FingerPosition(it.pointerId, (it.x - rect.left) / rect.width(), (it.y - rect.top) / rect.height())
         }
     }
 

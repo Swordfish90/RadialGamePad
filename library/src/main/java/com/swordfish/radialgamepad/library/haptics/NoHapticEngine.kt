@@ -22,5 +22,5 @@ import android.view.View
 import com.swordfish.radialgamepad.library.event.Event
 
 class NoHapticEngine : HapticEngine() {
-    override fun performHapticForEvents(events: List<Event>, view: View) { }
+    override fun performHapticForEvents(events: List<Event>, view: View) {}
 }

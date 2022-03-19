@@ -36,7 +36,10 @@ class EmptyDial : Dial {
 
     override fun draw(canvas: Canvas) {}
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean = false
+    override fun touch(
+        fingers: List<TouchUtils.FingerPosition>,
+        outEvents: MutableList<Event>
+    ): Boolean = false
 
     override fun gesture(
         relativeX: Float,

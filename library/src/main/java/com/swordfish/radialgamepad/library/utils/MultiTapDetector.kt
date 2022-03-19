@@ -6,7 +6,10 @@ import android.view.MotionEvent
 import android.view.ViewConfiguration
 import kotlin.math.abs
 
-class MultiTapDetector(context: Context, private val callback: (Float, Float, Int, Boolean) -> Unit) {
+class MultiTapDetector(
+    context: Context,
+    private val callback: (Float, Float, Int, Boolean) -> Unit
+) {
     private var numberOfTaps = 0
     private val handler = Handler()
 
@@ -32,7 +35,7 @@ class MultiTapDetector(context: Context, private val callback: (Float, Float, In
     }
 
     fun handleEvent(event: MotionEvent) {
-        when(event.action) {
+        when (event.action) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 downEvent.copyFrom(event)
 
@@ -42,7 +45,7 @@ class MultiTapDetector(context: Context, private val callback: (Float, Float, In
             }
             MotionEvent.ACTION_MOVE -> {
                 // If a move greater than the allowed slop happens before timeout, then this is a scroll and not a tap
-                if(event.eventTime - event.downTime < tapTimeout
+                if (event.eventTime - event.downTime < tapTimeout
                     && abs(event.x - downEvent.x) > viewConfig.scaledTouchSlop
                     && abs(event.y - downEvent.y) > viewConfig.scaledTouchSlop) {
                     downEvent.clear()
@@ -52,9 +55,9 @@ class MultiTapDetector(context: Context, private val callback: (Float, Float, In
                 val downEvent = this.downEvent
                 val lastTapUpEvent = this.lastTapUpEvent
 
-                if(downEvent.time > 0 && event.eventTime - downEvent.time < longPressTimeout) {
+                if (downEvent.time > 0 && event.eventTime - downEvent.time < longPressTimeout) {
                     // We have a tap
-                    if(lastTapUpEvent.time > 0
+                    if (lastTapUpEvent.time > 0
                         && event.eventTime - lastTapUpEvent.time < doubleTapTimeout
                         && abs(event.x - lastTapUpEvent.x) < viewConfig.scaledDoubleTapSlop
                         && abs(event.y - lastTapUpEvent.y) < viewConfig.scaledDoubleTapSlop) {

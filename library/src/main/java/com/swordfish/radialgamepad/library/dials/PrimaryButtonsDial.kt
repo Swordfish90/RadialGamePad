@@ -20,10 +20,12 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.view.KeyEvent
+import androidx.appcompat.content.res.AppCompatResources
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.ButtonConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
@@ -32,7 +34,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
-import com.swordfish.radialgamepad.library.paint.FillStrokePaint
+import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.paint.TextPaint
 import com.swordfish.radialgamepad.library.touch.TouchAnchor
 import com.swordfish.radialgamepad.library.utils.Constants
@@ -51,13 +53,9 @@ class PrimaryButtonsDial(
     private val theme: RadialGamePadTheme
 ) : Dial {
 
-    private val backgroundPaint = FillStrokePaint(context, theme).apply {
-        setFillColor(theme.primaryDialBackground)
-        setStrokeColor(theme.strokeLightColor)
-    }
-    private val fillAndStrokePaint = FillStrokePaint(context, theme)
+    private val painterPalette = PainterPalette(theme)
     private val textPaint = TextPaint()
-    private val compositeButtonPaint = CompositeButtonPaint(context, theme)
+    private val compositeButtonPaint = CompositeButtonPaint(theme)
     private val drawables = loadRequiredDrawables(context)
 
     private var pressed: Set<Int> = setOf()
@@ -76,7 +74,7 @@ class PrimaryButtonsDial(
     private fun loadRequiredDrawables(context: Context): Map<Int, Drawable?> {
         val iconDrawablePairs = (circleActions + centerAction).mapNotNull { buttonConfig ->
             buttonConfig?.iconId?.let { iconId ->
-                val drawable = context.getDrawable(iconId)!!
+                val drawable = AppCompatResources.getDrawable(context, iconId)!!
                 val buttonTheme = buttonConfig.theme ?: theme
                 drawable.setTint(buttonTheme.textColor)
                 iconId to drawable
@@ -91,9 +89,7 @@ class PrimaryButtonsDial(
 
     private fun buildIdButtonsAssociations(): Map<Int, ButtonConfig> {
         return (circleActions + listOf(centerAction))
-            .filterNotNull()
-            .map { it.id to it }
-            .toMap()
+            .filterNotNull().associateBy { it.id }
     }
 
     override fun drawingBox(): RectF = drawingBox
@@ -195,9 +191,7 @@ class PrimaryButtonsDial(
     }
 
     private fun drawBackground(canvas: Canvas, radius: Float) {
-        backgroundPaint.paint {
-            canvas.drawCircle(center.x, center.y, radius, it)
-        }
+        canvas.drawCircle(center.x, center.y, radius, painterPalette.background)
     }
 
     private fun drawCompositeActions(canvas: Canvas, outerRadius: Float) {
@@ -217,14 +211,12 @@ class PrimaryButtonsDial(
             .forEach { anchor ->
                 val button = getButtonForId(anchor.ids.first()) ?: return@forEach
 
-                updatePainterForButtonIds(setOf(button.id), button.theme ?: theme)
+                val painter = getPainterForIds(setOf(button.id), button.theme ?: theme)
 
                 val subDialX = center.x + anchor.getX() * distanceToCenter * 4f
                 val subDialY = center.y - anchor.getY() * distanceToCenter * 4f
 
-                fillAndStrokePaint.paint {
-                    canvas.drawCircle(subDialX, subDialY, buttonRadius, it)
-                }
+                canvas.drawCircle(subDialX, subDialY, buttonRadius, painter)
 
                 if (button.label != null) {
                     textPaint.paintText(
@@ -259,7 +251,10 @@ class PrimaryButtonsDial(
         return minOf(radialMaxSize, linearMaxSize)
     }
 
-    override fun touch(fingers: List<TouchUtils.FingerPosition>, outEvents: MutableList<Event>): Boolean {
+    override fun touch(
+        fingers: List<TouchUtils.FingerPosition>,
+        outEvents: MutableList<Event>
+    ): Boolean {
         trackedPointerIds.clear()
         trackedPointerIds.addAll(fingers.map { it.pointerId })
 
@@ -279,7 +274,7 @@ class PrimaryButtonsDial(
 
     private fun getAssociatedIds(x: Float, y: Float): Sequence<Int> {
         return touchAnchors
-            .minBy {
+            .minByOrNull {
                 it.getNormalizedDistance(
                     (x - 0.5f).coerceIn(-0.5f, 0.5f),
                     (-y + 0.5f).coerceIn(-0.5f, 0.5f)
@@ -306,11 +301,11 @@ class PrimaryButtonsDial(
         return false
     }
 
-    private fun updatePainterForButtonIds(buttonIds: Set<Int>, theme: RadialGamePadTheme) {
-        when {
-            pressed.containsAll(buttonIds) -> fillAndStrokePaint.setFillColor(theme.pressedColor)
-            buttonIds.size == 1 -> fillAndStrokePaint.setFillColor(theme.normalColor)
-            else -> fillAndStrokePaint.setFillColor(theme.primaryDialBackground)
+    private fun getPainterForIds(buttonIds: Set<Int>, theme: RadialGamePadTheme): Paint {
+        return when {
+            pressed.containsAll(buttonIds) -> painterPalette.pressed
+            buttonIds.size == 1 -> painterPalette.normal
+            else -> painterPalette.background
         }
     }
 
@@ -324,13 +319,21 @@ class PrimaryButtonsDial(
             }
     }
 
-    private fun sendNewActionDowns(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
+    private fun sendNewActionDowns(
+        newPressed: Set<Int>,
+        oldPressed: Set<Int>,
+        outEvents: MutableList<Event>
+    ) {
         newPressed.asSequence()
             .filter { it !in oldPressed && getButtonForId(it)?.supportsButtons == true }
             .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_DOWN, HapticEngine.EFFECT_PRESS)) }
     }
 
-    private fun sendNewActionUps(newPressed: Set<Int>, oldPressed: Set<Int>, outEvents: MutableList<Event>) {
+    private fun sendNewActionUps(
+        newPressed: Set<Int>,
+        oldPressed: Set<Int>,
+        outEvents: MutableList<Event>
+    ) {
         oldPressed.asSequence()
             .filter { it !in newPressed && getButtonForId(it)?.supportsButtons == true }
             .forEach { outEvents.add(Event.Button(it, KeyEvent.ACTION_UP, HapticEngine.EFFECT_RELEASE)) }

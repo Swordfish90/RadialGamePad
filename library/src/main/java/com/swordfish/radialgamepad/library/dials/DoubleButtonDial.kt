@@ -20,6 +20,7 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Path
 import android.graphics.RectF
 import android.view.KeyEvent
 import androidx.appcompat.content.res.AppCompatResources
@@ -32,12 +33,13 @@ import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.paint.TextPaint
+import com.swordfish.radialgamepad.library.path.BeanPathBuilder
 import com.swordfish.radialgamepad.library.simulation.SimulateKeyDial
 import com.swordfish.radialgamepad.library.utils.PaintUtils.roundToInt
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scaleCentered
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 
-class ButtonDial(
+class DoubleButtonDial(
     context: Context,
     private val config: ButtonConfig,
     private val theme: RadialGamePadTheme
@@ -49,7 +51,7 @@ class ButtonDial(
         }
     }
 
-    private val paintPalette = PainterPalette(getTheme())
+    private val paintPalette = PainterPalette(theme)
 
     private val textPainter = TextPaint()
 
@@ -59,6 +61,7 @@ class ButtonDial(
     private var radius = 10f
     private var drawingBox = RectF()
     private var labelDrawingBox = RectF()
+    private var beanPath: Path = Path()
 
     override fun drawingBox(): RectF = drawingBox
 
@@ -70,22 +73,20 @@ class ButtonDial(
         radius = minOf(drawingBox.width(), drawingBox.height()) / 2
         labelDrawingBox = drawingBox.scaleCentered(0.6f)
         paintPalette.background.strokeWidth = 0.15f * drawingBox.width()
+
+        if (sector != null) {
+            beanPath = buildBeanPath(sector)
+        }
+    }
+
+    private fun buildBeanPath(sector: Sector): Path {
+        return BeanPathBuilder.build(drawingBox.roundToInt(), sector, ButtonDial.DEFAULT_MARGIN)
     }
 
     override fun draw(canvas: Canvas) {
         val buttonTheme = getTheme()
-
         drawBackground(canvas)
         drawForeground(canvas, buttonTheme)
-    }
-
-    private fun drawBackground(canvas: Canvas) {
-        canvas.drawCircle(
-            drawingBox.centerX(),
-            drawingBox.centerY(),
-            radius * (1.0f - 2 * DEFAULT_MARGIN),
-            paintPalette.background
-        )
     }
 
     private fun drawForeground(canvas: Canvas, buttonTheme: RadialGamePadTheme) {
@@ -95,18 +96,17 @@ class ButtonDial(
             else -> paintPalette.normal
         }
 
-        canvas.drawCircle(
-            drawingBox.centerX(),
-            drawingBox.centerY(),
-            radius * (1.0f - 2 * DEFAULT_MARGIN),
-            paint
-        )
+        canvas.drawPath(beanPath, paint)
 
         config.label?.let {
             textPainter.paintText(labelDrawingBox, it, canvas, buttonTheme)
         }
 
         iconDrawable?.draw(canvas)
+    }
+
+    private fun drawBackground(canvas: Canvas) {
+        canvas.drawPath(beanPath, paintPalette.background)
     }
 
     override fun touch(
@@ -172,8 +172,4 @@ class ButtonDial(
     }
 
     private fun getTheme() = (config.theme ?: theme)
-
-    companion object {
-        const val DEFAULT_MARGIN = 0.15f
-    }
 }
