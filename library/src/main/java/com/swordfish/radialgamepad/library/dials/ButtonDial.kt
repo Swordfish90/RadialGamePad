@@ -44,7 +44,7 @@ class ButtonDial(
 ) : SimulateKeyDial {
 
     private val iconDrawable = config.iconId?.let {
-        AppCompatResources.getDrawable(context ,it)?.apply {
+        AppCompatResources.getDrawable(context, it)?.apply {
             setTint(theme.textColor)
         }
     }
