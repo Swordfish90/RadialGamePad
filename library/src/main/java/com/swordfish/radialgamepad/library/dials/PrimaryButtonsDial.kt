@@ -34,6 +34,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
+import com.swordfish.radialgamepad.library.paint.FillStrokePaint
 import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.paint.TextPaint
 import com.swordfish.radialgamepad.library.touch.TouchAnchor
@@ -53,9 +54,9 @@ class PrimaryButtonsDial(
     private val theme: RadialGamePadTheme
 ) : Dial {
 
-    private val painterPalette = PainterPalette(theme)
+    private val painterPalette = PainterPalette(context, theme)
     private val textPaint = TextPaint()
-    private val compositeButtonPaint = CompositeButtonPaint(theme)
+    private val compositeButtonPaint = CompositeButtonPaint(context, theme)
     private val drawables = loadRequiredDrawables(context)
 
     private var pressed: Set<Int> = setOf()
@@ -191,7 +192,9 @@ class PrimaryButtonsDial(
     }
 
     private fun drawBackground(canvas: Canvas, radius: Float) {
-        canvas.drawCircle(center.x, center.y, radius, painterPalette.background)
+        painterPalette.background.paint {
+            canvas.drawCircle(center.x, center.y, radius, it)
+        }
     }
 
     private fun drawCompositeActions(canvas: Canvas, outerRadius: Float) {
@@ -211,12 +214,14 @@ class PrimaryButtonsDial(
             .forEach { anchor ->
                 val button = getButtonForId(anchor.ids.first()) ?: return@forEach
 
-                val painter = getPainterForIds(setOf(button.id), button.theme ?: theme)
+                val painter = getPainterForIds(setOf(button.id))
 
                 val subDialX = center.x + anchor.getX() * distanceToCenter * 4f
                 val subDialY = center.y - anchor.getY() * distanceToCenter * 4f
 
-                canvas.drawCircle(subDialX, subDialY, buttonRadius, painter)
+                painter.paint {
+                    canvas.drawCircle(subDialX, subDialY, buttonRadius, it)
+                }
 
                 if (button.label != null) {
                     textPaint.paintText(
@@ -301,7 +306,7 @@ class PrimaryButtonsDial(
         return false
     }
 
-    private fun getPainterForIds(buttonIds: Set<Int>, theme: RadialGamePadTheme): Paint {
+    private fun getPainterForIds(buttonIds: Set<Int>): FillStrokePaint {
         return when {
             pressed.containsAll(buttonIds) -> painterPalette.pressed
             buttonIds.size == 1 -> painterPalette.normal

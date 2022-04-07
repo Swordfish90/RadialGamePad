@@ -20,7 +20,6 @@ package com.swordfish.radialgamepad.library.dials
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
@@ -35,6 +34,7 @@ import com.swordfish.radialgamepad.library.event.GestureType
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
 import com.swordfish.radialgamepad.library.math.Sector
 import com.swordfish.radialgamepad.library.paint.CompositeButtonPaint
+import com.swordfish.radialgamepad.library.paint.FillStrokePaint
 import com.swordfish.radialgamepad.library.paint.PainterPalette
 import com.swordfish.radialgamepad.library.path.ArrowPathBuilder
 import com.swordfish.radialgamepad.library.path.CirclePathBuilder
@@ -176,9 +176,9 @@ class CrossDial(
 
     private var shapePath: Path = Path()
 
-    private val paintPalette = PainterPalette(theme)
+    private val paintPalette = PainterPalette(context, theme)
 
-    private val compositeButtonPaint = CompositeButtonPaint(theme)
+    private val compositeButtonPaint = CompositeButtonPaint(context, theme)
 
     override fun drawingBox(): RectF = drawingBox
 
@@ -262,7 +262,9 @@ class CrossDial(
                 canvas.save()
                 canvas.rotate(rotationInDegrees, 0f, 0f)
 
-                canvas.drawPath(shapePath, paint)
+                paint.paint {
+                    canvas.drawPath(shapePath, it)
+                }
 
                 foregroundDrawable?.apply {
                     bounds = drawableRect
@@ -276,7 +278,9 @@ class CrossDial(
     }
 
     private fun drawBackground(canvas: Canvas, radius: Float) {
-        canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, paintPalette.background)
+        paintPalette.background.paint {
+            canvas.drawCircle(drawingBox.centerX(), drawingBox.centerY(), radius, it)
+        }
     }
 
     private fun getMainStates() = State.values()
@@ -430,7 +434,7 @@ class CrossDial(
         )
     }
 
-    private fun getPaint(isPressed: Boolean): Paint {
+    private fun getPaint(isPressed: Boolean): FillStrokePaint {
         return when {
             isPressed -> paintPalette.pressed
             simulatedState != null -> paintPalette.simulated

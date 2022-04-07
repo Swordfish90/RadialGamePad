@@ -49,7 +49,7 @@ class ButtonDial(
         }
     }
 
-    private val paintPalette = PainterPalette(getTheme())
+    private val paintPalette = PainterPalette(context, getTheme())
 
     private val textPainter = TextPaint()
 
@@ -69,7 +69,6 @@ class ButtonDial(
         iconDrawable?.bounds = drawingBox.scaleCentered(0.5f).roundToInt()
         radius = minOf(drawingBox.width(), drawingBox.height()) / 2
         labelDrawingBox = drawingBox.scaleCentered(0.6f)
-        paintPalette.background.strokeWidth = 0.15f * drawingBox.width()
     }
 
     override fun draw(canvas: Canvas) {
@@ -80,12 +79,14 @@ class ButtonDial(
     }
 
     private fun drawBackground(canvas: Canvas) {
-        canvas.drawCircle(
-            drawingBox.centerX(),
-            drawingBox.centerY(),
-            radius * (1.0f - 2 * DEFAULT_MARGIN),
-            paintPalette.background
-        )
+        paintPalette.background.paint {
+            canvas.drawCircle(
+                drawingBox.centerX(),
+                drawingBox.centerY(),
+                radius * (1.0f - DEFAULT_MARGIN),
+                it
+            )
+        }
     }
 
     private fun drawForeground(canvas: Canvas, buttonTheme: RadialGamePadTheme) {
@@ -95,12 +96,14 @@ class ButtonDial(
             else -> paintPalette.normal
         }
 
-        canvas.drawCircle(
-            drawingBox.centerX(),
-            drawingBox.centerY(),
-            radius * (1.0f - 2 * DEFAULT_MARGIN),
-            paint
-        )
+        paint.paint {
+            canvas.drawCircle(
+                drawingBox.centerX(),
+                drawingBox.centerY(),
+                radius * (1.0f - 2 * DEFAULT_MARGIN),
+                it
+            )
+        }
 
         config.label?.let {
             textPainter.paintText(labelDrawingBox, it, canvas, buttonTheme)

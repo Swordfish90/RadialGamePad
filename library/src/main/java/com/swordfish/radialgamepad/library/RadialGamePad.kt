@@ -328,6 +328,7 @@ class RadialGamePad @JvmOverloads constructor(
                 configuration.crossConfig.theme ?: gamePadConfig.theme
             )
             is PrimaryDialConfig.Stick -> StickDial(
+                context,
                 configuration.id,
                 configuration.buttonPressId,
                 configuration.supportsGestures,
@@ -349,6 +350,7 @@ class RadialGamePad @JvmOverloads constructor(
         return secondaryDials.map { config ->
             val secondaryDial = when (config) {
                 is SecondaryDialConfig.Stick -> StickDial(
+                    context,
                     config.id,
                     config.buttonPressId,
                     config.supportsGestures,

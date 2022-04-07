@@ -18,15 +18,16 @@
 
 package com.swordfish.radialgamepad.library.paint
 
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.RectF
 import com.swordfish.radialgamepad.library.config.RadialGamePadTheme
 
-class CompositeButtonPaint(theme: RadialGamePadTheme) {
+class CompositeButtonPaint(context: Context, theme: RadialGamePadTheme) {
 
     private var radius: Float = 0f
 
-    private val painterPalette = PainterPalette(theme)
+    private val painterPalette = PainterPalette(context, theme)
 
     fun updateDrawingBox(drawingBox: RectF) {
         radius = minOf(drawingBox.width(), drawingBox.height()) / 30f
@@ -34,6 +35,8 @@ class CompositeButtonPaint(theme: RadialGamePadTheme) {
 
     fun drawCompositeButton(canvas: Canvas, x: Float, y: Float, isActive: Boolean) {
         val paint = if (isActive) painterPalette.pressed else painterPalette.light
-        canvas.drawCircle(x, y, radius, paint)
+        paint.paint {
+            canvas.drawCircle(x, y, radius, it)
+        }
     }
 }

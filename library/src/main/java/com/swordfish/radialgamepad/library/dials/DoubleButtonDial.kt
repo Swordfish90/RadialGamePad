@@ -51,7 +51,7 @@ class DoubleButtonDial(
         }
     }
 
-    private val paintPalette = PainterPalette(theme)
+    private val paintPalette = PainterPalette(context, theme)
 
     private val textPainter = TextPaint()
 
@@ -61,7 +61,9 @@ class DoubleButtonDial(
     private var radius = 10f
     private var drawingBox = RectF()
     private var labelDrawingBox = RectF()
+
     private var beanPath: Path = Path()
+    private var backgroundBeanPath: Path = Path()
 
     override fun drawingBox(): RectF = drawingBox
 
@@ -72,15 +74,15 @@ class DoubleButtonDial(
         iconDrawable?.bounds = drawingBox.scaleCentered(0.5f).roundToInt()
         radius = minOf(drawingBox.width(), drawingBox.height()) / 2
         labelDrawingBox = drawingBox.scaleCentered(0.6f)
-        paintPalette.background.strokeWidth = 0.15f * drawingBox.width()
 
         if (sector != null) {
-            beanPath = buildBeanPath(sector)
+            beanPath = buildBeanPath(sector, ButtonDial.DEFAULT_MARGIN)
+            backgroundBeanPath = buildBeanPath(sector, ButtonDial.DEFAULT_MARGIN / 2)
         }
     }
 
-    private fun buildBeanPath(sector: Sector): Path {
-        return BeanPathBuilder.build(drawingBox.roundToInt(), sector, ButtonDial.DEFAULT_MARGIN)
+    private fun buildBeanPath(sector: Sector, margin: Float): Path {
+        return BeanPathBuilder.build(drawingBox.roundToInt(), sector, margin)
     }
 
     override fun draw(canvas: Canvas) {
@@ -96,7 +98,9 @@ class DoubleButtonDial(
             else -> paintPalette.normal
         }
 
-        canvas.drawPath(beanPath, paint)
+        paint.paint {
+            canvas.drawPath(beanPath, it)
+        }
 
         config.label?.let {
             textPainter.paintText(labelDrawingBox, it, canvas, buttonTheme)
@@ -106,7 +110,9 @@ class DoubleButtonDial(
     }
 
     private fun drawBackground(canvas: Canvas) {
-        canvas.drawPath(beanPath, paintPalette.background)
+        paintPalette.background.paint {
+            canvas.drawPath(backgroundBeanPath, it)
+        }
     }
 
     override fun touch(
