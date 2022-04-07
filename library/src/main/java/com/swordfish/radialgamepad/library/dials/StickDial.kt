@@ -18,6 +18,7 @@
 
 package com.swordfish.radialgamepad.library.dials
 
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.PointF
 import android.graphics.RectF
@@ -37,6 +38,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class StickDial(
+    context: Context,
     private val id: Int,
     private val keyPressId: Int?,
     private val supportsGestures: Set<GestureType>,
@@ -44,7 +46,7 @@ class StickDial(
     theme: RadialGamePadTheme
 ) : SimulateMotionDial {
 
-    private val paintPalette = PainterPalette(theme)
+    private val paintPalette = PainterPalette(context, theme)
 
     private var isButtonPressed: Boolean = false
     private var firstTouch: PointF? = null
@@ -80,22 +82,26 @@ class StickDial(
             else -> paintPalette.normal
         }
 
-        canvas.drawCircle(
-            drawingBox.left + radius + cos(angle) * strength * smallRadius,
-            drawingBox.top + radius + sin(angle) * strength * smallRadius,
-            smallRadius,
-            paint
-        )
+        paint.paint {
+            canvas.drawCircle(
+                drawingBox.left + radius + cos(angle) * strength * smallRadius,
+                drawingBox.top + radius + sin(angle) * strength * smallRadius,
+                smallRadius,
+                it
+            )
+        }
     }
 
     private fun drawBackground(canvas: Canvas) {
         val paint = if (isButtonPressed) paintPalette.pressed else paintPalette.background
-        canvas.drawCircle(
-            drawingBox.left + radius,
-            drawingBox.top + radius,
-            radius * STICK_BACKGROUND_SIZE,
-            paint
-        )
+        paint.paint {
+            canvas.drawCircle(
+                drawingBox.left + radius,
+                drawingBox.top + radius,
+                radius * STICK_BACKGROUND_SIZE,
+                it
+            )
+        }
     }
 
     override fun touch(

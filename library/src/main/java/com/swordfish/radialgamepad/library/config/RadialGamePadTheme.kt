@@ -35,5 +35,9 @@ data class RadialGamePadTheme(
     val simulatedColor: Int = Constants.DEFAULT_COLOR_NORMAL,
     val textColor: Int = Constants.DEFAULT_COLOR_TEXT,
     val primaryDialBackground: Int = Constants.DEFAULT_COLOR_BACKGROUND,
-    val lightColor: Int = Constants.DEFAULT_COLOR_LIGHT
+    val lightColor: Int = Constants.DEFAULT_COLOR_LIGHT,
+    val strokeWidthDp: Float = 2f,
+    val normalStrokeColor: Int = Constants.DEFAULT_COLOR_NORMAL,
+    val lightStrokeColor: Int = Constants.DEFAULT_COLOR_LIGHT,
+    val backgroundStrokeColor: Int = Constants.DEFAULT_COLOR_BACKGROUND,
 )
