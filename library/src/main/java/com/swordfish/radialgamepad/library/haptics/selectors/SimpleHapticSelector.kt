@@ -16,18 +16,15 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.haptics
+package com.swordfish.radialgamepad.library.haptics.selectors
 
-import android.view.View
 import com.swordfish.radialgamepad.library.event.Event
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
 
-class SimpleHapticEngine : HapticEngine() {
-
-    override fun performHapticForEvents(events: List<Event>, view: View) {
-        val finalEffect = events.asSequence()
+class SimpleHapticSelector : HapticSelector {
+    override fun getEffectConstant(events: List<Event>): Int {
+        return events.asSequence()
             .map { it.haptic }
-            .firstOrNull { it == EFFECT_PRESS } ?: EFFECT_NONE
-
-        performHaptic(finalEffect, view)
+            .firstOrNull { it == HapticEngine.EFFECT_PRESS } ?: HapticEngine.EFFECT_NONE
     }
 }

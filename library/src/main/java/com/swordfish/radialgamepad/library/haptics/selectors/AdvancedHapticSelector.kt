@@ -1,6 +1,6 @@
 /*
  * Created by Filippo Scognamiglio.
- * Copyright (c) 2022. This file is part of RadialGamePad.
+ * Copyright (c) 2020. This file is part of RadialGamePad.
  *
  * RadialGamePad is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,28 +16,15 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.haptics
+package com.swordfish.radialgamepad.library.haptics.selectors
 
 import com.swordfish.radialgamepad.library.event.Event
-import com.swordfish.radialgamepad.library.haptics.actuators.HapticActuator
-import com.swordfish.radialgamepad.library.haptics.selectors.HapticSelector
+import com.swordfish.radialgamepad.library.haptics.HapticEngine
 
-class HapticEngine(
-    private val selector: HapticSelector,
-    private val actuator: HapticActuator
-) {
-
-    fun performHapticForEvents(events: List<Event>) {
-        performHaptic(selector.getEffectConstant(events))
-    }
-
-    fun performHaptic(effect: Int) {
-        actuator.performHaptic(effect)
-    }
-
-    companion object {
-        const val EFFECT_NONE = 0
-        const val EFFECT_RELEASE = 1
-        const val EFFECT_PRESS = 2
+class AdvancedHapticSelector : HapticSelector {
+    override fun getEffectConstant(events: List<Event>): Int {
+        return events
+            .maxByOrNull { it.haptic }
+            ?.haptic ?: HapticEngine.EFFECT_NONE
     }
 }
