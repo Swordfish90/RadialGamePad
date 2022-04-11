@@ -1,6 +1,6 @@
 /*
  * Created by Filippo Scognamiglio.
- * Copyright (c) 2020. This file is part of RadialGamePad.
+ * Copyright (c) 2022. This file is part of RadialGamePad.
  *
  * RadialGamePad is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +16,8 @@
  * along with RadialGamePad.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.swordfish.radialgamepad.library.haptics
+package com.swordfish.radialgamepad.library.haptics.actuators
 
-import android.view.View
-import com.swordfish.radialgamepad.library.event.Event
-
-class AdvancedHapticEngine : HapticEngine() {
-
-    override fun performHapticForEvents(events: List<Event>, view: View) {
-        val strongestEffect = events
-            .maxByOrNull { it.haptic }
-            ?.haptic ?: EFFECT_NONE
-
-        performHaptic(strongestEffect, view)
-    }
+interface HapticActuator {
+    fun performHaptic(hapticEffect: Int)
 }

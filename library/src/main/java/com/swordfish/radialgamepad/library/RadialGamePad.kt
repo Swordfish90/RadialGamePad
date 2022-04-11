@@ -48,11 +48,13 @@ import com.swordfish.radialgamepad.library.dials.StickDial
 import com.swordfish.radialgamepad.library.event.Event
 import com.swordfish.radialgamepad.library.event.EventsSource
 import com.swordfish.radialgamepad.library.event.GestureType
-import com.swordfish.radialgamepad.library.haptics.AdvancedHapticEngine
 import com.swordfish.radialgamepad.library.haptics.HapticConfig
 import com.swordfish.radialgamepad.library.haptics.HapticEngine
-import com.swordfish.radialgamepad.library.haptics.NoHapticEngine
-import com.swordfish.radialgamepad.library.haptics.SimpleHapticEngine
+import com.swordfish.radialgamepad.library.haptics.actuators.VibrationEffectActuator
+import com.swordfish.radialgamepad.library.haptics.actuators.ViewActuator
+import com.swordfish.radialgamepad.library.haptics.selectors.AdvancedHapticSelector
+import com.swordfish.radialgamepad.library.haptics.selectors.NoEffectHapticSelector
+import com.swordfish.radialgamepad.library.haptics.selectors.SimpleHapticSelector
 import com.swordfish.radialgamepad.library.math.MathUtils.clamp
 import com.swordfish.radialgamepad.library.math.MathUtils.toRadians
 import com.swordfish.radialgamepad.library.math.Sector
@@ -67,6 +69,7 @@ import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
 import io.reactivex.Observable
+import java.lang.ref.WeakReference
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
@@ -240,11 +243,19 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun createHapticEngine(): HapticEngine {
-        return when (gamePadConfig.haptic) {
-            HapticConfig.OFF -> NoHapticEngine()
-            HapticConfig.PRESS -> SimpleHapticEngine()
-            HapticConfig.PRESS_AND_RELEASE -> AdvancedHapticEngine()
+        val actuator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            VibrationEffectActuator(context.applicationContext)
+        } else {
+            ViewActuator(WeakReference(this))
         }
+
+        val selector = when (gamePadConfig.haptic) {
+            HapticConfig.OFF -> NoEffectHapticSelector()
+            HapticConfig.PRESS -> SimpleHapticSelector()
+            HapticConfig.PRESS_AND_RELEASE -> AdvancedHapticSelector()
+        }
+
+        return HapticEngine(selector, actuator)
     }
 
     init {
@@ -316,7 +327,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun handleEvents(events: List<Event>) {
-        hapticEngine.performHapticForEvents(events, this)
+        hapticEngine.performHapticForEvents(events)
         events.forEach { eventsSubject.accept(it) }
     }
 
@@ -570,7 +581,7 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     fun performHapticFeedback() {
-        hapticEngine.performHaptic(HapticEngine.EFFECT_PRESS, this)
+        hapticEngine.performHaptic(HapticEngine.EFFECT_PRESS)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
