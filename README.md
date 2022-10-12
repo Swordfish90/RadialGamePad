@@ -29,7 +29,7 @@ As the name suggests, RadialGamePad is built around the idea circular dials. The
 
 To define the layout a ```RadialGamePadConfig``` object is passed to the constructor, and the library will take care of sizing and positioning controls to optimize the available space.
 
-Events are returned as an Kotlin ```Flow``` and are composed of three different types:
+Events are returned as a Kotlin ```Flow``` and are composed of three different types:
 
 * **Direction**: fired from Sticks and Crosses and indicates a direction through the two components xAxis and yAxis
 * **Button**: indicates when a control has been pressed or released (```KeyEvent.ACTION_DOWN``` or ```KeyEvent.ACTION_UP```)
