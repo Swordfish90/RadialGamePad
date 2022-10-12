@@ -33,7 +33,6 @@ import android.view.View
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.customview.widget.ExploreByTouchHelper
-import com.jakewharton.rxrelay2.PublishRelay
 import com.swordfish.radialgamepad.library.accessibility.AccessibilityBox
 import com.swordfish.radialgamepad.library.config.PrimaryDialConfig
 import com.swordfish.radialgamepad.library.config.RadialGamePadConfig
@@ -68,7 +67,6 @@ import com.swordfish.radialgamepad.library.utils.MultiTapDetector
 import com.swordfish.radialgamepad.library.utils.PaintUtils
 import com.swordfish.radialgamepad.library.utils.PaintUtils.scale
 import com.swordfish.radialgamepad.library.utils.TouchUtils
-import io.reactivex.Observable
 import java.lang.ref.WeakReference
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -78,7 +76,14 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.tan
 import kotlin.properties.Delegates
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
 
+@OptIn(DelicateCoroutinesApi::class)
 class RadialGamePad @JvmOverloads constructor(
     private val gamePadConfig: RadialGamePadConfig,
     defaultMarginsInDp: Float = 16f,
@@ -87,7 +92,9 @@ class RadialGamePad @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), EventsSource {
 
-    private val eventsSubject = PublishRelay.create<Event>()
+    private val eventDispatcher = newSingleThreadContext("touch-events")
+    private val hapticDispatcher = newSingleThreadContext("haptic-events")
+    private val eventsSubject = MutableSharedFlow<Event>()
 
     private val exploreByTouchHelper = object : ExploreByTouchHelper(this) {
 
@@ -327,8 +334,14 @@ class RadialGamePad @JvmOverloads constructor(
     }
 
     private fun handleEvents(events: List<Event>) {
-        hapticEngine.performHapticForEvents(events)
-        events.forEach { eventsSubject.accept(it) }
+        GlobalScope.launch(hapticDispatcher) {
+            hapticEngine.performHapticForEvents(events)
+        }
+        GlobalScope.launch(eventDispatcher) {
+            events.forEach {
+                eventsSubject.emit(it)
+            }
+        }
     }
 
     private fun buildPrimaryInteractor(configuration: PrimaryDialConfig): Dial {
@@ -576,7 +589,7 @@ class RadialGamePad @JvmOverloads constructor(
         }
     }
 
-    override fun events(): Observable<Event> {
+    override fun events(): Flow<Event> {
         return eventsSubject
     }
 

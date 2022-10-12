@@ -18,8 +18,8 @@
 
 package com.swordfish.radialgamepad.library.event
 
-import io.reactivex.Observable
+import kotlinx.coroutines.flow.Flow
 
 interface EventsSource {
-    fun events(): Observable<Event>
+    fun events(): Flow<Event>
 }
