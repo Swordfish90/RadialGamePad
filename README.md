@@ -16,10 +16,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.swordfish90:radialgamepad:0.1.0'
+    implementation 'com.github.swordfish90:radialgamepad:$LAST_RELEASE'
     
-    // To handle Rx events from RadialGamePad
-    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    // To handle the Flow of events from RadialGamePad
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
 }
 ```
 
@@ -29,7 +29,7 @@ As the name suggests, RadialGamePad is built around the idea circular dials. The
 
 To define the layout a ```RadialGamePadConfig``` object is passed to the constructor, and the library will take care of sizing and positioning controls to optimize the available space.
 
-Events are returned as an RxJava2 ```Observable``` and are composed of three different types:
+Events are returned as an Kotlin ```Flow``` and are composed of three different types:
 
 * **Direction**: fired from Sticks and Crosses and indicates a direction through the two components xAxis and yAxis
 * **Button**: indicates when a control has been pressed or released (```KeyEvent.ACTION_DOWN``` or ```KeyEvent.ACTION_UP```)
@@ -41,39 +41,46 @@ Here's a simple example which creates a remote control pad and handles its event
 class MainActivity : Activity() {
     private lateinit var pad: RadialGamePad
 
-    private val compositeDisposable = CompositeDisposable()
-
     private val padConfig = RadialGamePadConfig(
-        // The pad will have 6 secondary dials (not every one needs to be used)
         sockets = 6,
-
-        // Perform haptic feedback when a control is pressed
-        haptic = true,
-
-        // The primary dial is a DPad with id = 0
-        primaryDial = PrimaryDialConfig.Cross(0),
-
-        // Secondary dial are 4 buttons, with spread 1.
+        primaryDial = PrimaryDialConfig.Cross(
+            CrossConfig(
+                id = 0,
+                useDiagonals = false
+            )
+        ),
         secondaryDials = listOf(
-            SecondaryDialConfig.SingleButton(1, 1,
+            SecondaryDialConfig.SingleButton(
+                index = 1,
+                scale = 1f,
+                distance = 0f,
                 ButtonConfig(
                     id = KeyEvent.KEYCODE_BUTTON_SELECT,
                     iconId = R.drawable.ic_play
                 )
             ),
-            SecondaryDialConfig.SingleButton(2, 1,
+            SecondaryDialConfig.SingleButton(
+                index = 2,
+                scale = 1f,
+                distance = 0f,
                 ButtonConfig(
                     id = KeyEvent.KEYCODE_BUTTON_L1,
                     iconId = R.drawable.ic_stop
                 )
             ),
-            SecondaryDialConfig.SingleButton(4, 1,
+            SecondaryDialConfig.SingleButton(
+                index = 4,
+                scale = 1f,
+                distance = 0f,
                 ButtonConfig(
                     id = KeyEvent.KEYCODE_BUTTON_MODE,
                     iconId = R.drawable.ic_volume_down
                 )
             ),
-            SecondaryDialConfig.SingleButton(5, 1,
+            SecondaryDialConfig.SingleButton(
+                index = 5,
+                scale = 1f,
+                distance = 0f,
                 ButtonConfig(
                     id = KeyEvent.KEYCODE_BUTTON_MODE,
                     iconId = R.drawable.ic_volume_up
@@ -91,13 +98,15 @@ class MainActivity : Activity() {
         pad = RadialGamePad(padConfig, 8f, requireContext())
 
         findViewById<FrameLayout>(R.id.container).addView(pad)
-    }
 
-    override fun onResume() {
-        super.onResume()
-        compositeDisposable.add(
-            pad.events().subscribe { handleEvent(it) }
-        )
+        // Collect the Flow of events to a handler
+        lifecycleScope.launch {
+            pad.events()
+                .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
+                .collect {
+                    handleEvent(it)
+                }
+        }
     }
 
     private fun handleEvent(event: Event) {
@@ -113,11 +122,6 @@ class MainActivity : Activity() {
                 Log.d("Event", "Direction event from control ${event.id}")
             }
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        compositeDisposable.clear()
     }
 }
 ```
