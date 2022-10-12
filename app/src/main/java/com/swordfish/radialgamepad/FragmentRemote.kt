@@ -25,14 +25,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.swordfish.radialgamepad.library.RadialGamePad
 import com.swordfish.radialgamepad.library.event.Event
-import io.reactivex.disposables.CompositeDisposable
+import kotlinx.coroutines.launch
 
 class FragmentRemote : Fragment() {
     private lateinit var pad: RadialGamePad
-
-    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,19 +47,17 @@ class FragmentRemote : Fragment() {
         pad = RadialGamePad(SamplePadConfigs.REMOTE, 8f, requireContext())
 
         view.findViewById<FrameLayout>(R.id.container).addView(pad)
-    }
 
-    override fun onResume() {
-        super.onResume()
-        compositeDisposable.add(pad.events().subscribe { handleEvent(it) })
+        lifecycleScope.launch {
+            pad.events()
+                .flowWithLifecycle(lifecycle, Lifecycle.State.RESUMED)
+                .collect {
+                    handleEvent(it)
+                }
+        }
     }
 
     private fun handleEvent(event: Event) {
         Log.d("Event", "Event received $event")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        compositeDisposable.clear()
     }
 }
