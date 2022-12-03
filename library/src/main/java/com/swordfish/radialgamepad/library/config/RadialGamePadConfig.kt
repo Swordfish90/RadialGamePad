@@ -27,11 +27,13 @@ import com.swordfish.radialgamepad.library.haptics.HapticConfig
  * @property secondaryDials List of configurations for the surrounding secondary dials
  * @property haptic Choose which effects will be performed
  * @property theme RadialGamePadTheme for the whole view
+ * @property preferScreenTouchCoordinates Use an alternative sampling methods for touch coordinates
  */
 data class RadialGamePadConfig(
     val sockets: Int,
     val primaryDial: PrimaryDialConfig,
     val secondaryDials: List<SecondaryDialConfig>,
     val haptic: HapticConfig = HapticConfig.PRESS,
-    val theme: RadialGamePadTheme = RadialGamePadTheme()
+    val theme: RadialGamePadTheme = RadialGamePadTheme(),
+    val preferScreenTouchCoordinates: Boolean = false
 )
